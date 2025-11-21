@@ -1,10 +1,13 @@
-import express, { Request, Response } from "express";
+import app from "./app";
 
-const app = express();
+async function startServer() {
+    try {
+        app.listen(process.env.PORT, () => {
+            console.log(`Server is running on port ${process.env.PORT || 3000}`);
+        });
+    } catch (error) {
+        console.error(error);
+    }
+}
 
-
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World");
-});
-
-export default app;
+startServer().catch(console.error);

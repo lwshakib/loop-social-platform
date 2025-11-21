@@ -31,6 +31,13 @@ const signInSchema = z.object({
 
 type SignInFormValues = z.infer<typeof signInSchema>;
 
+// Helper function to set cookie
+const setCookie = (name: string, value: string, days: number) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Lax; Secure`;
+};
+
 export default function SignInPage() {
   const navigate = useNavigate();
   const form = useForm<SignInFormValues>({
@@ -44,17 +51,45 @@ export default function SignInPage() {
 
   const onSubmit = async (data: SignInFormValues) => {
     try {
-      // TODO: Replace with your actual API endpoint
-      const response = await fetch("/api/auth/sign-in", {
+      // Helper to get server URL from environment variables
+      const getServerUrl = () => {
+        return import.meta.env.VITE_SERVER_URL || "";
+      };
+
+      const serverUrl = getServerUrl();
+      const response = await fetch(`${serverUrl}/auth/sign-in`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
       });
 
       if (response.ok) {
+        const result = await response.json();
+
+        // Extract tokens from response
+        // The response structure is: { statusCode, success, message, data: { accessToken, refreshToken, ... } }
+        if (result.data?.accessToken && result.data?.refreshToken) {
+          // Set cookie expiration based on rememberMe
+          // Access token: 15 minutes (0.01 days) or 30 days if rememberMe
+          // Refresh token: 7 days or 30 days if rememberMe
+          const accessTokenExpiry = data.rememberMe ? 30 : 0.01; // 15 minutes = 0.01 days
+          const refreshTokenExpiry = data.rememberMe ? 30 : 7;
+
+          // Save tokens to cookies
+          setCookie("accessToken", result.data.accessToken, accessTokenExpiry);
+          setCookie(
+            "refreshToken",
+            result.data.refreshToken,
+            refreshTokenExpiry
+          );
+        }
+
         // Redirect to home page after successful sign in
         navigate("/");
       } else {

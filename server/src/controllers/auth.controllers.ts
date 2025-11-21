@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { ZodError } from "zod";
 import logger from "../logger/winston.logger.js";
 import { Otp } from "../models/otp.model";
 import User from "../models/user.model";
@@ -6,14 +7,33 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendOTPEmail } from "../utils/mail";
+import {
+  sendOtpEmailSchema,
+  signInSchema,
+  signUpSchema,
+  type SendOtpEmailInput,
+  type SignInInput,
+  type SignUpInput,
+} from "../validators/auth.validators.js";
 
 export const signIn = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      throw new ApiError(400, "Email and password are required");
+    // Validate request body
+    let validatedData: SignInInput;
+    try {
+      validatedData = signInSchema.parse(req.body);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const errors = error.issues.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        throw new ApiError(400, "Validation failed", errors);
+      }
+      throw new ApiError(400, "Invalid request data");
     }
+
+    const { email, password } = validatedData;
 
     const user = await User.findOne({ email }).select("+password");
 
@@ -58,6 +78,21 @@ export const signIn = asyncHandler(
 
 export const signUp = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    // Validate request body
+    let validatedData: SignUpInput;
+    try {
+      validatedData = signUpSchema.parse(req.body);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const errors = error.issues.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        throw new ApiError(400, "Validation failed", errors);
+      }
+      throw new ApiError(400, "Invalid request data");
+    }
+
     const {
       firstName,
       surname,
@@ -67,12 +102,7 @@ export const signUp = asyncHandler(
       email,
       password,
       otp,
-    } = req.body;
-
-    // Validate required fields
-    if (!firstName || !surname || !username || !email || !password || !otp) {
-      throw new ApiError(400, "All fields are required");
-    }
+    } = validatedData;
 
     // Check if user with email already exists
     const existingUserByEmail = await User.findOne({ email });
@@ -167,11 +197,22 @@ export const signUp = asyncHandler(
 
 export const sendOtpEmail = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email } = req.body;
-
-    if (!email) {
-      throw new ApiError(400, "Email is required");
+    // Validate request body
+    let validatedData: SendOtpEmailInput;
+    try {
+      validatedData = sendOtpEmailSchema.parse(req.body);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const errors = error.issues.map((err) => ({
+          field: err.path.join("."),
+          message: err.message,
+        }));
+        throw new ApiError(400, "Validation failed", errors);
+      }
+      throw new ApiError(400, "Invalid request data");
     }
+
+    const { email } = validatedData;
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();

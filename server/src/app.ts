@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import morganMiddleware from "./logger/morgan.logger.js";
 import http from "http";
+import routes from "./routes/index.js";
 dotenv.config();
 
 const app = express();
@@ -22,5 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morganMiddleware);
 
 const httpServer = http.createServer(app);
+
+app.use("/api", routes);
 
 export default httpServer;

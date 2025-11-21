@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail, User } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import * as z from "zod";
@@ -38,9 +39,18 @@ const signUpSchema = z
     month: z.string().min(1, "Month is required"),
     year: z.string().min(1, "Year is required"),
     gender: z.enum(["male", "female", "other"]),
+    username: z
+      .string()
+      .min(3, "Username must be at least 3 characters")
+      .max(20, "Username must be at most 20 characters")
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        "Username can only contain letters, numbers, and underscores"
+      ),
     email: z.string().email("Please enter a valid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Please confirm your password"),
+    otp: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -79,6 +89,14 @@ const signUpSchema = z
 
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 
+// Helper to get server URL from environment variables
+// Set VITE_SERVER_URL in your .env file (e.g., VITE_SERVER_URL=http://localhost:3000)
+const getServerUrl = () => {
+  // Vite uses import.meta.env for environment variables
+  // For process.env.SERVER_URL to work, you'd need to configure it in your build setup
+  return import.meta.env.VITE_SERVER_URL || "";
+};
+
 // Generate arrays for date pickers
 const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
 const months = [
@@ -102,6 +120,8 @@ const years = Array.from({ length: currentYear - 1899 }, (_, i) =>
 
 export default function SignUpPage() {
   const navigate = useNavigate();
+  const [otpGenerated, setOtpGenerated] = useState(false);
+  const [isGeneratingOtp, setIsGeneratingOtp] = useState(false);
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -111,13 +131,60 @@ export default function SignUpPage() {
       month: "",
       year: "",
       gender: undefined,
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
+      otp: "",
     },
   });
 
+  const generateOTP = async (email: string) => {
+    try {
+      setIsGeneratingOtp(true);
+      const serverUrl = getServerUrl();
+      const response = await fetch(`${serverUrl}/auth/send-otp-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        setOtpGenerated(true);
+        form.clearErrors("root");
+      } else {
+        const error = await response.json();
+        form.setError("root", {
+          message: error.message || "Failed to generate OTP. Please try again.",
+        });
+      }
+    } catch {
+      form.setError("root", {
+        message: "An error occurred while generating OTP. Please try again.",
+      });
+    } finally {
+      setIsGeneratingOtp(false);
+    }
+  };
+
   const onSubmit = async (data: SignUpFormValues) => {
+    // If OTP hasn't been generated yet, generate it first
+    if (!otpGenerated) {
+      await generateOTP(data.email);
+      return;
+    }
+
+    // If OTP is generated, proceed with final submission
+    if (!data.otp) {
+      form.setError("root", {
+        message: "Please enter the OTP sent to your email.",
+      });
+      return;
+    }
+
     try {
       // Combine day, month, year into a date
       const dateOfBirth = new Date(
@@ -131,12 +198,14 @@ export default function SignUpPage() {
         surname: data.surname,
         dateOfBirth: dateOfBirth.toISOString(),
         gender: data.gender,
+        username: data.username,
         email: data.email,
         password: data.password,
+        otp: data.otp,
       };
 
-      // TODO: Replace with your actual API endpoint
-      const response = await fetch("/api/auth/sign-up", {
+      const serverUrl = getServerUrl();
+      const response = await fetch(`${serverUrl}/auth/sign-up`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -377,6 +446,32 @@ export default function SignUpPage() {
                   )}
                 />
 
+                {/* Username */}
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">
+                        Username
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground font-medium">
+                            @
+                          </span>
+                          <Input
+                            placeholder="username"
+                            className="pl-8 h-10 sm:h-11 text-sm sm:text-base"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 {/* Email */}
                 <FormField
                   control={form.control}
@@ -456,6 +551,37 @@ export default function SignUpPage() {
                   )}
                 />
 
+                {/* OTP Field - shown after OTP is generated */}
+                {otpGenerated && (
+                  <FormField
+                    control={form.control}
+                    name="otp"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium">
+                          Enter OTP
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                              type="text"
+                              placeholder="Enter the OTP sent to your email"
+                              className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
+                              maxLength={6}
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Check your email for the verification code
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 {form.formState.errors.root && (
                   <div className="rounded-md bg-destructive/10 p-3">
                     <p className="text-sm text-destructive">
@@ -467,10 +593,16 @@ export default function SignUpPage() {
                 <Button
                   type="submit"
                   className="w-full h-10 sm:h-11 font-semibold text-sm sm:text-base"
-                  disabled={form.formState.isSubmitting}
+                  disabled={form.formState.isSubmitting || isGeneratingOtp}
                 >
-                  {form.formState.isSubmitting
-                    ? "Creating account..."
+                  {isGeneratingOtp
+                    ? "Sending OTP..."
+                    : otpGenerated
+                    ? form.formState.isSubmitting
+                      ? "Creating account..."
+                      : "Submit"
+                    : form.formState.isSubmitting
+                    ? "Sending OTP..."
                     : "Sign Up"}
                 </Button>
               </form>

@@ -15,6 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -155,15 +156,26 @@ export default function SignUpPage() {
       if (response.ok) {
         setOtpGenerated(true);
         form.clearErrors("root");
+        toast.success("OTP Sent", {
+          description: "Please check your email for the OTP code.",
+        });
       } else {
         const error = await response.json();
+        const errorMessage = error.message || "Failed to generate OTP. Please try again.";
         form.setError("root", {
-          message: error.message || "Failed to generate OTP. Please try again.",
+          message: errorMessage,
+        });
+        toast.error("Failed to Send OTP", {
+          description: errorMessage,
         });
       }
-    } catch {
+    } catch (error) {
+      const errorMessage = "An error occurred while generating OTP. Please try again.";
       form.setError("root", {
-        message: "An error occurred while generating OTP. Please try again.",
+        message: errorMessage,
+      });
+      toast.error("Error", {
+        description: errorMessage,
       });
     } finally {
       setIsGeneratingOtp(false);
@@ -216,16 +228,27 @@ export default function SignUpPage() {
 
       if (response.ok) {
         // Redirect to home page after successful sign up
+        toast.success("Account Created", {
+          description: "Your account has been created successfully!",
+        });
         navigate("/");
       } else {
         const error = await response.json();
+        const errorMessage = error.message || "Failed to sign up. Please try again.";
         form.setError("root", {
-          message: error.message || "Failed to sign up. Please try again.",
+          message: errorMessage,
+        });
+        toast.error("Sign Up Failed", {
+          description: errorMessage,
         });
       }
-    } catch {
+    } catch (error) {
+      const errorMessage = "An error occurred. Please try again.";
       form.setError("root", {
-        message: "An error occurred. Please try again.",
+        message: errorMessage,
+      });
+      toast.error("Error", {
+        description: errorMessage,
       });
     }
   };

@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail } from "lucide-react";
@@ -91,16 +92,27 @@ export default function SignInPage() {
         }
 
         // Redirect to home page after successful sign in
+        toast.success("Welcome Back!", {
+          description: "You have been signed in successfully.",
+        });
         navigate("/");
       } else {
         const error = await response.json();
+        const errorMessage = error.message || "Failed to sign in. Please try again.";
         form.setError("root", {
-          message: error.message || "Failed to sign in. Please try again.",
+          message: errorMessage,
+        });
+        toast.error("Sign In Failed", {
+          description: errorMessage,
         });
       }
-    } catch {
+    } catch (error) {
+      const errorMessage = "An error occurred. Please try again.";
       form.setError("root", {
-        message: "An error occurred. Please try again.",
+        message: errorMessage,
+      });
+      toast.error("Error", {
+        description: errorMessage,
       });
     }
   };

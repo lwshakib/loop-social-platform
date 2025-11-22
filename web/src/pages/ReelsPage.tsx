@@ -1,7 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/mode-toggle";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Heart, MessageCircle, Share, Bookmark } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
@@ -45,7 +43,6 @@ const formatTimeAgo = (date: string): string => {
 export default function ReelsPage() {
   const navigate = useNavigate();
   const { videoId } = useParams<{ videoId?: string }>();
-  const isMobile = useIsMobile();
   const [videos, setVideos] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
@@ -600,23 +597,10 @@ export default function ReelsPage() {
   }
 
   return (
-    <>
-      {/* Mobile Header with Theme Toggle */}
-      {isMobile && (
-        <header className="lg:hidden fixed top-0 left-0 right-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-          <div className="flex h-14 items-center justify-between px-3 sm:px-4">
-            <h1 className="text-lg sm:text-xl font-bold bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Reels
-            </h1>
-            <ModeToggle />
-          </div>
-        </header>
-      )}
-
-      <div
-        ref={containerRef}
-        className={`flex-1 h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth max-w-full mx-auto ${isMobile ? "pt-14" : ""}`}
-      >
+    <div
+      ref={containerRef}
+      className="flex-1 h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth max-w-full mx-auto"
+    >
       {videos.map((video) => (
         <div
           key={video.id}
@@ -671,12 +655,6 @@ export default function ReelsPage() {
                       {formatTimeAgo(video.createdAt)}
                     </p>
                   </div>
-                </div>
-              )}
-              {/* Theme Toggle - Bottom Left on Large Screens */}
-              {!isMobile && (
-                <div className="mt-4">
-                  <ModeToggle />
                 </div>
               )}
             </div>
@@ -738,7 +716,6 @@ export default function ReelsPage() {
           </div>
         </div>
       ))}
-      </div>
-    </>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+import { ModeToggle } from "@/components/mode-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -1097,29 +1098,16 @@ export default function Layout() {
                   Profile
                 </motion.span>
               </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 h-12 text-base cursor-pointer"
-                style={{ cursor: "pointer" }}
+              <div
+                className="w-full flex items-center justify-start gap-3 h-12"
+                style={{
+                  opacity: isSearchOpen || isNotificationsOpen ? 0 : 1,
+                  pointerEvents:
+                    isSearchOpen || isNotificationsOpen ? "none" : "auto",
+                }}
               >
-                <Menu className="h-6 w-6" />
-                <motion.span
-                  initial={false}
-                  animate={{
-                    opacity: isSearchOpen || isNotificationsOpen ? 0 : 1,
-                    width: isSearchOpen || isNotificationsOpen ? 0 : "auto",
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 35,
-                    mass: 0.6,
-                  }}
-                  style={{ overflow: "hidden", whiteSpace: "nowrap" }}
-                >
-                  More
-                </motion.span>
-              </Button>
+                <ModeToggle />
+              </div>
             </motion.nav>
           </motion.div>
 

@@ -606,61 +606,69 @@ export default function ReelsPage() {
           key={video.id}
           id={`video-${video.id}`}
           data-video-id={video.id}
-          className="h-screen w-full snap-start snap-always flex items-center justify-center bg-black relative"
+          className="h-screen w-full snap-start snap-always flex items-center justify-center bg-background relative"
         >
-          {/* Video */}
-          <video
-            ref={(el) => {
-              if (el) {
-                videoRefs.current.set(video.id, el);
-              } else {
-                videoRefs.current.delete(video.id);
-              }
-            }}
-            src={video.url}
-            className="w-full h-full object-contain"
-            loop
-            muted
-            playsInline
-            onPlay={() => {
-              // Pause other videos when this one plays
-              videoRefs.current.forEach((v, id) => {
-                if (id !== video.id) {
-                  v.pause();
-                }
-              });
-            }}
-          />
+          {/* Video Container - Full height with 9:16 aspect ratio */}
+          <div className="w-full h-full flex items-center justify-center relative">
+            <div className="h-full w-full max-w-[calc(100vh*9/16)] flex items-center justify-center relative">
+              <video
+                ref={(el) => {
+                  if (el) {
+                    videoRefs.current.set(video.id, el);
+                  } else {
+                    videoRefs.current.delete(video.id);
+                  }
+                }}
+                src={video.url}
+                className="h-full w-full object-cover"
+                style={{ aspectRatio: "9/16" }}
+                loop
+                muted
+                playsInline
+                onPlay={() => {
+                  // Pause other videos when this one plays
+                  videoRefs.current.forEach((v, id) => {
+                    if (id !== video.id) {
+                      v.pause();
+                    }
+                  });
+                }}
+              />
 
-          {/* Overlay with user info and actions */}
-          <div className="absolute inset-0 flex">
-            {/* Left side - User info and caption */}
-            <div className="flex-1 flex flex-col justify-end p-4 sm:p-6 pb-20 sm:pb-24">
-              {video.user && (
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 border-2 border-white">
-                    <AvatarImage
-                      src={video.user.profileImage || ""}
-                      alt={video.user.username || ""}
-                    />
-                    <AvatarFallback>
-                      {video.user.firstName?.[0] || video.user.username?.[0] || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-semibold text-white text-sm sm:text-base">
-                      @{video.user.username || "unknown"}
+              {/* Overlay with user info, caption, and actions - Inside video */}
+              <div className="absolute inset-0 flex">
+                {/* Left side - User info and caption */}
+                <div className="flex-1 flex flex-col justify-end p-4 sm:p-6 pb-20 sm:pb-24">
+                  {video.user && (
+                    <div className="flex items-center gap-3 mb-3">
+                      <Avatar className="h-10 w-10 border-2 border-white">
+                        <AvatarImage
+                          src={video.user.profileImage || ""}
+                          alt={video.user.username || ""}
+                        />
+                        <AvatarFallback>
+                          {video.user.firstName?.[0] || video.user.username?.[0] || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-white text-sm sm:text-base">
+                          @{video.user.username || "unknown"}
+                        </p>
+                        <p className="text-white/80 text-xs sm:text-sm">
+                          {formatTimeAgo(video.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {video.caption && (
+                    <p className="text-white text-sm sm:text-base mb-2 wrap-break-word">
+                      {video.caption}
                     </p>
-                    <p className="text-white/80 text-xs sm:text-sm">
-                      {formatTimeAgo(video.createdAt)}
-                    </p>
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Right side - Action buttons */}
-            <div className="flex flex-col justify-end items-center gap-4 sm:gap-6 p-4 sm:p-6 pb-20 sm:pb-24">
+                {/* Right side - Action buttons */}
+                <div className="flex flex-col justify-end items-center gap-4 sm:gap-6 p-4 sm:p-6 pb-20 sm:pb-24">
               <Button
                 variant="ghost"
                 size="icon"

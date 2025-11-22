@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { EmojiPicker } from "frimousse";
 import {
@@ -119,7 +120,7 @@ export default function Layout() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState(mockRecentSearches);
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const [notifications] = useState(mockNotifications);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
@@ -128,6 +129,8 @@ export default function Layout() {
     file: null as File | null,
     preview: null as string | null,
   });
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const isHomeActive =
     location.pathname === "/" && !isSearchOpen && !isNotificationsOpen;
@@ -266,24 +269,72 @@ export default function Layout() {
       let postType: "text" | "image" | "video" = "text";
       let postUrl = "";
 
+      // Upload file to Cloudinary if file exists
       if (createPostData.file) {
-        // Check file type
-        if (createPostData.file.type.startsWith("image/")) {
-          postType = "image";
-        } else if (createPostData.file.type.startsWith("video/")) {
-          postType = "video";
-        }
+        setIsUploading(true);
+        setUploadProgress(0);
 
-        // TODO: Upload file to get URL
-        // For now, we'll use the preview URL as a placeholder
-        // In production, you'll need to upload the file to a storage service (S3, Cloudinary, etc.)
-        postUrl = createPostData.preview || "";
+        try {
+          // Check file type
+          if (createPostData.file.type.startsWith("image/")) {
+            postType = "image";
+          } else if (createPostData.file.type.startsWith("video/")) {
+            postType = "video";
+          }
 
-        // If no preview URL, we can't create the post
-        if (!postUrl) {
-          alert(
-            "File upload is not yet implemented. Please provide a URL for the media."
+          // Get Cloudinary signature
+          const { data: signature } = await axios.get(
+            `${serverUrl}/cloudinary/signature`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+              params: {
+                folder: "loop-social-platform",
+              },
+            }
           );
+
+          // Determine upload endpoint based on file type
+          const uploadType = postType === "video" ? "video" : "image";
+          const uploadApi = `https://api.cloudinary.com/v1_1/${signature.cloudName}/${uploadType}/upload`;
+
+          // Create FormData
+          const formData = new FormData();
+          formData.append("file", createPostData.file);
+          formData.append("api_key", signature.apiKey);
+          formData.append("timestamp", signature.timestamp.toString());
+          formData.append("folder", signature.folder);
+          formData.append("signature", signature.signature);
+
+          // Upload to Cloudinary
+          const { data: uploadResponse } = await axios.post(
+            uploadApi,
+            formData,
+            {
+              onUploadProgress: (progressEvent) => {
+                if (progressEvent.total) {
+                  const progress = Math.round(
+                    (progressEvent.loaded * 100) / progressEvent.total
+                  );
+                  setUploadProgress(progress);
+                }
+              },
+            }
+          );
+
+          postUrl = uploadResponse.secure_url || uploadResponse.url;
+          setIsUploading(false);
+          setUploadProgress(0);
+        } catch (error) {
+          setIsUploading(false);
+          setUploadProgress(0);
+          console.error("Error uploading file:", error);
+          const errorMessage =
+            axios.isAxiosError(error) && error.response?.data?.message
+              ? error.response.data.message
+              : "Failed to upload file. Please try again.";
+          alert(errorMessage);
           return;
         }
       }
@@ -305,7 +356,7 @@ export default function Layout() {
         requestBody.url = postUrl;
       }
 
-      // Make API call
+      // Make API call to create post
       const response = await fetch(`${serverUrl}/posts`, {
         method: "POST",
         headers: {
@@ -327,6 +378,8 @@ export default function Layout() {
       }
     } catch (error) {
       console.error("Error creating post:", error);
+      setIsUploading(false);
+      setUploadProgress(0);
       alert("An error occurred while creating the post. Please try again.");
     }
   };
@@ -1388,16 +1441,40 @@ export default function Layout() {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCreateClose}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!createPostData.caption.trim()}
-            >
-              Create Post
-            </Button>
+          <DialogFooter className="flex-col gap-2">
+            {/* Upload Progress */}
+            {isUploading && (
+              <div className="w-full space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Uploading...</span>
+                  <span className="font-medium">{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="flex gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={handleCreateClose}
+                disabled={isUploading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={!createPostData.caption.trim() || isUploading}
+                className="flex-1"
+              >
+                {isUploading
+                  ? `Uploading... ${uploadProgress}%`
+                  : "Create Post"}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

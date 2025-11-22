@@ -3,6 +3,10 @@
  * All environment variables should be imported from this file
  */
 
+import dotenv from "dotenv";
+
+dotenv.config();
+
 export const envs = {
   // Node Environment
   NODE_ENV: process.env.NODE_ENV || "development",

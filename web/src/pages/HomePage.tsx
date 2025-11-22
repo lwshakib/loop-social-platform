@@ -1,6 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Bookmark,
   ChevronLeft,
@@ -8,7 +7,8 @@ import {
   Heart,
   MessageCircle,
   MoreHorizontal,
-  Send,
+  Repeat2,
+  Share,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -16,36 +16,43 @@ import { useEffect, useRef, useState } from "react";
 const mockPosts = [
   {
     id: 1,
-    username: "johndoe",
-    userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-    postImage: "https://picsum.photos/600/600?random=1",
-    likes: 1234,
-    caption: "Beautiful sunset today! 🌅 #sunset #nature",
-    comments: [
-      { username: "janedoe", text: "Amazing!" },
-      { username: "bob", text: "Love this!" },
-    ],
-    timeAgo: "2 hours ago",
+    username: "RealChiefPriest",
+    displayName: "Chief Priest",
+    userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ChiefPriest",
+    postImage: "https://picsum.photos/600/400?random=1",
+    content:
+      "I want to celebrate the 🐐 Davido's 33rd birthday by giving out 33 million naira to all my followers. Just like this post ❤️ and drop your account number below 👇 #DavidoAt33",
+    likes: 17000,
+    comments: 5000,
+    retweets: 1200,
+    views: 548000,
+    timeAgo: "21h",
   },
   {
     id: 2,
-    username: "janedoe",
-    userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
-    postImage: "https://picsum.photos/600/600?random=2",
-    likes: 567,
-    caption: "Coffee and code ☕️💻",
-    comments: [{ username: "johndoe", text: "Same here!" }],
-    timeAgo: "5 hours ago",
+    username: "johndoe",
+    displayName: "John Doe",
+    userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+    postImage: "https://picsum.photos/600/400?random=2",
+    content: "Beautiful sunset today! 🌅 #sunset #nature",
+    likes: 1234,
+    comments: 89,
+    retweets: 45,
+    views: 12000,
+    timeAgo: "2h",
   },
   {
     id: 3,
-    username: "bob",
-    userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
-    postImage: "https://picsum.photos/600/600?random=3",
-    likes: 890,
-    caption: "Weekend vibes 🎉",
-    comments: [],
-    timeAgo: "1 day ago",
+    username: "janedoe",
+    displayName: "Jane Doe",
+    userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
+    postImage: null,
+    content: "Coffee and code ☕️💻 Perfect way to start the day!",
+    likes: 567,
+    comments: 23,
+    retweets: 12,
+    views: 8900,
+    timeAgo: "5h",
   },
 ];
 
@@ -147,12 +154,12 @@ export default function HomePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 lg:px-8">
+    <div className="max-w-6xl mx-auto px-4 py-6 lg:px-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Feed */}
-        <div className="lg:col-span-2 space-y-6 max-w-2xl">
+        <div className="lg:col-span-2 space-y-6">
           {/* Stories Section */}
-          <div className="bg-card border rounded-lg p-4 overflow-hidden relative">
+          <div className="bg-card p-4 overflow-hidden relative">
             {/* Left Arrow */}
             {canScrollLeft && (
               <Button
@@ -207,114 +214,119 @@ export default function HomePage() {
           {mockPosts.map((post) => (
             <div
               key={post.id}
-              className="bg-card border rounded-lg overflow-hidden"
+              className="bg-card border-b hover:bg-accent/5 transition-colors cursor-pointer"
             >
-              {/* Post Header */}
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
+              <div className="p-4">
+                {/* Post Header */}
+                <div className="flex items-start gap-3 mb-3">
+                  <Avatar className="h-12 w-12 shrink-0">
                     <AvatarImage src={post.userAvatar} alt={post.username} />
-                    <AvatarFallback>{post.username[0]}</AvatarFallback>
+                    <AvatarFallback>
+                      {(post.displayName || post.username)[0].toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="font-semibold text-sm">{post.username}</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-5 w-5" />
-                </Button>
-              </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-sm hover:underline">
+                        {post.displayName || post.username}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        @{post.username}
+                      </span>
+                      <span className="text-sm text-muted-foreground">·</span>
+                      <span className="text-sm text-muted-foreground hover:underline">
+                        {post.timeAgo}
+                      </span>
+                    </div>
 
-              {/* Post Image */}
-              <div className="aspect-square w-full bg-muted">
-                <img
-                  src={post.postImage}
-                  alt={post.caption}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+                    {/* Post Content */}
+                    <div className="text-sm mb-3 whitespace-pre-wrap wrap-break-word">
+                      {post.content}
+                    </div>
 
-              {/* Post Actions */}
-              <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => toggleLike(post.id)}
-                      className={likedPosts.has(post.id) ? "text-red-500" : ""}
-                    >
-                      <Heart
-                        className={`h-6 w-6 ${
-                          likedPosts.has(post.id) ? "fill-current" : ""
+                    {/* Post Image */}
+                    {post.postImage && (
+                      <div className="rounded-2xl overflow-hidden mb-3 border border-border">
+                        <img
+                          src={post.postImage}
+                          alt="Post"
+                          className="w-full h-auto object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between max-w-md">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full"
+                      >
+                        <MessageCircle className="h-5 w-5 mr-2" />
+                        <span className="text-sm">
+                          {post.comments.toLocaleString()}
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-green-500 hover:bg-green-500/10 rounded-full"
+                      >
+                        <Repeat2 className="h-5 w-5 mr-2" />
+                        <span className="text-sm">
+                          {post.retweets.toLocaleString()}
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleLike(post.id)}
+                        className={`rounded-full ${
+                          likedPosts.has(post.id)
+                            ? "text-red-500 hover:bg-red-500/10"
+                            : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                         }`}
-                      />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <MessageCircle className="h-6 w-6" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Send className="h-6 w-6" />
-                    </Button>
+                      >
+                        <Heart
+                          className={`h-5 w-5 mr-2 ${
+                            likedPosts.has(post.id) ? "fill-current" : ""
+                          }`}
+                        />
+                        <span className="text-sm">
+                          {post.likes.toLocaleString()}
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full"
+                      >
+                        <Share className="h-5 w-5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleSave(post.id)}
+                        className={`rounded-full ${
+                          savedPosts.has(post.id)
+                            ? "text-primary hover:bg-primary/10"
+                            : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        }`}
+                      >
+                        <Bookmark
+                          className={`h-5 w-5 ${
+                            savedPosts.has(post.id) ? "fill-current" : ""
+                          }`}
+                        />
+                      </Button>
+                    </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => toggleSave(post.id)}
-                    className={savedPosts.has(post.id) ? "text-primary" : ""}
+                    className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
                   >
-                    <Bookmark
-                      className={`h-6 w-6 ${
-                        savedPosts.has(post.id) ? "fill-current" : ""
-                      }`}
-                    />
-                  </Button>
-                </div>
-
-                {/* Likes Count */}
-                <p className="font-semibold text-sm">
-                  {post.likes.toLocaleString()} likes
-                </p>
-
-                {/* Caption */}
-                <div className="text-sm">
-                  <span className="font-semibold">{post.username}</span>{" "}
-                  <span>{post.caption}</span>
-                </div>
-
-                {/* View Comments */}
-                {post.comments.length > 0 && (
-                  <button className="text-sm text-muted-foreground">
-                    View all {post.comments.length} comments
-                  </button>
-                )}
-
-                {/* Comments Preview */}
-                {post.comments.slice(0, 2).map((comment, idx) => (
-                  <div key={idx} className="text-sm">
-                    <span className="font-semibold">{comment.username}</span>{" "}
-                    <span>{comment.text}</span>
-                  </div>
-                ))}
-
-                {/* Time Ago */}
-                <p className="text-xs text-muted-foreground uppercase">
-                  {post.timeAgo}
-                </p>
-
-                {/* Add Comment */}
-                <div className="flex items-center gap-2 pt-2 border-t">
-                  <Input
-                    type="text"
-                    placeholder="Add a comment..."
-                    className="border-0 bg-transparent focus-visible:ring-0 text-sm h-8 flex-1"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-primary px-2"
-                  >
-                    Post
+                    <MoreHorizontal className="h-5 w-5" />
                   </Button>
                 </div>
               </div>

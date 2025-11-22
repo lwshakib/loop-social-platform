@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import { ZodError } from "zod";
 import logger from "../logger/winston.logger.js";
 import { Otp } from "../models/otp.model";
@@ -227,5 +228,82 @@ export const sendOtpEmail = asyncHandler(
     await sendOTPEmail(email, otp);
 
     res.status(200).json(new ApiResponse(200, {}, "OTP sent to email"));
+  }
+);
+
+export const validateAccessToken = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Try to get token from Authorization header first, then from cookies
+    const accessToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies.accessToken;
+
+    if (!accessToken) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    try {
+      const decoded = jwt.verify(
+        accessToken,
+        process.env.ACCESS_TOKEN_SECRET || ""
+      ) as { id: string };
+
+      const user = await User.findById(decoded.id);
+
+      if (!user) {
+        throw new ApiError(401, "Unauthorized");
+      }
+
+      res
+        .status(200)
+        .json(new ApiResponse(200, { valid: true }, "Access token is valid"));
+    } catch (error) {
+      throw new ApiError(401, "Unauthorized");
+    }
+  }
+);
+
+export const refreshAccessToken = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET || ""
+      );
+    } catch (error) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    // Check if the refresh token matches the one stored in the database
+    if (user.refreshToken !== refreshToken) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    // Generate new access token
+    const accessToken = (user as any).generateAccessToken();
+
+    // Return the new access token
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken },
+          "Access token refreshed successfully"
+        )
+      );
   }
 );

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserStore } from "@/store/userStore";
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
@@ -115,9 +116,109 @@ const mockNotifications = [
   },
 ];
 
+// Mobile Menu Component - defined outside to avoid recreation on each render
+type MobileMenuProps = {
+  navigate: (path: string) => void;
+  setIsSearchOpen: (open: boolean) => void;
+  setIsNotificationsOpen: (open: boolean) => void;
+  setIsCreateDialogOpen: (open: boolean) => void;
+  isHomeActive: boolean;
+  isReelsActive: boolean;
+  isSearchOpen: boolean;
+  locationPathname: string;
+  userData: { username?: string } | null;
+  getAvatarUrl: () => string;
+  getAvatarFallback: () => string;
+  handleSearchClick: () => void;
+};
+
+const MobileMenu = ({
+  navigate,
+  setIsSearchOpen,
+  setIsNotificationsOpen,
+  setIsCreateDialogOpen,
+  isHomeActive,
+  isReelsActive,
+  isSearchOpen,
+  locationPathname,
+  userData,
+  getAvatarUrl,
+  getAvatarFallback,
+  handleSearchClick,
+}: MobileMenuProps) => (
+  <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t z-50">
+    <div className="flex justify-around items-center h-16">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          navigate("/");
+          setIsSearchOpen(false);
+          setIsNotificationsOpen(false);
+        }}
+        className={`${
+          isHomeActive ? "text-foreground" : "text-muted-foreground"
+        }`}
+      >
+        <Home className="h-6 w-6" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleSearchClick}
+        className={isSearchOpen ? "text-foreground" : "text-muted-foreground"}
+      >
+        <Search className="h-6 w-6" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setIsCreateDialogOpen(true)}
+        className="text-muted-foreground"
+      >
+        <PlusSquare className="h-6 w-6" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          navigate("/reels");
+          setIsSearchOpen(false);
+          setIsNotificationsOpen(false);
+        }}
+        className={`${
+          isReelsActive ? "text-foreground" : "text-muted-foreground"
+        }`}
+      >
+        <Play className="h-6 w-6" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => {
+          navigate(`/${userData?.username}`);
+          setIsSearchOpen(false);
+          setIsNotificationsOpen(false);
+        }}
+        className={`${
+          locationPathname === `/${userData?.username}`
+            ? "text-foreground"
+            : "text-muted-foreground"
+        }`}
+      >
+        <Avatar className="h-6 w-6">
+          <AvatarImage src={getAvatarUrl()} />
+          <AvatarFallback>{getAvatarFallback()}</AvatarFallback>
+        </Avatar>
+      </Button>
+    </div>
+  </div>
+);
+
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -484,16 +585,32 @@ export default function Layout() {
   }, [isEmojiPickerOpen]);
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left Sidebar Navigation */}
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row w-full overflow-x-hidden">
+      {/* Mobile Header */}
+      <MobileMenu
+        navigate={navigate}
+        setIsSearchOpen={setIsSearchOpen}
+        setIsNotificationsOpen={setIsNotificationsOpen}
+        setIsCreateDialogOpen={setIsCreateDialogOpen}
+        isHomeActive={isHomeActive}
+        isReelsActive={isReelsActive}
+        isSearchOpen={isSearchOpen}
+        locationPathname={location.pathname}
+        userData={userData}
+        getAvatarUrl={getAvatarUrl}
+        getAvatarFallback={getAvatarFallback}
+        handleSearchClick={handleSearchClick}
+      />
+
+      {/* Left Sidebar Navigation - Desktop */}
       <motion.aside
-        className={`hidden lg:flex border-r sticky top-0 h-screen z-[70] bg-background transition-all ${
+        className={`hidden lg:flex border-r sticky top-0 h-screen z-[70] bg-background transition-all shrink-0 ${
           isCreateDialogOpen ? "blur-sm opacity-75 pointer-events-none" : ""
         }`}
         style={{ pointerEvents: isCreateDialogOpen ? "none" : "auto" }}
         initial={false}
         animate={{
-          width: isSearchOpen || isNotificationsOpen ? 384 : 256, // w-96 = 384px, w-64 = 256px
+          width: isSearchOpen || isNotificationsOpen ? 384 : 256,
         }}
         transition={{
           type: "spring",
@@ -705,7 +822,7 @@ export default function Layout() {
                 mass: 0.6,
               }}
             >
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 Loop
               </h1>
             </motion.div>
@@ -1030,7 +1147,7 @@ export default function Layout() {
           >
             {/* Search Header */}
             <motion.div
-              className="mb-8 flex items-center justify-between flex-shrink-0"
+              className="mb-8 flex items-center justify-between shrink-0"
               initial={false}
               animate={{
                 opacity: isSearchOpen && !isNotificationsOpen ? 1 : 0,
@@ -1130,7 +1247,7 @@ export default function Layout() {
                                 {search.username}
                               </p>
                               {search.isVerified && (
-                                <Check className="h-4 w-4 text-blue-500 fill-current flex-shrink-0" />
+                                <Check className="h-4 w-4 text-blue-500 fill-current shrink-0" />
                               )}
                             </div>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -1195,7 +1312,7 @@ export default function Layout() {
           >
             {/* Notifications Header */}
             <motion.div
-              className="p-4 pb-3 flex items-center justify-between flex-shrink-0 border-b"
+              className="p-4 pb-3 flex items-center justify-between shrink-0 border-b"
               initial={false}
               animate={{
                 opacity: isNotificationsOpen && !isSearchOpen ? 1 : 0,
@@ -1242,7 +1359,7 @@ export default function Layout() {
                         !notification.isRead ? "bg-accent/50" : ""
                       }`}
                     >
-                      <Avatar className="h-10 w-10 flex-shrink-0">
+                      <Avatar className="h-10 w-10 shrink-0">
                         <AvatarImage
                           src={notification.avatar}
                           alt={notification.username}
@@ -1272,7 +1389,7 @@ export default function Layout() {
                             </p>
                           </div>
                           {notification.postImage && (
-                            <div className="flex-shrink-0">
+                            <div className="shrink-0">
                               <img
                                 src={notification.postImage}
                                 alt="Post"
@@ -1283,7 +1400,7 @@ export default function Layout() {
                         </div>
                       </div>
                       {!notification.isRead && (
-                        <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />
+                        <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2" />
                       )}
                     </div>
                   ))}
@@ -1296,61 +1413,362 @@ export default function Layout() {
             </motion.div>
           </motion.div>
         </div>
+
+        {/* Search Dialog - Mobile only */}
+        {isMobile && (
+          <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+            <DialogContent className="w-full h-full sm:h-auto sm:max-w-md sm:rounded-lg p-0">
+              <DialogHeader className="px-4 sm:px-6 py-4 border-b">
+                <DialogTitle className="text-lg font-semibold">
+                  Search
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="flex flex-col h-full sm:max-h-[80vh]">
+                {/* Search Input */}
+                <div className="px-4 sm:px-6 py-4 border-b">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 pr-9 h-10 bg-muted/50"
+                      autoFocus
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={handleClearSearch}
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                      >
+                        <X className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Search Results */}
+                <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+                  {/* Recent Searches */}
+                  {recentSearches.length > 0 && !searchQuery && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="font-semibold text-sm">Recent</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleClearRecent}
+                          className="text-primary text-xs h-auto py-1"
+                        >
+                          Clear all
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {recentSearches.map((search) => (
+                          <div
+                            key={search.id}
+                            className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer group"
+                            onClick={() => {
+                              navigate(`/${search.username}`);
+                              setIsSearchOpen(false);
+                            }}
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage
+                                  src={search.avatar}
+                                  alt={search.username}
+                                />
+                                <AvatarFallback>
+                                  {search.username[0].toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1">
+                                  <p className="font-semibold text-sm truncate">
+                                    {search.username}
+                                  </p>
+                                  {search.isVerified && (
+                                    <Check className="h-4 w-4 text-blue-500 fill-current shrink-0" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <p className="truncate">{search.fullName}</p>
+                                  <span>·</span>
+                                  <p>{search.followers} followers</p>
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveRecent(search.id);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                            >
+                              <X className="h-4 w-4 text-muted-foreground" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Search Results (when typing) */}
+                  {searchQuery && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p className="text-sm">No results found</p>
+                    </div>
+                  )}
+
+                  {/* Empty State */}
+                  {recentSearches.length === 0 && !searchQuery && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p className="text-sm">No recent searches</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Notifications Dialog - Mobile only */}
+        {isMobile && (
+          <Dialog
+            open={isNotificationsOpen}
+            onOpenChange={setIsNotificationsOpen}
+          >
+            <DialogContent className="w-full h-full sm:h-auto sm:max-w-md sm:rounded-lg p-0">
+              <DialogHeader className="px-4 sm:px-6 py-4 border-b">
+                <DialogTitle className="text-lg font-semibold">
+                  Notifications
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className="flex-1 overflow-y-auto min-h-0">
+                {notifications.length > 0 ? (
+                  <div className="p-4 sm:p-6 space-y-2">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`flex items-start gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors ${
+                          !notification.isRead ? "bg-accent/50" : ""
+                        }`}
+                        onClick={() => {
+                          if (notification.postImage) {
+                            // Navigate to post or show post preview
+                            setIsNotificationsOpen(false);
+                          } else if (notification.type === "follow") {
+                            navigate(`/${notification.username}`);
+                            setIsNotificationsOpen(false);
+                          }
+                        }}
+                      >
+                        <Avatar className="h-10 w-10 shrink-0">
+                          <AvatarImage
+                            src={notification.avatar}
+                            alt={notification.username}
+                          />
+                          <AvatarFallback>
+                            {notification.username[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="text-sm">
+                                <span className="font-semibold">
+                                  {notification.username}
+                                </span>{" "}
+                                <span className="text-muted-foreground">
+                                  {notification.action}
+                                </span>
+                              </p>
+                              {notification.comment && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  "{notification.comment}"
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {notification.time}
+                              </p>
+                            </div>
+                            {notification.postImage && (
+                              <div className="shrink-0">
+                                <img
+                                  src={notification.postImage}
+                                  alt="Post"
+                                  className="w-12 h-12 rounded object-cover"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {!notification.isRead && (
+                          <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-sm">No notifications</p>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </motion.aside>
 
       {/* Mobile Top Bar */}
-      <header className="lg:hidden sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-        <div className="flex h-14 items-center justify-between px-4">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+      <header className="lg:hidden sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
+        <div className="flex h-14 items-center justify-between px-3 sm:px-4">
+          <h1 className="text-lg sm:text-xl font-bold bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             Loop
           </h1>
-          <Button variant="ghost" size="icon">
-            <Send className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 sm:h-10 sm:w-10"
+              onClick={handleSearchClick}
+            >
+              <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 sm:h-10 sm:w-10"
+              onClick={handleCreateClick}
+            >
+              <PlusSquare className="h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 transition-all ${
-          isCreateDialogOpen ? "blur-sm opacity-75 pointer-events-none" : ""
-        }`}
+        className={`flex-1 transition-all pb-14 sm:pb-16 lg:pb-0 w-full min-w-0 max-w-full overflow-x-hidden relative left-0`}
+        style={{
+          ...(isCreateDialogOpen && {
+            filter: "blur(4px)",
+            opacity: 0.75,
+            pointerEvents: "none" as const,
+          }),
+        }}
       >
-        <Outlet />
+        <div className="w-full max-w-full min-h-full overflow-y-auto overflow-x-hidden">
+          <Outlet />
+        </div>
       </div>
 
-      {/* Bottom Messages Bar (Mobile) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 border-t bg-background p-2">
-        <Button variant="ghost" className="w-full justify-start gap-2">
-          <Send className="h-5 w-5" />
-          <span>Messages</span>
-        </Button>
-      </div>
+      {/* Bottom Navigation Bar (Mobile) */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80 z-50 safe-area-inset-bottom">
+        <div className="flex items-center justify-around h-14 sm:h-16 px-1 sm:px-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`flex-1 h-full max-w-[20%] ${
+              isHomeActive ? "text-primary" : ""
+            }`}
+            onClick={handleHomeClick}
+          >
+            <Home
+              className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                isHomeActive ? "fill-current" : ""
+              }`}
+            />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`flex-1 h-full max-w-[20%] ${
+              isSearchOpen ? "text-primary" : ""
+            }`}
+            onClick={handleSearchClick}
+          >
+            <Search
+              className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                isSearchOpen ? "fill-current" : ""
+              }`}
+            />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-1 h-full max-w-[20%]"
+            onClick={handleCreateClick}
+          >
+            <PlusSquare className="h-5 w-5 sm:h-6 sm:w-6" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`flex-1 h-full max-w-[20%] ${
+              isNotificationsOpen ? "text-primary" : ""
+            }`}
+            onClick={handleNotificationsClick}
+          >
+            <Bell
+              className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                isNotificationsOpen ? "fill-current" : ""
+              }`}
+            />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-1 h-full max-w-[20%]"
+            onClick={() => {
+              if (userData?.username) {
+                navigate(`/@${userData.username}`);
+              } else {
+                navigate("/profile");
+              }
+            }}
+          >
+            <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+              <AvatarImage src={getAvatarUrl()} />
+              <AvatarFallback className="text-[10px] sm:text-xs">
+                {getAvatarFallback()}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </div>
+      </nav>
+
+      {/* Add padding bottom for mobile navigation */}
+      <div className="lg:hidden h-14 sm:h-16" />
 
       {/* Create Post Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh]">
+        <DialogContent className="sm:max-w-[900px] max-w-[95vw] max-h-[90vh] p-3 sm:p-4 md:p-6">
           <DialogHeader>
             <DialogTitle>Create New Post</DialogTitle>
             <DialogDescription>
               Share your thoughts, images, or videos with the community.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-6 py-4 min-h-[500px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6 py-3 sm:py-4 min-h-[300px] sm:min-h-[400px] md:min-h-[500px]">
             {/* Left Side - Drag and Drop Field */}
-            <div className="space-y-2 flex flex-col">
-              <Label>Media</Label>
+            <div className="space-y-2 flex flex-col order-2 sm:order-1">
+              <Label className="text-sm sm:text-base">Media</Label>
               <div
-                className="border-2 border-dashed rounded-lg flex-1 flex items-center justify-center cursor-pointer hover:border-primary transition-colors min-h-[400px]"
+                className="border-2 border-dashed rounded-lg flex-1 flex items-center justify-center cursor-pointer hover:border-primary transition-colors min-h-[250px] sm:min-h-[300px] md:min-h-[400px]"
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
               >
                 {createPostData.preview ? (
-                  <div className="space-y-4 w-full h-full flex flex-col items-center justify-center p-4">
+                  <div className="space-y-3 sm:space-y-4 w-full h-full flex flex-col items-center justify-center p-3 sm:p-4">
                     <img
                       src={createPostData.preview}
                       alt="Preview"
-                      className="max-h-[400px] max-w-full rounded-lg object-contain"
+                      className="max-h-[250px] sm:max-h-[300px] md:max-h-[400px] max-w-full rounded-lg object-contain"
                     />
                     <div className="flex items-center justify-center gap-2">
                       <Button
@@ -1370,13 +1788,13 @@ export default function Layout() {
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-4 text-center p-8">
-                    <Upload className="h-16 w-16 mx-auto text-muted-foreground" />
+                  <div className="space-y-3 sm:space-y-4 text-center p-4 sm:p-6 md:p-8">
+                    <Upload className="h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 mx-auto text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium">
+                      <p className="text-xs sm:text-sm font-medium">
                         Drag and drop an image here, or click to browse
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                         Supports: JPG, PNG, GIF, MP4
                       </p>
                     </div>
@@ -1403,14 +1821,18 @@ export default function Layout() {
             </div>
 
             {/* Right Side - Caption Field */}
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full order-1 sm:order-2 min-h-[250px] sm:min-h-[300px] md:min-h-0">
               {/* Profile Section */}
-              <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-                <Avatar className="h-10 w-10">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 pb-3 sm:pb-4 border-b">
+                <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                   <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=You" />
-                  <AvatarFallback>YO</AvatarFallback>
+                  <AvatarFallback className="text-xs sm:text-sm">
+                    YO
+                  </AvatarFallback>
                 </Avatar>
-                <span className="font-semibold text-sm">shakibthedev</span>
+                <span className="font-semibold text-xs sm:text-sm truncate">
+                  shakibthedev
+                </span>
               </div>
 
               {/* Caption Textarea Container */}
@@ -1426,27 +1848,27 @@ export default function Layout() {
                     }))
                   }
                   maxLength={2200}
-                  className="flex-1 w-full bg-transparent px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none resize-none"
+                  className="flex-1 w-full bg-transparent px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm placeholder:text-muted-foreground focus-visible:outline-none resize-none"
                 />
 
                 {/* Bottom Bar */}
-                <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/50 relative">
+                <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-t bg-muted/50 relative">
                   {/* Emoji Button */}
                   <div className="relative">
                     <Button
                       ref={emojiButtonRef}
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-7 w-7 sm:h-8 sm:w-8"
                       onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
                     >
-                      <Smile className="h-5 w-5" />
+                      <Smile className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
 
                     {/* Emoji Picker */}
                     {isEmojiPickerOpen && (
                       <div
-                        className="absolute bottom-full left-0 mb-2 z-50 bg-background border rounded-lg shadow-lg"
+                        className="absolute bottom-full left-0 mb-2 z-50 bg-background border rounded-lg shadow-lg w-[280px] sm:w-[320px] max-w-[calc(100vw-2rem)]"
                         data-emoji-picker
                       >
                         <EmojiPicker.Root
@@ -1467,15 +1889,15 @@ export default function Layout() {
                           className="w-full"
                         >
                           {/* Search Bar */}
-                          <div className="p-3 border-b">
+                          <div className="p-2 sm:p-3 border-b">
                             <EmojiPicker.Search
                               placeholder="Search..."
-                              className="w-full px-3 py-2 border rounded-md text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                              className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border rounded-md text-xs sm:text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                             />
                           </div>
 
                           {/* Emoji Viewport */}
-                          <EmojiPicker.Viewport className="h-64 overflow-y-auto">
+                          <EmojiPicker.Viewport className="h-48 sm:h-64 overflow-y-auto">
                             <EmojiPicker.Loading className="text-center py-8 text-muted-foreground text-sm">
                               Loading…
                             </EmojiPicker.Loading>
@@ -1520,41 +1942,42 @@ export default function Layout() {
                   </div>
 
                   {/* Character Count */}
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[10px] sm:text-xs text-muted-foreground">
                     {createPostData.caption.length.toLocaleString()}/2,200
                   </span>
                 </div>
               </div>
             </div>
           </div>
-          <DialogFooter className="flex-col gap-2">
+          <DialogFooter className="flex-col gap-2 sm:gap-3">
             {/* Upload Progress */}
             {isUploading && (
               <div className="w-full space-y-2">
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
                   <span className="text-muted-foreground">Uploading...</span>
                   <span className="font-medium">{uploadProgress}%</span>
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-1.5 sm:h-2">
                   <div
-                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    className="bg-primary h-1.5 sm:h-2 rounded-full transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
               </div>
             )}
-            <div className="flex gap-2 w-full">
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
               <Button
                 variant="outline"
                 onClick={handleCreateClose}
                 disabled={isUploading}
+                className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={!createPostData.caption.trim() || isUploading}
-                className="flex-1"
+                className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
               >
                 {isUploading
                   ? `Uploading... ${uploadProgress}%`

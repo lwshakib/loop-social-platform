@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const likeSchema = new mongoose.Schema(
+const savedSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -23,13 +23,14 @@ const likeSchema = new mongoose.Schema(
   }
 );
 
-// Compound index to ensure a user can only like a post once
-likeSchema.index({ userId: 1, postId: 1 }, { unique: true });
+// Compound index to ensure a user can only save a post once
+savedSchema.index({ userId: 1, postId: 1 }, { unique: true });
 
 // Index for better query performance
-likeSchema.index({ postId: 1, createdAt: -1 });
-likeSchema.index({ userId: 1, createdAt: -1 });
+savedSchema.index({ postId: 1, createdAt: -1 });
+savedSchema.index({ userId: 1, createdAt: -1 });
 
-const Like = mongoose.model("Like", likeSchema);
+const Saved = mongoose.model("Saved", savedSchema);
 
-export default Like;
+export default Saved;
+

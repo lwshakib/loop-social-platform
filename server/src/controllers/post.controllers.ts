@@ -2,6 +2,9 @@ import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 import logger from "../logger/winston.logger.js";
 import Post from "../models/post.model.js";
+import Like from "../models/like.model.js";
+import Comment from "../models/comment.model.js";
+import Saved from "../models/saved.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -9,6 +12,7 @@ import {
   createPostSchema,
   type CreatePostInput,
 } from "../validators/post.validators.js";
+import mongoose from "mongoose";
 
 /**
  * Create a new post
@@ -115,5 +119,464 @@ export const getPosts = asyncHandler(
         "Posts fetched successfully"
       )
     );
+  }
+);
+
+/**
+ * Like a post
+ * POST /api/posts/:postId/like
+ * Requires authentication
+ */
+export const likePost = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = (req as any).user;
+    if (!user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { postId } = req.params;
+
+    if (!postId || !mongoose.Types.ObjectId.isValid(postId)) {
+      throw new ApiError(400, "Invalid post ID");
+    }
+
+    // Check if post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+
+    // Check if already liked
+    const existingLike = await Like.findOne({
+      userId: user._id,
+      postId: postId,
+    });
+
+    if (existingLike) {
+      throw new ApiError(400, "Post already liked");
+    }
+
+    // Create like
+    const like = await Like.create({
+      userId: user._id,
+      postId: postId,
+    });
+
+    res
+      .status(201)
+      .json(new ApiResponse(201, like, "Post liked successfully"));
+  }
+);
+
+/**
+ * Unlike a post
+ * DELETE /api/posts/:postId/like
+ * Requires authentication
+ */
+export const unlikePost = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = (req as any).user;
+    if (!user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { postId } = req.params;
+
+    if (!postId || !mongoose.Types.ObjectId.isValid(postId)) {
+      throw new ApiError(400, "Invalid post ID");
+    }
+
+    // Check if post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+
+    // Remove like
+    const deletedLike = await Like.findOneAndDelete({
+      userId: user._id,
+      postId: postId,
+    });
+
+    if (!deletedLike) {
+      throw new ApiError(404, "Like not found");
+    }
+
+    res.status(200).json(new ApiResponse(200, null, "Post unliked successfully"));
+  }
+);
+
+/**
+ * Get comments for a post
+ * GET /api/posts/:postId/comments
+ * Requires authentication
+ */
+export const getPostComments = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = (req as any).user;
+    if (!user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { postId } = req.params;
+
+    if (!postId || !mongoose.Types.ObjectId.isValid(postId)) {
+      throw new ApiError(400, "Invalid post ID");
+    }
+
+    // Check if post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+
+    // Get pagination parameters
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    // Fetch comments (only top-level comments)
+    const comments = await Comment.find({
+      postId: postId,
+      parentId: { $exists: false },
+    })
+      .populate("userId", "firstName surName username profileImage")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Transform comments to match frontend expectations
+    // Only return reply count, not the actual replies (for performance)
+    const transformedComments = await Promise.all(
+      comments.map(async (comment: any) => {
+        const populatedUser = comment.userId as any;
+        
+        // Get reply count (only direct replies, not nested)
+        const replyCount = await Comment.countDocuments({
+          postId: postId,
+          parentId: comment._id,
+        });
+
+        return {
+          id: comment._id.toString(),
+          userId: populatedUser?._id?.toString() || "",
+          user: {
+            id: populatedUser?._id?.toString() || "",
+            firstName: populatedUser?.firstName || "",
+            surName: populatedUser?.surName || "",
+            username: populatedUser?.username || "",
+            profileImage: populatedUser?.profileImage || "",
+          },
+          comment: comment.comment,
+          postId: comment.postId.toString(),
+          parentId: comment.parentId ? comment.parentId.toString() : undefined,
+          createdAt: comment.createdAt.toISOString(),
+          replyCount: replyCount,
+        };
+      })
+    );
+
+    // Get total count
+    const total = await Comment.countDocuments({
+      postId: postId,
+      parentId: { $exists: false },
+    });
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          comments: transformedComments,
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit),
+          },
+        },
+        "Comments fetched successfully"
+      )
+    );
+  }
+);
+
+/**
+ * Create a comment on a post
+ * POST /api/posts/:postId/comments
+ * Requires authentication
+ */
+export const createComment = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = (req as any).user;
+    if (!user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { postId } = req.params;
+    const { comment, parentId } = req.body;
+
+    if (!postId || !mongoose.Types.ObjectId.isValid(postId)) {
+      throw new ApiError(400, "Invalid post ID");
+    }
+
+    // Check if post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+
+    // If parentId is provided, validate it
+    if (parentId && typeof parentId === "string") {
+      if (!mongoose.Types.ObjectId.isValid(parentId)) {
+        throw new ApiError(400, "Invalid parent comment ID");
+      }
+      const parentComment = await Comment.findById(parentId);
+      if (!parentComment) {
+        throw new ApiError(404, "Parent comment not found");
+      }
+    }
+
+    // Create comment
+    const newComment = await Comment.create({
+      userId: user._id,
+      postId: postId,
+      comment: comment,
+      ...(parentId && typeof parentId === "string" ? { parentId } : {}),
+    });
+
+    // Populate user data
+    await newComment.populate("userId", "firstName surName username profileImage");
+
+    // Transform comment to match frontend expectations
+    const populatedUser = newComment.userId as any;
+    const transformedComment = {
+      id: newComment._id.toString(),
+      userId: populatedUser._id.toString(),
+      user: {
+        id: populatedUser._id.toString(),
+        firstName: populatedUser.firstName || "",
+        surName: populatedUser.surName || "",
+        username: populatedUser.username || "",
+        profileImage: populatedUser.profileImage || "",
+      },
+      comment: newComment.comment,
+      postId: newComment.postId.toString(),
+      parentId: newComment.parentId ? newComment.parentId.toString() : undefined,
+      createdAt: newComment.createdAt.toISOString(),
+    };
+
+    res
+      .status(201)
+      .json(new ApiResponse(201, transformedComment, "Comment created successfully"));
+  }
+);
+
+// Get replies for a specific comment
+export const getCommentReplies = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { postId, commentId } = req.params;
+
+    if (!postId || !mongoose.Types.ObjectId.isValid(postId)) {
+      throw new ApiError(400, "Invalid post ID");
+    }
+
+    if (!commentId || !mongoose.Types.ObjectId.isValid(commentId)) {
+      throw new ApiError(400, "Invalid comment ID");
+    }
+
+    // Check if post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+
+    // Check if parent comment exists
+    const parentComment = await Comment.findById(commentId);
+    if (!parentComment) {
+      throw new ApiError(404, "Parent comment not found");
+    }
+
+    // Get pagination parameters
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = parseInt(req.query.skip as string) || 0;
+
+    // Helper function to recursively fetch replies
+    const fetchRepliesRecursively = async (
+      parentId: any,
+      depth: number = 0,
+      maxDepth: number = 10,
+      replyLimit: number = 50,
+      replySkip: number = 0
+    ): Promise<{ replies: any[]; hasMore: boolean; total: number }> => {
+      if (depth >= maxDepth) {
+        return { replies: [], hasMore: false, total: 0 };
+      }
+
+      // Get total count first
+      const total = await Comment.countDocuments({
+        postId: postId,
+        parentId: parentId,
+      });
+
+      const replies = await Comment.find({
+        postId: postId,
+        parentId: parentId,
+      })
+        .populate("userId", "firstName surName username profileImage")
+        .sort({ createdAt: 1 })
+        .skip(replySkip)
+        .limit(replyLimit);
+
+      const transformedReplies = await Promise.all(
+        replies.map(async (reply: any) => {
+          const replyUser = reply.userId as any;
+          const nestedRepliesResult = await fetchRepliesRecursively(
+            reply._id,
+            depth + 1,
+            maxDepth,
+            50,
+            0
+          );
+
+          // Get reply count for nested replies
+          const nestedReplyCount = await Comment.countDocuments({
+            postId: postId,
+            parentId: reply._id,
+          });
+
+          return {
+            id: reply._id.toString(),
+            userId: replyUser?._id?.toString() || "",
+            user: {
+              id: replyUser?._id?.toString() || "",
+              firstName: replyUser?.firstName || "",
+              surName: replyUser?.surName || "",
+              username: replyUser?.username || "",
+              profileImage: replyUser?.profileImage || "",
+            },
+            comment: reply.comment,
+            postId: reply.postId.toString(),
+            parentId: reply.parentId ? reply.parentId.toString() : undefined,
+            createdAt: reply.createdAt.toISOString(),
+            replies: nestedRepliesResult.replies,
+            replyCount: nestedReplyCount,
+          };
+        })
+      );
+
+      const hasMore = replySkip + replyLimit < total;
+      return {
+        replies: transformedReplies,
+        hasMore,
+        total,
+      };
+    };
+
+    // Fetch replies recursively (only for top level, use limit and skip)
+    const repliesResult = await fetchRepliesRecursively(
+      commentId,
+      0,
+      10,
+      limit,
+      skip
+    );
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          replies: repliesResult.replies,
+          hasMore: repliesResult.hasMore,
+          total: repliesResult.total,
+        },
+        "Replies fetched successfully"
+      )
+    );
+  }
+);
+
+/**
+ * Save a post
+ * POST /api/posts/:postId/saved
+ * Requires authentication
+ */
+export const savePost = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = (req as any).user;
+    if (!user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { postId } = req.params;
+
+    if (!postId || !mongoose.Types.ObjectId.isValid(postId)) {
+      throw new ApiError(400, "Invalid post ID");
+    }
+
+    // Check if post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+
+    // Check if already saved
+    const existingSaved = await Saved.findOne({
+      userId: user._id,
+      postId: postId,
+    });
+
+    if (existingSaved) {
+      throw new ApiError(400, "Post already saved");
+    }
+
+    // Create saved
+    const saved = await Saved.create({
+      userId: user._id,
+      postId: postId,
+    });
+
+    res
+      .status(201)
+      .json(new ApiResponse(201, saved, "Post saved successfully"));
+  }
+);
+
+/**
+ * Unsave a post
+ * DELETE /api/posts/:postId/saved
+ * Requires authentication
+ */
+export const unsavePost = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user = (req as any).user;
+    if (!user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { postId } = req.params;
+
+    if (!postId || !mongoose.Types.ObjectId.isValid(postId)) {
+      throw new ApiError(400, "Invalid post ID");
+    }
+
+    // Check if post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+
+    // Remove saved
+    const deletedSaved = await Saved.findOneAndDelete({
+      userId: user._id,
+      postId: postId,
+    });
+
+    if (!deletedSaved) {
+      throw new ApiError(404, "Saved post not found");
+    }
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Post unsaved successfully"));
   }
 );

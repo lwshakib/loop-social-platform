@@ -57,3 +57,48 @@ export const verifyJWT = async (
     return next(new ApiError(401, "Unauthorized"));
   }
 };
+
+/**
+ * Optional JWT verification middleware
+ * Attaches the user to the request object if token is valid, but doesn't throw errors if token is missing
+ */
+export const optionalVerifyJWT = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Try to get token from Authorization header first, then from cookies
+    let accessToken = req.headers.authorization?.replace("Bearer ", "");
+
+    // If not in header, try cookies
+    if (!accessToken) {
+      accessToken = req.cookies?.accessToken;
+    }
+
+    // If no token, just continue without setting user
+    if (!accessToken) {
+      return next();
+    }
+
+    // Verify the token
+    const decoded = jwt.verify(accessToken, envs.ACCESS_TOKEN_SECRET) as {
+      id: string;
+    };
+
+    // Find the user
+    const user = await User.findById(decoded.id).select(
+      "-password -refreshToken"
+    );
+
+    if (user) {
+      // Attach user to request object
+      (req as any).user = user;
+    }
+    
+    next();
+  } catch (error) {
+    // If token is invalid, just continue without setting user (don't throw error)
+    next();
+  }
+};

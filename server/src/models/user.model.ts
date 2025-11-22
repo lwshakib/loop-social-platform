@@ -59,8 +59,41 @@ const userSchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+// Virtual for posts count
+userSchema.virtual("postsCount", {
+  ref: "Post",
+  localField: "_id",
+  foreignField: "userId",
+  count: true,
+});
+
+// Virtual for posts (populate posts)
+userSchema.virtual("posts", {
+  ref: "Post",
+  localField: "_id",
+  foreignField: "userId",
+});
+
+// Virtual for likes count (posts liked by user)
+userSchema.virtual("likesCount", {
+  ref: "Like",
+  localField: "_id",
+  foreignField: "userId",
+  count: true,
+});
+
+// Virtual for comments count (comments made by user)
+userSchema.virtual("commentsCount", {
+  ref: "Comment",
+  localField: "_id",
+  foreignField: "userId",
+  count: true,
+});
 
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {

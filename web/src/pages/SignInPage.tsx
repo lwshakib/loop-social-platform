@@ -126,37 +126,37 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-3 sm:p-4 md:p-6">
       {/* Mode Toggle - Top Right */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
         <ModeToggle />
       </div>
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             Loop
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-xs sm:text-sm">
             Welcome back! Sign in to continue
           </p>
         </div>
 
         <Card className="border-2 shadow-lg">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-semibold text-center">
+          <CardHeader className="space-y-1 pb-3 sm:pb-4 px-4 sm:px-6">
+            <CardTitle className="text-xl sm:text-2xl font-semibold text-center">
               Sign In
             </CardTitle>
-            <CardDescription className="text-center">
+            <CardDescription className="text-center text-xs sm:text-sm">
               Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6 pb-4 sm:pb-6">
             {/* Email/Password Form */}
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+                className="space-y-3 sm:space-y-4"
               >
                 <FormField
                   control={form.control}
@@ -168,11 +168,11 @@ export default function SignInPage() {
                       </FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Mail className="absolute left-3 top-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             type="email"
                             placeholder="name@example.com"
-                            className="pl-10 h-11"
+                            className="pl-9 sm:pl-10 h-10 sm:h-11 text-sm sm:text-base"
                             {...field}
                           />
                         </div>
@@ -199,11 +199,11 @@ export default function SignInPage() {
                       </div>
                       <FormControl>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Lock className="absolute left-3 top-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             type="password"
                             placeholder="Enter your password"
-                            className="pl-10 h-11"
+                            className="pl-9 sm:pl-10 h-10 sm:h-11 text-sm sm:text-base"
                             {...field}
                           />
                         </div>
@@ -240,7 +240,7 @@ export default function SignInPage() {
                 )}
                 <Button
                   type="submit"
-                  className="w-full h-11 font-semibold text-base"
+                  className="w-full h-10 sm:h-11 font-semibold text-sm sm:text-base"
                   disabled={form.formState.isSubmitting}
                 >
                   {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
@@ -249,7 +249,7 @@ export default function SignInPage() {
             </Form>
 
             {/* Sign Up Link */}
-            <div className="text-center text-sm">
+            <div className="text-center text-xs sm:text-sm">
               <span className="text-muted-foreground">
                 Don't have an account?{" "}
               </span>
@@ -264,7 +264,7 @@ export default function SignInPage() {
         </Card>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-4 sm:mt-6 text-center text-[10px] sm:text-xs text-muted-foreground px-2">
           By signing in, you agree to our Terms of Service and Privacy Policy
         </p>
       </div>

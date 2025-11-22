@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
+import { envs } from "../config/envs.js";
 import logger from "../logger/winston.logger.js";
 import { ApiError } from "../utils/ApiError.js";
 
@@ -58,3 +59,4 @@ const errorHandler = (
 };
 
 export { errorHandler };
+

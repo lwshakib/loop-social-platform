@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import express from "express";
 import http from "http";
 import morganMiddleware from "./logger/morgan.logger.js";
-import { errorHandler } from "./middleware/errorHandler.middleware.js";
+import { errorHandler } from "./middleware/error.middleware.js";
 import routes from "./routes/index.js";
 dotenv.config();
 

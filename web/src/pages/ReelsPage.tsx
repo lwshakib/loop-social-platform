@@ -672,7 +672,7 @@ export default function ReelsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex flex-col gap-1 h-auto text-white hover:bg-white/10"
+                className="flex flex-col gap-1 h-auto text-white hover:bg-white/20 bg-black/30 backdrop-blur-sm rounded-full p-2"
                 onClick={() => handleLike(video.id)}
               >
                 <Heart
@@ -690,7 +690,7 @@ export default function ReelsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex flex-col gap-1 h-auto text-white hover:bg-white/10"
+                className="flex flex-col gap-1 h-auto text-white hover:bg-white/20 bg-black/30 backdrop-blur-sm rounded-full p-2"
               >
                 <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7" />
                 <span className="text-xs sm:text-sm font-semibold">
@@ -701,7 +701,7 @@ export default function ReelsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex flex-col gap-1 h-auto text-white hover:bg-white/10"
+                className="flex flex-col gap-1 h-auto text-white hover:bg-white/20 bg-black/30 backdrop-blur-sm rounded-full p-2"
                 onClick={() => handleSave(video.id)}
               >
                 <Bookmark
@@ -716,10 +716,12 @@ export default function ReelsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="flex flex-col gap-1 h-auto text-white hover:bg-white/10"
+                className="flex flex-col gap-1 h-auto text-white hover:bg-white/20 bg-black/30 backdrop-blur-sm rounded-full p-2"
               >
                 <Share className="h-6 w-6 sm:h-7 sm:w-7" />
               </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

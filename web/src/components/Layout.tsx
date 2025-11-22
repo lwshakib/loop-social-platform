@@ -604,7 +604,7 @@ export default function Layout() {
 
       {/* Left Sidebar Navigation - Desktop */}
       <motion.aside
-        className={`hidden lg:flex border-r fixed left-0 top-0 h-screen z-[70] bg-background transition-all shrink-0 ${
+        className={`hidden lg:flex border-r fixed left-0 top-0 h-screen z-70 bg-background transition-all shrink-0 ${
           isCreateDialogOpen ? "blur-sm opacity-75 pointer-events-none" : ""
         }`}
         style={{ pointerEvents: isCreateDialogOpen ? "none" : "auto" }}

@@ -275,6 +275,7 @@ createRoot(document.getElementById("root")!).render(
             <Route index element={<HomePage />} />
             <Route path="explore" element={<ExplorePage />} />
             <Route path="reels" element={<ReelsPage />} />
+            <Route path="reels/:videoId" element={<ReelsPage />} />
             <Route path="messages" element={<MessagesPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="@:username" element={<ProfilePage />} />

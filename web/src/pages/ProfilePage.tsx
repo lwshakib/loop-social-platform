@@ -1290,7 +1290,7 @@ export default function ProfilePage() {
   return (
     <div className="flex-1 overflow-y-auto">
       {/* Cover Image */}
-      <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 bg-gradient-to-r from-blue-500 to-purple-500">
+      <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 bg-linear-to-r from-blue-500 to-purple-500">
         <img
           src={coverImageUrl}
           alt="Cover"
@@ -1370,7 +1370,7 @@ export default function ProfilePage() {
         </div>
 
         {userData.bio && (
-          <p className="text-xs sm:text-sm mb-2 sm:mb-3 whitespace-pre-wrap break-words">
+          <p className="text-xs sm:text-sm mb-2 sm:mb-3 whitespace-pre-wrap wrap-break-word">
             {userData.bio}
           </p>
         )}
@@ -1382,7 +1382,7 @@ export default function ProfilePage() {
 
         <div className="flex gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm">
           <button
-            className="hover:underline flex-shrink-0"
+            className="hover:underline shrink-0"
             onClick={() => navigate(`/@${userData.username}/following`)}
           >
             <span className="font-semibold text-foreground">
@@ -1391,7 +1391,7 @@ export default function ProfilePage() {
             <span className="text-muted-foreground">Following</span>
           </button>
           <button
-            className="hover:underline flex-shrink-0"
+            className="hover:underline shrink-0"
             onClick={() => navigate(`/@${userData.username}/followers`)}
           >
             <span className="font-semibold text-foreground">
@@ -1400,7 +1400,7 @@ export default function ProfilePage() {
             <span className="text-muted-foreground">Followers</span>
           </button>
           <button
-            className="hover:underline flex-shrink-0"
+            className="hover:underline shrink-0"
             onClick={() => setActiveTab("posts")}
           >
             <span className="font-semibold text-foreground">
@@ -1715,7 +1715,7 @@ export default function ProfilePage() {
                 {selectedPost.caption && (
                   <div className="p-4 border-b">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm whitespace-pre-wrap break-words">
+                      <p className="text-sm whitespace-pre-wrap wrap-break-word">
                         {selectedPost.caption}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
@@ -1827,7 +1827,7 @@ export default function ProfilePage() {
                                     {formatTimeAgo(comment.createdAt)}
                                   </span>
                                 </div>
-                                <p className="text-sm whitespace-pre-wrap break-words">
+                                <p className="text-sm whitespace-pre-wrap wrap-break-word">
                                   {comment.comment}
                                 </p>
                                 <div className="flex items-center gap-3 mt-2">
@@ -1994,7 +1994,7 @@ export default function ProfilePage() {
                                                 {formatTimeAgo(reply.createdAt)}
                                               </span>
                                             </div>
-                                            <p className="text-sm whitespace-pre-wrap break-words">
+                                            <p className="text-sm whitespace-pre-wrap wrap-break-word">
                                               {reply.comment}
                                             </p>
                                             <button
@@ -2156,7 +2156,7 @@ export default function ProfilePage() {
                                                             )}
                                                           </span>
                                                         </div>
-                                                        <p className="text-xs whitespace-pre-wrap break-words">
+                                                        <p className="text-xs whitespace-pre-wrap wrap-break-word">
                                                           {nestedReply.comment}
                                                         </p>
                                                       </div>

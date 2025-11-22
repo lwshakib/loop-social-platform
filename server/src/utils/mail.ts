@@ -1,21 +1,22 @@
 import { config } from "dotenv";
 import nodemailer from "nodemailer";
+import { envs } from "../config/envs.js";
 
 config();
 
-const isDevelopment = process.env.NODE_ENV === "development";
+const isDevelopment = envs.NODE_ENV === "development";
 
 const transporter = nodemailer.createTransport(
   isDevelopment
     ? {
-        host: process.env.MAILHOG_SMTP_HOST || "localhost",
-        port: Number(process.env.MAILHOG_SMTP_PORT) || 1025,
+        host: envs.MAILHOG_SMTP_HOST,
+        port: envs.MAILHOG_SMTP_PORT,
       }
     : {
         service: "gmail",
         auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_PASS,
+          user: envs.GMAIL_USER,
+          pass: envs.GMAIL_PASS,
         },
       }
 );
@@ -28,7 +29,7 @@ export const sendEmail = async (
 ) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_FROM || `Loop <noreply@loop.com>`,
+      from: envs.EMAIL_FROM,
       to,
       subject,
       text: text || html.replace(/<[^>]*>/g, ""), // Strip HTML tags for text version

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { ZodError } from "zod";
+import { envs } from "../config/envs.js";
 import logger from "../logger/winston.logger.js";
 import { Otp } from "../models/otp.model";
 import User from "../models/user.model";
@@ -245,7 +246,7 @@ export const validateAccessToken = asyncHandler(
     try {
       const decoded = jwt.verify(
         accessToken,
-        process.env.ACCESS_TOKEN_SECRET || ""
+        envs.ACCESS_TOKEN_SECRET
       ) as { id: string };
 
       const user = await User.findById(decoded.id);
@@ -275,7 +276,7 @@ export const refreshAccessToken = asyncHandler(
     try {
       decoded = jwt.verify(
         refreshToken,
-        process.env.REFRESH_TOKEN_SECRET || ""
+        envs.REFRESH_TOKEN_SECRET
       );
     } catch (error) {
       throw new ApiError(401, "Unauthorized");

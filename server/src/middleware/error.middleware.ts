@@ -47,7 +47,7 @@ const errorHandler = (
     message: apiError.message,
     data: apiError.data,
     errors: apiError.errors,
-    ...(process.env.NODE_ENV === "development"
+    ...(envs.NODE_ENV === "development"
       ? { stack: apiError.stack }
       : {}), // Error stack traces should be visible in development for debugging
   };

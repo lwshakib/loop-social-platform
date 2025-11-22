@@ -1,5 +1,6 @@
 import Layout from "@/components/Layout";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
@@ -262,6 +263,7 @@ createRoot(document.getElementById("root")!).render(
           />
       </Routes>
     </BrowserRouter>
+    <Toaster />
     </ThemeProvider>
   </StrictMode>
 );

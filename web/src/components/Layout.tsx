@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { EmojiPicker } from "frimousse";
+import { toast } from "sonner";
 import {
   BarChart3,
   Bell,
@@ -260,7 +261,9 @@ export default function Layout() {
 
       // Check if user is authenticated
       if (!accessToken) {
-        alert("You must be logged in to create a post. Please sign in.");
+        toast.error("Authentication Required", {
+          description: "You must be logged in to create a post. Please sign in.",
+        });
         handleCreateClose();
         return;
       }
@@ -334,7 +337,9 @@ export default function Layout() {
             axios.isAxiosError(error) && error.response?.data?.message
               ? error.response.data.message
               : "Failed to upload file. Please try again.";
-          alert(errorMessage);
+          toast.error("Upload Failed", {
+            description: errorMessage,
+          });
           return;
         }
       }
@@ -370,17 +375,24 @@ export default function Layout() {
       if (response.ok) {
         const result = await response.json();
         console.log("Post created successfully:", result);
+        toast.success("Post Created", {
+          description: "Your post has been created successfully!",
+        });
         handleCreateClose();
       } else {
         const error = await response.json();
         console.error("Error creating post:", error);
-        alert(error.message || "Failed to create post. Please try again.");
+        toast.error("Failed to Create Post", {
+          description: error.message || "Failed to create post. Please try again.",
+        });
       }
     } catch (error) {
       console.error("Error creating post:", error);
       setIsUploading(false);
       setUploadProgress(0);
-      alert("An error occurred while creating the post. Please try again.");
+      toast.error("Error", {
+        description: "An error occurred while creating the post. Please try again.",
+      });
     }
   };
 

@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { EmojiPicker } from "frimousse";
-import { toast } from "sonner";
 import {
   BarChart3,
   Bell,
@@ -31,6 +30,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
+import { toast } from "sonner";
 
 // Instagram Logo Component
 const InstagramLogo = ({ className }: { className?: string }) => (
@@ -262,7 +262,8 @@ export default function Layout() {
       // Check if user is authenticated
       if (!accessToken) {
         toast.error("Authentication Required", {
-          description: "You must be logged in to create a post. Please sign in.",
+          description:
+            "You must be logged in to create a post. Please sign in.",
         });
         handleCreateClose();
         return;
@@ -383,7 +384,8 @@ export default function Layout() {
         const error = await response.json();
         console.error("Error creating post:", error);
         toast.error("Failed to Create Post", {
-          description: error.message || "Failed to create post. Please try again.",
+          description:
+            error.message || "Failed to create post. Please try again.",
         });
       }
     } catch (error) {
@@ -391,7 +393,8 @@ export default function Layout() {
       setIsUploading(false);
       setUploadProgress(0);
       toast.error("Error", {
-        description: "An error occurred while creating the post. Please try again.",
+        description:
+          "An error occurred while creating the post. Please try again.",
       });
     }
   };

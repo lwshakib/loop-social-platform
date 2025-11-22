@@ -1,20 +1,45 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  Calendar,
-  MapPin,
-  Link as LinkIcon,
-  MessageCircle,
-  Heart,
-  Repeat2,
   Bookmark,
-  Share,
-  MoreHorizontal,
-  Settings,
+  Calendar,
   Edit,
+  Grid3x3,
+  Heart,
+  Link as LinkIcon,
+  MapPin,
+  MessageCircle,
+  MoreHorizontal,
+  Play,
+  Repeat2,
+  Settings,
+  Share,
 } from "lucide-react";
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
+
+type TabType = "posts" | "reels" | "liked";
+
+type BasePost = {
+  id: number;
+  postImage: string | null;
+  content: string;
+  likes: number;
+  comments: number;
+  retweets: number;
+  views: number;
+  timeAgo: string;
+  type: "text" | "image" | "video";
+};
+
+type LikedPost = BasePost & {
+  likedBy: string;
+};
+
+type VideoPost = BasePost & {
+  type: "video";
+  duration: string;
+};
 
 // Mock user data - in production, this would come from an API
 const mockUserData = {
@@ -35,7 +60,7 @@ const mockUserData = {
 };
 
 // Mock posts for profile
-const mockProfilePosts = [
+const mockProfilePosts: BasePost[] = [
   {
     id: 1,
     postImage: "https://picsum.photos/600/400?random=1",
@@ -45,6 +70,7 @@ const mockProfilePosts = [
     retweets: 45,
     views: 12000,
     timeAgo: "2h",
+    type: "image" as const,
   },
   {
     id: 2,
@@ -55,6 +81,7 @@ const mockProfilePosts = [
     retweets: 12,
     views: 8900,
     timeAgo: "5h",
+    type: "text" as const,
   },
   {
     id: 3,
@@ -65,21 +92,94 @@ const mockProfilePosts = [
     retweets: 23,
     views: 15000,
     timeAgo: "1d",
+    type: "image" as const,
+  },
+];
+
+// Mock reels/videos
+const mockReels: VideoPost[] = [
+  {
+    id: 6,
+    postImage: "https://picsum.photos/600/800?random=6",
+    content: "Check out this amazing sunset! 🌅",
+    likes: 5678,
+    comments: 234,
+    retweets: 89,
+    views: 45000,
+    timeAgo: "1d",
+    type: "video" as const,
+    duration: "0:45",
+  },
+  {
+    id: 7,
+    postImage: "https://picsum.photos/600/800?random=7",
+    content: "Behind the scenes of my latest project 🎬",
+    likes: 3456,
+    comments: 156,
+    retweets: 67,
+    views: 32000,
+    timeAgo: "2d",
+    type: "video" as const,
+    duration: "1:20",
+  },
+];
+
+// Mock liked posts
+const mockLikedPosts: LikedPost[] = [
+  {
+    id: 8,
+    postImage: "https://picsum.photos/600/400?random=8",
+    content: "This is an amazing post I liked! 🔥",
+    likes: 8900,
+    comments: 567,
+    retweets: 234,
+    views: 89000,
+    timeAgo: "4h",
+    type: "image" as const,
+    likedBy: "@johndoe",
+  },
+  {
+    id: 9,
+    postImage: null,
+    content: "Such an inspiring message! 💪",
+    likes: 1234,
+    comments: 89,
+    retweets: 45,
+    views: 12000,
+    timeAgo: "8h",
+    type: "text" as const,
+    likedBy: "@johndoe",
   },
 ];
 
 export default function ProfilePage() {
-  const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
   const [isFollowing, setIsFollowing] = useState(mockUserData.isFollowing);
 
-  // Remove @ symbol if present in username
-  const cleanUsername = username?.startsWith("@") ? username.slice(1) : username;
+  // Remove @ symbol if present in username (for future use when fetching real data)
+  // const cleanUsername = username?.startsWith("@") ? username.slice(1) : username;
 
   // In production, fetch user data based on username
   const userData = mockUserData;
+
+  // Get content based on active tab
+  const getTabContent = () => {
+    switch (activeTab) {
+      case "posts":
+        return mockProfilePosts;
+      case "reels":
+        return mockReels;
+      case "liked":
+        return mockLikedPosts;
+      default:
+        return mockProfilePosts;
+    }
+  };
+
+  const currentPosts = getTabContent();
 
   const handleLike = (postId: number) => {
     setLikedPosts((prev) => {
@@ -224,97 +324,137 @@ export default function ProfilePage() {
 
       {/* Tabs */}
       <div className="flex border-b">
-        <button className="flex-1 py-3 text-center font-semibold text-sm border-b-2 border-primary">
-          Posts
+        <button
+          onClick={() => setActiveTab("posts")}
+          className={`flex-1 py-3 flex items-center justify-center gap-2 font-semibold text-sm transition-colors ${
+            activeTab === "posts"
+              ? "border-b-2 border-primary text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Grid3x3 className="h-5 w-5" />
         </button>
-        <button className="flex-1 py-3 text-center font-semibold text-sm text-muted-foreground hover:text-foreground">
-          Replies
+        <button
+          onClick={() => setActiveTab("reels")}
+          className={`flex-1 py-3 flex items-center justify-center gap-2 font-semibold text-sm transition-colors ${
+            activeTab === "reels"
+              ? "border-b-2 border-primary text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Play className="h-5 w-5" />
         </button>
-        <button className="flex-1 py-3 text-center font-semibold text-sm text-muted-foreground hover:text-foreground">
-          Media
-        </button>
-        <button className="flex-1 py-3 text-center font-semibold text-sm text-muted-foreground hover:text-foreground">
-          Likes
+        <button
+          onClick={() => setActiveTab("liked")}
+          className={`flex-1 py-3 flex items-center justify-center gap-2 font-semibold text-sm transition-colors ${
+            activeTab === "liked"
+              ? "border-b-2 border-primary text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Heart className="h-5 w-5" />
         </button>
       </div>
 
       {/* Posts */}
       <div>
-        {mockProfilePosts.map((post) => (
-          <div
-            key={post.id}
-            className="bg-card border-b hover:bg-accent/5 transition-colors"
-          >
-            <div className="p-4">
-              {/* Post Content */}
-              <div className="text-sm mb-3 whitespace-pre-wrap">
-                {post.content}
-              </div>
+        {currentPosts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-muted-foreground text-sm">
+              {activeTab === "posts" && "No posts yet"}
+              {activeTab === "reels" && "No reels yet"}
+              {activeTab === "liked" && "No liked posts yet"}
+            </p>
+          </div>
+        ) : (
+          currentPosts.map((post) => (
+            <div
+              key={post.id}
+              className="bg-card border-b hover:bg-accent/5 transition-colors"
+            >
+              <div className="p-4">
+                {/* Liked by indicator */}
+                {activeTab === "liked" && "likedBy" in post && (
+                  <div className="text-xs text-muted-foreground mb-2">
+                    Liked by {(post as LikedPost).likedBy}
+                  </div>
+                )}
 
-              {/* Post Image */}
-              {post.postImage && (
-                <div className="rounded-2xl overflow-hidden mb-3 border border-border">
-                  <img
-                    src={post.postImage}
-                    alt="Post"
-                    className="w-full h-auto object-cover"
-                  />
+                {/* Post Content */}
+                <div className="text-sm mb-3 whitespace-pre-wrap">
+                  {post.content}
                 </div>
-              )}
 
-              {/* Post Actions */}
-              <div className="flex items-center justify-between text-muted-foreground">
-                <div className="flex items-center gap-6">
+                {/* Post Image/Video */}
+                {post.postImage && (
+                  <div className="relative rounded-2xl overflow-hidden mb-3 border border-border">
+                    <img
+                      src={post.postImage}
+                      alt="Post"
+                      className="w-full h-auto object-cover"
+                    />
+                    {/* Video duration indicator */}
+                    {post.type === "video" && "duration" in post && (
+                      <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                        {(post as VideoPost).duration}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Post Actions */}
+                <div className="flex items-center justify-between text-muted-foreground">
+                  <div className="flex items-center gap-6">
+                    <button
+                      className="flex items-center gap-2 hover:text-primary transition-colors"
+                      onClick={() => handleLike(post.id)}
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      <span className="text-sm">{post.comments}</span>
+                    </button>
+                    <button className="flex items-center gap-2 hover:text-green-500 transition-colors">
+                      <Repeat2 className="h-5 w-5" />
+                      <span className="text-sm">{post.retweets}</span>
+                    </button>
+                    <button
+                      className={`flex items-center gap-2 transition-colors ${
+                        likedPosts.has(post.id)
+                          ? "text-red-500"
+                          : "hover:text-red-500"
+                      }`}
+                      onClick={() => handleLike(post.id)}
+                    >
+                      <Heart
+                        className={`h-5 w-5 ${
+                          likedPosts.has(post.id) ? "fill-current" : ""
+                        }`}
+                      />
+                      <span className="text-sm">{post.likes}</span>
+                    </button>
+                    <button className="flex items-center gap-2 hover:text-blue-500 transition-colors">
+                      <Share className="h-5 w-5" />
+                    </button>
+                  </div>
                   <button
-                    className="flex items-center gap-2 hover:text-primary transition-colors"
-                    onClick={() => handleLike(post.id)}
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    <span className="text-sm">{post.comments}</span>
-                  </button>
-                  <button className="flex items-center gap-2 hover:text-green-500 transition-colors">
-                    <Repeat2 className="h-5 w-5" />
-                    <span className="text-sm">{post.retweets}</span>
-                  </button>
-                  <button
-                    className={`flex items-center gap-2 transition-colors ${
-                      likedPosts.has(post.id)
-                        ? "text-red-500"
-                        : "hover:text-red-500"
+                    className={`transition-colors ${
+                      savedPosts.has(post.id)
+                        ? "text-yellow-500"
+                        : "hover:text-yellow-500"
                     }`}
-                    onClick={() => handleLike(post.id)}
+                    onClick={() => handleSave(post.id)}
                   >
-                    <Heart
+                    <Bookmark
                       className={`h-5 w-5 ${
-                        likedPosts.has(post.id) ? "fill-current" : ""
+                        savedPosts.has(post.id) ? "fill-current" : ""
                       }`}
                     />
-                    <span className="text-sm">{post.likes}</span>
-                  </button>
-                  <button className="flex items-center gap-2 hover:text-blue-500 transition-colors">
-                    <Share className="h-5 w-5" />
                   </button>
                 </div>
-                <button
-                  className={`transition-colors ${
-                    savedPosts.has(post.id)
-                      ? "text-yellow-500"
-                      : "hover:text-yellow-500"
-                  }`}
-                  onClick={() => handleSave(post.id)}
-                >
-                  <Bookmark
-                    className={`h-5 w-5 ${
-                      savedPosts.has(post.id) ? "fill-current" : ""
-                    }`}
-                  />
-                </button>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
 }
-

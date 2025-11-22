@@ -788,7 +788,7 @@ export default function Layout() {
         >
           {/* Menu - morphs smoothly */}
           <motion.div
-            className="flex flex-col h-full p-4"
+            className="flex flex-col h-full p-4 justify-between"
             initial={false}
             animate={{
               opacity: isSearchOpen || isNotificationsOpen ? 0 : 1,
@@ -1098,17 +1098,19 @@ export default function Layout() {
                   Profile
                 </motion.span>
               </Button>
-              <div
-                className="w-full flex items-center justify-start gap-3 h-12"
-                style={{
-                  opacity: isSearchOpen || isNotificationsOpen ? 0 : 1,
-                  pointerEvents:
-                    isSearchOpen || isNotificationsOpen ? "none" : "auto",
-                }}
-              >
-                <ModeToggle />
-              </div>
             </motion.nav>
+
+            {/* Mode Toggle at Bottom */}
+            <div
+              className="w-full flex items-center justify-start gap-3 h-12 mt-auto"
+              style={{
+                opacity: isSearchOpen || isNotificationsOpen ? 0 : 1,
+                pointerEvents:
+                  isSearchOpen || isNotificationsOpen ? "none" : "auto",
+              }}
+            >
+              <ModeToggle />
+            </div>
           </motion.div>
 
           {/* Search - morphs smoothly */}

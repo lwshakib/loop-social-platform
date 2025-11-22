@@ -27,10 +27,9 @@ export const verifyJWT = async (
     }
 
     // Verify the token
-    const decoded = jwt.verify(
-      accessToken,
-      envs.ACCESS_TOKEN_SECRET
-    ) as { id: string };
+    const decoded = jwt.verify(accessToken, envs.ACCESS_TOKEN_SECRET) as {
+      id: string;
+    };
 
     // Find the user
     const user = await User.findById(decoded.id).select(

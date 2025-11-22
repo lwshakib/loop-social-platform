@@ -1,4 +1,5 @@
 import morgan from "morgan";
+import { envs } from "../config/envs.js";
 import logger from "./winston.logger.js";
 
 const stream = {
@@ -7,8 +8,7 @@ const stream = {
 };
 
 const skip = () => {
-  const env = process.env.NODE_ENV || "development";
-  return env !== "development";
+  return envs.NODE_ENV !== "development";
 };
 
 const morganMiddleware = morgan(

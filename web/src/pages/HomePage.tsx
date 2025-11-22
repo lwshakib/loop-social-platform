@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Bookmark,
+  ChevronLeft,
+  ChevronRight,
   Heart,
   MessageCircle,
   MoreHorizontal,
   Send,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Mock data for posts
 const mockPosts = [
@@ -51,34 +53,74 @@ const mockPosts = [
 const mockStories = [
   {
     id: 1,
-    username: "johndoe",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+    username: "mr_ng_39",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=mr_ng_39",
   },
   {
     id: 2,
-    username: "janedoe",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
+    username: "addicted._....",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=addicted",
   },
   {
     id: 3,
-    username: "bob",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
+    username: "its_rhythm...",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=rhythm",
   },
   {
     id: 4,
-    username: "alice",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice",
+    username: "nintaidzuy...",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=nintaidzuy",
   },
   {
     id: 5,
-    username: "charlie",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie",
+    username: "muhtashi...",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=muhtashi",
+  },
+  {
+    id: 6,
+    username: "marsplane...",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=marsplane",
   },
 ];
 
 export default function HomePage() {
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
+  const storiesScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScrollButtons = () => {
+    if (storiesScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = storiesScrollRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  };
+
+  const scrollStories = (direction: "left" | "right") => {
+    if (storiesScrollRef.current) {
+      const scrollAmount = 200;
+      const newScrollLeft =
+        direction === "left"
+          ? storiesScrollRef.current.scrollLeft - scrollAmount
+          : storiesScrollRef.current.scrollLeft + scrollAmount;
+
+      storiesScrollRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: "smooth",
+      });
+
+      setTimeout(checkScrollButtons, 100);
+    }
+  };
+
+  useEffect(() => {
+    checkScrollButtons();
+    const handleResize = () => checkScrollButtons();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const toggleLike = (postId: number) => {
     setLikedPosts((prev) => {
@@ -110,27 +152,50 @@ export default function HomePage() {
         {/* Main Feed */}
         <div className="lg:col-span-2 space-y-6 max-w-2xl">
           {/* Stories Section */}
-          <div className="bg-card border rounded-lg p-4 overflow-hidden">
-            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+          <div className="bg-card border rounded-lg p-4 overflow-hidden relative">
+            {/* Left Arrow */}
+            {canScrollLeft && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-md"
+                onClick={() => scrollStories("left")}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            )}
+
+            {/* Right Arrow */}
+            {canScrollRight && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-md"
+                onClick={() => scrollStories("right")}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            )}
+
+            <div
+              ref={storiesScrollRef}
+              className="flex gap-4 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              onScroll={checkScrollButtons}
+            >
               {mockStories.map((story) => (
                 <div
                   key={story.id}
-                  className="flex flex-col items-center gap-2 min-w-[70px] cursor-pointer"
+                  className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer"
                 >
-                  <div className="relative">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 p-0.5">
-                      <div className="bg-background rounded-full p-0.5">
-                        <Avatar className="h-16 w-16 border-2 border-background">
-                          <AvatarImage
-                            src={story.avatar}
-                            alt={story.username}
-                          />
-                          <AvatarFallback>{story.username[0]}</AvatarFallback>
-                        </Avatar>
-                      </div>
+                  <div className="relative p-[2px] rounded-full bg-linear-to-tr from-yellow-400 via-pink-500 to-purple-500">
+                    <div className="rounded-full bg-background p-[2px]">
+                      <Avatar className="h-14 w-14">
+                        <AvatarImage src={story.avatar} alt={story.username} />
+                        <AvatarFallback>{story.username[0]}</AvatarFallback>
+                      </Avatar>
                     </div>
                   </div>
-                  <span className="text-xs truncate max-w-[70px]">
+                  <span className="text-xs text-foreground truncate max-w-[70px] text-center">
                     {story.username}
                   </span>
                 </div>

@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
+import { useUserStore } from "@/store/userStore";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail } from "lucide-react";
@@ -41,6 +42,7 @@ const setCookie = (name: string, value: string, days: number) => {
 
 export default function SignInPage() {
   const navigate = useNavigate();
+  const setUserData = useUserStore((state) => state.setUserData);
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -89,6 +91,12 @@ export default function SignInPage() {
             result.data.refreshToken,
             refreshTokenExpiry
           );
+
+          // Store user data (excluding tokens) in Zustand store
+          const userData = { ...result.data };
+          delete userData.accessToken;
+          delete userData.refreshToken;
+          setUserData(userData);
         }
 
         // Redirect to home page after successful sign in

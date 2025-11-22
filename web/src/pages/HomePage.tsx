@@ -11,6 +11,7 @@ import {
   Share,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 
 // Mock data for posts
 const mockPosts = [
@@ -91,6 +92,7 @@ const mockStories = [
 ];
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
   const storiesScrollRef = useRef<HTMLDivElement>(null);
@@ -219,7 +221,10 @@ export default function HomePage() {
               <div className="p-4">
                 {/* Post Header */}
                 <div className="flex items-start gap-3 mb-3">
-                  <Avatar className="h-12 w-12 shrink-0">
+                  <Avatar 
+                    className="h-12 w-12 shrink-0 cursor-pointer"
+                    onClick={() => navigate(`/${post.username}`)}
+                  >
                       <AvatarImage src={post.userAvatar} alt={post.username} />
                     <AvatarFallback>
                       {(post.displayName || post.username)[0].toUpperCase()}
@@ -227,10 +232,16 @@ export default function HomePage() {
                     </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-sm hover:underline">
+                      <span 
+                        className="font-semibold text-sm hover:underline cursor-pointer"
+                        onClick={() => navigate(`/${post.username}`)}
+                      >
                         {post.displayName || post.username}
                       </span>
-                      <span className="text-sm text-muted-foreground">
+                      <span 
+                        className="text-sm text-muted-foreground hover:underline cursor-pointer"
+                        onClick={() => navigate(`/${post.username}`)}
+                      >
                         @{post.username}
                       </span>
                       <span className="text-sm text-muted-foreground">·</span>

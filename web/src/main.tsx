@@ -1,6 +1,7 @@
 import Layout from "@/components/Layout";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { useUserStore } from "@/store/userStore";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
@@ -8,6 +9,7 @@ import "./index.css";
 import ExplorePage from "./pages/ExplorePage.tsx";
 import HomePage from "./pages/HomePage.tsx";
 import MessagesPage from "./pages/MessagesPage.tsx";
+import ProfilePage from "./pages/ProfilePage.tsx";
 import ReelsPage from "./pages/ReelsPage.tsx";
 import SignInPage from "./pages/SignInPage.tsx";
 import SignUpPage from "./pages/SignUpPage.tsx";
@@ -64,7 +66,12 @@ export function ProtectedRoute({ children }: { children: React.ReactElement }) {
           });
 
           if (response.ok) {
-            // Access token is valid
+            // Access token is valid, get user data
+            const result = await response.json();
+            if (result.data) {
+              // Store user data in Zustand store
+              useUserStore.getState().setUserData(result.data);
+            }
             setIsAuthenticated(true);
             setIsLoading(false);
             return;
@@ -92,6 +99,26 @@ export function ProtectedRoute({ children }: { children: React.ReactElement }) {
             if (result.data?.accessToken) {
               // Save new access token (15 minutes expiry)
               setCookie("accessToken", result.data.accessToken, 0.01);
+              
+              // Fetch user data after token refresh
+              try {
+                const validateResponse = await fetch(`${serverUrl}/auth/validate-token`, {
+                  method: "GET",
+                  headers: {
+                    Authorization: `Bearer ${result.data.accessToken}`,
+                  },
+                  credentials: "include",
+                });
+                if (validateResponse.ok) {
+                  const validateResult = await validateResponse.json();
+                  if (validateResult.data) {
+                    useUserStore.getState().setUserData(validateResult.data);
+                  }
+                }
+              } catch (error) {
+                console.error("Error fetching user data after refresh:", error);
+              }
+              
               setIsAuthenticated(true);
               setIsLoading(false);
               return;
@@ -159,6 +186,11 @@ export function AuthRoute({ children }: { children: React.ReactElement }) {
           });
 
           if (response.ok) {
+            // User is authenticated, get user data
+            const result = await response.json();
+            if (result.data) {
+              useUserStore.getState().setUserData(result.data);
+            }
             // User is authenticated, redirect to home
             setIsAuthenticated(true);
             setIsLoading(false);
@@ -244,6 +276,9 @@ createRoot(document.getElementById("root")!).render(
             <Route path="explore" element={<ExplorePage />} />
             <Route path="reels" element={<ReelsPage />} />
             <Route path="messages" element={<MessagesPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="@:username" element={<ProfilePage />} />
+            <Route path=":username" element={<ProfilePage />} />
           </Route>
           <Route
             path="/sign-up"

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useUserStore } from "@/store/userStore";
 import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { EmojiPicker } from "frimousse";
@@ -132,6 +133,55 @@ export default function Layout() {
   });
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Use Zustand store for user data
+  const { userData, setUserData, getAvatarUrl, getAvatarFallback } =
+    useUserStore();
+
+  // Fetch user data when component mounts or token is validated
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const getCookie = (name: string): string | null => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+          return parts.pop()?.split(";").shift() || null;
+        }
+        return null;
+      };
+
+      const getServerUrl = () => {
+        return import.meta.env.VITE_SERVER_URL || "";
+      };
+
+      const accessToken = getCookie("accessToken");
+      if (!accessToken) {
+        return;
+      }
+
+      try {
+        const serverUrl = getServerUrl();
+        const response = await fetch(`${serverUrl}/auth/validate-token`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data) {
+            setUserData(result.data);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, [setUserData]);
 
   const isHomeActive =
     location.pathname === "/" && !isSearchOpen && !isNotificationsOpen;
@@ -587,10 +637,17 @@ export default function Layout() {
                   variant="ghost"
                   className="w-full justify-center h-12 cursor-pointer"
                   style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    if (userData?.username) {
+                      navigate(`/@${userData.username}`);
+                    } else {
+                      navigate("/profile");
+                    }
+                  }}
                 >
                   <Avatar className="h-6 w-6">
-                    <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=You" />
-                    <AvatarFallback>YO</AvatarFallback>
+                    <AvatarImage src={getAvatarUrl()} />
+                    <AvatarFallback>{getAvatarFallback()}</AvatarFallback>
                   </Avatar>
                 </Button>
                 <Button
@@ -894,10 +951,17 @@ export default function Layout() {
                 variant="ghost"
                 className="w-full justify-start gap-3 h-12 text-base cursor-pointer"
                 style={{ cursor: "pointer" }}
+                onClick={() => {
+                  if (userData?.username) {
+                    navigate(`/@${userData.username}`);
+                  } else {
+                    navigate("/profile");
+                  }
+                }}
               >
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=You" />
-                  <AvatarFallback>YO</AvatarFallback>
+                  <AvatarImage src={getAvatarUrl()} />
+                  <AvatarFallback>{getAvatarFallback()}</AvatarFallback>
                 </Avatar>
                 <motion.span
                   initial={false}
@@ -1045,6 +1109,10 @@ export default function Layout() {
                       <div
                         key={search.id}
                         className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer group"
+                        onClick={() => {
+                          navigate(`/${search.username}`);
+                          setIsSearchOpen(false);
+                        }}
                       >
                         <div className="flex items-center gap-3 flex-1">
                           <Avatar className="h-10 w-10">

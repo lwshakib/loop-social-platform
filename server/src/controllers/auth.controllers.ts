@@ -244,20 +244,37 @@ export const validateAccessToken = asyncHandler(
     }
 
     try {
-      const decoded = jwt.verify(
-        accessToken,
-        envs.ACCESS_TOKEN_SECRET
-      ) as { id: string };
+      const decoded = jwt.verify(accessToken, envs.ACCESS_TOKEN_SECRET) as {
+        id: string;
+      };
 
-      const user = await User.findById(decoded.id);
+      const user = await User.findById(decoded.id).select(
+        "-password -refreshToken"
+      );
 
       if (!user) {
         throw new ApiError(401, "Unauthorized");
       }
 
+      // Return user data
+      const userResponse = {
+        id: user._id,
+        firstName: user.firstName,
+        surName: user.surName,
+        username: user.username,
+        email: user.email,
+        bio: user.bio,
+        gender: user.gender,
+        dateOfBirth: user.dateOfBirth,
+        profileImage: user.profileImage,
+        coverImage: user.coverImage,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt,
+      };
+
       res
         .status(200)
-        .json(new ApiResponse(200, { valid: true }, "Access token is valid"));
+        .json(new ApiResponse(200, userResponse, "Access token is valid"));
     } catch (error) {
       throw new ApiError(401, "Unauthorized");
     }
@@ -274,10 +291,7 @@ export const refreshAccessToken = asyncHandler(
 
     let decoded: any;
     try {
-      decoded = jwt.verify(
-        refreshToken,
-        envs.REFRESH_TOKEN_SECRET
-      );
+      decoded = jwt.verify(refreshToken, envs.REFRESH_TOKEN_SECRET);
     } catch (error) {
       throw new ApiError(401, "Unauthorized");
     }

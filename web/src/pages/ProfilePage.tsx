@@ -86,6 +86,7 @@ type UserData = {
   postsCount: number;
   followers: number;
   following: number;
+  isFollowing?: boolean;
 };
 
 // Helper function to format time ago
@@ -403,6 +404,21 @@ export default function ProfilePage() {
     const isSaved = savedPosts.has(postId);
     const serverUrl = getServerUrl();
 
+    // Optimistic update - update UI immediately
+    if (isSaved) {
+      setSavedPosts((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
+    } else {
+      setSavedPosts((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(postId);
+        return newSet;
+      });
+    }
+
     try {
       if (isSaved) {
         // Unsave
@@ -414,13 +430,13 @@ export default function ProfilePage() {
           credentials: "include",
         });
 
-        if (response.ok) {
+        if (!response.ok) {
+          // Revert on error
           setSavedPosts((prev) => {
             const newSet = new Set(prev);
-            newSet.delete(postId);
+            newSet.add(postId);
             return newSet;
           });
-        } else {
           const error = await response.json();
           toast.error("Error", {
             description: error.message || "Failed to unsave post",
@@ -436,13 +452,13 @@ export default function ProfilePage() {
           credentials: "include",
         });
 
-        if (response.ok) {
+        if (!response.ok) {
+          // Revert on error
           setSavedPosts((prev) => {
             const newSet = new Set(prev);
-            newSet.add(postId);
+            newSet.delete(postId);
             return newSet;
           });
-        } else {
           const error = await response.json();
           toast.error("Error", {
             description: error.message || "Failed to save post",
@@ -450,6 +466,20 @@ export default function ProfilePage() {
         }
       }
     } catch (error) {
+      // Revert on error
+      if (isSaved) {
+        setSavedPosts((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(postId);
+          return newSet;
+        });
+      } else {
+        setSavedPosts((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(postId);
+          return newSet;
+        });
+      }
       console.error("Error saving post:", error);
       toast.error("Error", {
         description: "Failed to save post",
@@ -592,6 +622,8 @@ export default function ProfilePage() {
         const result = await response.json();
         if (result.data) {
           setUserData(result.data);
+          // Initialize follow state
+          setIsFollowing(result.data.isFollowing || false);
         }
       } else {
         const error = await response.json();
@@ -697,6 +729,56 @@ export default function ProfilePage() {
     const isLiked = likedPosts.has(postId);
     const serverUrl = getServerUrl();
 
+    // Get current likes count for revert
+    const currentPost = posts.find((p) => p.id === postId);
+    const previousLikesCount = currentPost?.likesCount || 0;
+    const selectedPostLikesCount =
+      selectedPost?.id === postId ? selectedPost.likesCount : null;
+
+    // Optimistic update - update UI immediately
+    if (isLiked) {
+      setLikedPosts((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId
+            ? { ...post, likesCount: Math.max(0, post.likesCount - 1) }
+            : post
+        )
+      );
+      if (selectedPost?.id === postId) {
+        setSelectedPost((prev) =>
+          prev
+            ? {
+                ...prev,
+                likesCount: Math.max(0, prev.likesCount - 1),
+              }
+            : null
+        );
+      }
+    } else {
+      setLikedPosts((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(postId);
+        return newSet;
+      });
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId
+            ? { ...post, likesCount: post.likesCount + 1 }
+            : post
+        )
+      );
+      if (selectedPost?.id === postId) {
+        setSelectedPost((prev) =>
+          prev ? { ...prev, likesCount: prev.likesCount + 1 } : null
+        );
+      }
+    }
+
     try {
       if (isLiked) {
         // Unlike
@@ -708,31 +790,30 @@ export default function ProfilePage() {
           credentials: "include",
         });
 
-        if (response.ok) {
+        if (!response.ok) {
+          // Revert on error
           setLikedPosts((prev) => {
             const newSet = new Set(prev);
-            newSet.delete(postId);
+            newSet.add(postId);
             return newSet;
           });
-          // Update likes count
           setPosts((prev) =>
             prev.map((post) =>
               post.id === postId
-                ? { ...post, likesCount: Math.max(0, post.likesCount - 1) }
+                ? { ...post, likesCount: previousLikesCount }
                 : post
             )
           );
-          if (selectedPost?.id === postId) {
+          if (selectedPost?.id === postId && selectedPostLikesCount !== null) {
             setSelectedPost((prev) =>
               prev
                 ? {
                     ...prev,
-                    likesCount: Math.max(0, prev.likesCount - 1),
+                    likesCount: selectedPostLikesCount,
                   }
                 : null
             );
           }
-        } else {
           const error = await response.json();
           toast.error("Error", {
             description: error.message || "Failed to unlike post",
@@ -748,26 +829,30 @@ export default function ProfilePage() {
           credentials: "include",
         });
 
-        if (response.ok) {
+        if (!response.ok) {
+          // Revert on error
           setLikedPosts((prev) => {
             const newSet = new Set(prev);
-            newSet.add(postId);
+            newSet.delete(postId);
             return newSet;
           });
-          // Update likes count
           setPosts((prev) =>
             prev.map((post) =>
               post.id === postId
-                ? { ...post, likesCount: post.likesCount + 1 }
+                ? { ...post, likesCount: previousLikesCount }
                 : post
             )
           );
-          if (selectedPost?.id === postId) {
+          if (selectedPost?.id === postId && selectedPostLikesCount !== null) {
             setSelectedPost((prev) =>
-              prev ? { ...prev, likesCount: prev.likesCount + 1 } : null
+              prev
+                ? {
+                    ...prev,
+                    likesCount: selectedPostLikesCount,
+                  }
+                : null
             );
           }
-        } else {
           const error = await response.json();
           toast.error("Error", {
             description: error.message || "Failed to like post",
@@ -775,6 +860,54 @@ export default function ProfilePage() {
         }
       }
     } catch (error) {
+      // Revert on error
+      if (isLiked) {
+        setLikedPosts((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(postId);
+          return newSet;
+        });
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId
+              ? { ...post, likesCount: previousLikesCount }
+              : post
+          )
+        );
+        if (selectedPost?.id === postId && selectedPostLikesCount !== null) {
+          setSelectedPost((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  likesCount: selectedPostLikesCount,
+                }
+              : null
+          );
+        }
+      } else {
+        setLikedPosts((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(postId);
+          return newSet;
+        });
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId
+              ? { ...post, likesCount: previousLikesCount }
+              : post
+          )
+        );
+        if (selectedPost?.id === postId && selectedPostLikesCount !== null) {
+          setSelectedPost((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  likesCount: selectedPostLikesCount,
+                }
+              : null
+          );
+        }
+      }
       console.error("Error liking post:", error);
       toast.error("Error", {
         description: "Failed to like post",
@@ -782,8 +915,125 @@ export default function ProfilePage() {
     }
   };
 
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing);
+  const handleFollow = async () => {
+    if (!cleanUsername || !userData) {
+      return;
+    }
+
+    const getCookie = (name: string): string | null => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) {
+        return parts.pop()?.split(";").shift() || null;
+      }
+      return null;
+    };
+
+    const getServerUrl = () => {
+      return import.meta.env.VITE_SERVER_URL || "";
+    };
+
+    const accessToken = getCookie("accessToken");
+    if (!accessToken) {
+      toast.error("Error", {
+        description: "You must be logged in to follow users",
+      });
+      return;
+    }
+
+    const serverUrl = getServerUrl();
+    const isCurrentlyFollowing = isFollowing;
+    const previousFollowers = userData.followers;
+
+    // Optimistic update - update UI immediately
+    setIsFollowing(!isCurrentlyFollowing);
+    setUserData((prev) =>
+      prev
+        ? {
+            ...prev,
+            followers: isCurrentlyFollowing
+              ? Math.max(0, prev.followers - 1)
+              : prev.followers + 1,
+          }
+        : null
+    );
+
+    try {
+      if (isCurrentlyFollowing) {
+        // Unfollow
+        const response = await fetch(
+          `${serverUrl}/users/${cleanUsername}/follow`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          // Revert on error
+          setIsFollowing(isCurrentlyFollowing);
+          setUserData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  followers: previousFollowers,
+                }
+              : null
+          );
+          const error = await response.json();
+          toast.error("Error", {
+            description: error.message || "Failed to unfollow user",
+          });
+        }
+      } else {
+        // Follow
+        const response = await fetch(
+          `${serverUrl}/users/${cleanUsername}/follow`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          // Revert on error
+          setIsFollowing(isCurrentlyFollowing);
+          setUserData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  followers: previousFollowers,
+                }
+              : null
+          );
+          const error = await response.json();
+          toast.error("Error", {
+            description: error.message || "Failed to follow user",
+          });
+        }
+      }
+    } catch (error) {
+      // Revert on error
+      setIsFollowing(isCurrentlyFollowing);
+      setUserData((prev) =>
+        prev
+          ? {
+              ...prev,
+              followers: previousFollowers,
+            }
+          : null
+      );
+      console.error("Error following/unfollowing user:", error);
+      toast.error("Error", {
+        description: "Failed to follow/unfollow user",
+      });
+    }
   };
 
   const handleEditProfileClick = () => {

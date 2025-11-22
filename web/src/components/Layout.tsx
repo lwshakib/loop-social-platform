@@ -604,7 +604,7 @@ export default function Layout() {
 
       {/* Left Sidebar Navigation - Desktop */}
       <motion.aside
-        className={`hidden lg:flex border-r sticky top-0 h-screen z-[70] bg-background transition-all shrink-0 ${
+        className={`hidden lg:flex border-r fixed left-0 top-0 h-screen z-[70] bg-background transition-all shrink-0 ${
           isCreateDialogOpen ? "blur-sm opacity-75 pointer-events-none" : ""
         }`}
         style={{ pointerEvents: isCreateDialogOpen ? "none" : "auto" }}
@@ -1653,8 +1653,12 @@ export default function Layout() {
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 transition-all pb-14 sm:pb-16 lg:pb-0 w-full min-w-0 max-w-full overflow-x-hidden relative left-0`}
+        className={`flex-1 transition-all pb-14 sm:pb-16 lg:pb-0 w-full min-w-0 max-w-full overflow-x-hidden relative`}
         style={{
+          ...(!isMobile && {
+            marginLeft: isSearchOpen || isNotificationsOpen ? "384px" : "256px",
+            transition: "margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          }),
           ...(isCreateDialogOpen && {
             filter: "blur(4px)",
             opacity: 0.75,

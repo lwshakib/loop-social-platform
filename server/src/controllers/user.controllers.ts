@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 import Comment from "../models/comment.model.js";
+import Follow from "../models/follow.model.js";
 import Like from "../models/like.model.js";
 import Saved from "../models/saved.model.js";
 import Post from "../models/post.model.js";
@@ -43,10 +44,20 @@ export const getUserByUsername = asyncHandler(
     // Get user stats
     const postsCount = await Post.countDocuments({ userId: user._id });
 
-    // Get followers and following count (if you have a follow model)
-    // For now, we'll set them to 0
-    const followers = 0;
-    const following = 0;
+    // Get followers and following count
+    const followers = await Follow.countDocuments({ followingId: user._id });
+    const following = await Follow.countDocuments({ followerId: user._id });
+
+    // Check if current user is following this user (if authenticated)
+    const currentUser = (req as any).user;
+    let isFollowing = false;
+    if (currentUser) {
+      const follow = await Follow.findOne({
+        followerId: currentUser._id,
+        followingId: user._id,
+      });
+      isFollowing = !!follow;
+    }
 
     const userResponse = {
       id: user._id,
@@ -64,6 +75,7 @@ export const getUserByUsername = asyncHandler(
       postsCount,
       followers,
       following,
+      isFollowing,
     };
 
     res
@@ -291,8 +303,8 @@ export const updateProfile = asyncHandler(
 
     // Get updated stats
     const postsCount = await Post.countDocuments({ userId: updatedUser._id });
-    const followers = 0; // TODO: Implement followers count
-    const following = 0; // TODO: Implement following count
+    const followers = await Follow.countDocuments({ followingId: updatedUser._id });
+    const following = await Follow.countDocuments({ followerId: updatedUser._id });
 
     const userResponse = {
       id: updatedUser._id,
@@ -315,5 +327,108 @@ export const updateProfile = asyncHandler(
     res
       .status(200)
       .json(new ApiResponse(200, userResponse, "Profile updated successfully"));
+  }
+);
+
+/**
+ * Follow a user
+ * POST /api/users/:username/follow
+ * Requires authentication
+ */
+export const followUser = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Get user from request (set by verifyJWT middleware)
+    const currentUser = (req as any).user;
+    if (!currentUser) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { username } = req.params;
+
+    if (!username) {
+      throw new ApiError(400, "Username is required");
+    }
+
+    // Remove @ symbol if present
+    const cleanUsername = username.startsWith("@")
+      ? username.slice(1)
+      : username;
+
+    // Find user to follow
+    const userToFollow = await User.findOne({ username: cleanUsername });
+    if (!userToFollow) {
+      throw new ApiError(404, "User not found");
+    }
+
+    // Check if trying to follow self
+    if (currentUser._id.toString() === userToFollow._id.toString()) {
+      throw new ApiError(400, "Cannot follow yourself");
+    }
+
+    // Check if already following
+    const existingFollow = await Follow.findOne({
+      followerId: currentUser._id,
+      followingId: userToFollow._id,
+    });
+
+    if (existingFollow) {
+      throw new ApiError(400, "Already following this user");
+    }
+
+    // Create follow relationship
+    const follow = await Follow.create({
+      followerId: currentUser._id,
+      followingId: userToFollow._id,
+    });
+
+    res
+      .status(201)
+      .json(new ApiResponse(201, follow, "User followed successfully"));
+  }
+);
+
+/**
+ * Unfollow a user
+ * DELETE /api/users/:username/follow
+ * Requires authentication
+ */
+export const unfollowUser = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Get user from request (set by verifyJWT middleware)
+    const currentUser = (req as any).user;
+    if (!currentUser) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { username } = req.params;
+
+    if (!username) {
+      throw new ApiError(400, "Username is required");
+    }
+
+    // Remove @ symbol if present
+    const cleanUsername = username.startsWith("@")
+      ? username.slice(1)
+      : username;
+
+    // Find user to unfollow
+    const userToUnfollow = await User.findOne({ username: cleanUsername });
+    if (!userToUnfollow) {
+      throw new ApiError(404, "User not found");
+    }
+
+    // Remove follow relationship
+    const deletedFollow = await Follow.findOneAndDelete({
+      followerId: currentUser._id,
+      followingId: userToUnfollow._id,
+    });
+
+    if (!deletedFollow) {
+      throw new ApiError(404, "Follow relationship not found");
+    }
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, {}, "User unfollowed successfully"));
   }
 );

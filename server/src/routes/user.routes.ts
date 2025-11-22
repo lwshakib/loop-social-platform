@@ -5,6 +5,8 @@ import {
   getUserByUsername,
   getPostsByUsername,
   updateProfile,
+  followUser,
+  unfollowUser,
 } from "../controllers/user.controllers.js";
 import { updateProfileSchema } from "../validators/user.validators.js";
 
@@ -23,6 +25,12 @@ router.get("/:username", getUserByUsername);
 
 // Get posts by username (optional authentication to get like status)
 router.get("/:username/posts", optionalVerifyJWT, getPostsByUsername);
+
+// Follow a user (requires authentication)
+router.post("/:username/follow", verifyJWT, followUser);
+
+// Unfollow a user (requires authentication)
+router.delete("/:username/follow", verifyJWT, unfollowUser);
 
 export default router;
 

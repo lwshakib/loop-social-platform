@@ -287,7 +287,7 @@ export default function Layout() {
           }
 
           // Get Cloudinary signature
-          const { data: signature } = await axios.get(
+          const { data: response } = await axios.get(
             `${serverUrl}/cloudinary/signature`,
             {
               headers: {
@@ -298,6 +298,9 @@ export default function Layout() {
               },
             }
           );
+
+          // Extract signature data from ApiResponse wrapper
+          const signature = response.data;
 
           // Determine upload endpoint based on file type
           const uploadType = postType === "video" ? "video" : "image";

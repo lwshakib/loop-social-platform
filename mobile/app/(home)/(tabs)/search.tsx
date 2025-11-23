@@ -219,7 +219,7 @@ export default function SearchScreen() {
       >
         <Image source={{ uri: avatarUrl }} style={styles.recentAvatar} contentFit="cover" />
         <View style={styles.recentInfo}>
-          <View style={styles.recentHeader}>
+          <View style={styles.recentUserHeader}>
             <Text style={styles.recentUsername}>{item.username}</Text>
             {item.isVerified && (
               <Ionicons name="checkmark-circle" size={16} color="#007AFF" />
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   recentInfo: {
     flex: 1,
   },
-  recentHeader: {
+  recentUserHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,

@@ -9,15 +9,14 @@ function ProfileTabIcon({ color, size }: { color: string; size: number }) {
   const avatarUrl = userData ? getAvatarUrl() : null;
 
   if (avatarUrl) {
+    const isActive = color === "#007AFF";
     return (
       <View
+        className="rounded-full overflow-hidden border"
         style={{
           width: size,
           height: size,
-          borderRadius: size / 2,
-          overflow: "hidden",
-          borderWidth: 1,
-          borderColor: color === "#007AFF" ? "#007AFF" : "transparent",
+          borderColor: isActive ? "#007AFF" : "transparent",
         }}
       >
         <Image
@@ -44,6 +43,7 @@ export default function TabsLayout() {
           borderTopWidth: 1,
           borderTopColor: "#E5E5EA",
         },
+        tabBarClassName: "bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800",
       }}
     >
       <Tabs.Screen

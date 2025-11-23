@@ -11,7 +11,6 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -133,7 +132,7 @@ const VideoPlayer = ({
     }
   }, [shouldPlay, player]);
 
-  return <VideoView player={player} style={styles.video} contentFit="cover" />;
+  return <VideoView player={player} className="w-full h-full" contentFit="cover" />;
 };
 
 export default function HomeScreen() {
@@ -595,21 +594,21 @@ export default function HomeScreen() {
     return (
       <TouchableOpacity
         key={storyGroup.userId}
-        style={styles.storyItem}
+        className="items-center w-[70px]"
         onPress={() => {
           if (storyGroup.user?.username && firstStory?.id) {
             router.push(`/stories/@${storyGroup.user.username}/${firstStory.id}`);
           }
         }}
       >
-        <View style={styles.storyCircle}>
+        <View className="w-[70px] h-[70px] rounded-full border-2 border-gray-200 dark:border-gray-700 p-0.5 mb-1">
           <Image
             source={{ uri: storyGroup.user.profileImage || getAvatarUrl() }}
-            style={styles.storyAvatar}
+            className="w-full h-full rounded-[32px]"
             contentFit="cover"
           />
         </View>
-        <Text style={styles.storyUsername} numberOfLines={1}>
+        <Text className="text-xs text-black dark:text-white text-center max-w-[70px]" numberOfLines={1}>
           {isCurrentUser ? "Your story" : `@${storyGroup.user.username || "unknown"}`}
         </Text>
       </TouchableOpacity>
@@ -623,41 +622,41 @@ export default function HomeScreen() {
     const isVideoPlaying = playingVideoId === item.id;
 
     return (
-      <View style={styles.postContainer}>
+      <View className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 py-3 px-4">
         {/* Post Header */}
-        <View style={styles.postHeader}>
+        <View className="flex-row items-center justify-between mb-3">
           <TouchableOpacity
             onPress={() => router.push(`/(home)/(tabs)/profile`)}
-            style={styles.postHeaderLeft}
+            className="flex-row items-center flex-1"
           >
             <Image
               source={{ uri: item.userAvatar || getAvatarUrl() }}
-              style={styles.postAvatar}
+              className="w-10 h-10 rounded-full mr-3"
               contentFit="cover"
             />
-            <View style={styles.postHeaderInfo}>
-              <Text style={styles.postDisplayName}>{item.displayName}</Text>
-              <Text style={styles.postUsername}>@{item.username}</Text>
+            <View className="flex-1">
+              <Text className="text-[15px] font-semibold text-black dark:text-white">{item.displayName}</Text>
+              <Text className="text-[15px] text-gray-500 dark:text-gray-400">@{item.username}</Text>
             </View>
           </TouchableOpacity>
-          <Text style={styles.postTime}>{item.timeAgo}</Text>
+          <Text className="text-[15px] text-gray-500 dark:text-gray-400">{item.timeAgo}</Text>
         </View>
 
         {/* Post Content */}
         {item.content ? (
-          <Text style={styles.postContent}>{item.content}</Text>
+          <Text className="text-[15px] text-black dark:text-white leading-5 mb-3">{item.content}</Text>
         ) : null}
 
         {/* Post Image or Video */}
         {item.postImage && (
           <Image
             source={{ uri: item.postImage }}
-            style={styles.postImage}
+            className="w-full aspect-square rounded-lg mb-3"
             contentFit="cover"
           />
         )}
         {item.postVideo && (
-          <View style={styles.videoContainer}>
+          <View className="w-full aspect-square rounded-lg overflow-hidden mb-3 bg-black">
             <VideoPlayer
               videoUrl={item.postVideo}
               isMuted={true}
@@ -667,20 +666,20 @@ export default function HomeScreen() {
         )}
 
         {/* Action Buttons */}
-        <View style={styles.postActions}>
+        <View className="flex-row items-center gap-6 mt-2">
           <TouchableOpacity
-            style={styles.actionButton}
+            className="flex-row items-center gap-1.5"
             onPress={() => {
               setSelectedPost(item);
               setIsCommentsModalOpen(true);
             }}
           >
             <Ionicons name="chatbubble-outline" size={24} color="#000" />
-            <Text style={styles.actionText}>{formatNumber(item.comments)}</Text>
+            <Text className="text-sm text-black dark:text-white">{formatNumber(item.comments)}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionButton}
+            className="flex-row items-center gap-1.5"
             onPress={() => handleLike(item.id)}
           >
             <Ionicons
@@ -688,18 +687,13 @@ export default function HomeScreen() {
               size={24}
               color={isLiked ? "#EF4444" : "#000"}
             />
-            <Text
-              style={[
-                styles.actionText,
-                isLiked && styles.actionTextLiked,
-              ]}
-            >
+            <Text className={`text-sm ${isLiked ? "text-red-500" : "text-black dark:text-white"}`}>
               {formatNumber(item.likes)}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionButton}
+            className="flex-row items-center gap-1.5"
             onPress={() => handleSave(item.id)}
           >
             <Ionicons
@@ -714,7 +708,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
       <FlatList
         data={posts}
         renderItem={renderPostItem}
@@ -722,33 +716,33 @@ export default function HomeScreen() {
         ListHeaderComponent={
           <View>
             {/* Stories Section */}
-            <View style={styles.storiesContainer}>
+            <View className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 py-3">
               <ScrollView
                 ref={storiesScrollRef}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.storiesContent}
+                contentContainerStyle={{ paddingHorizontal: 12, gap: 12 }}
               >
                 {/* Create Story - Current User */}
                 {userData && (
                   <TouchableOpacity
-                    style={styles.storyItem}
+                    className="items-center w-[70px]"
                     onPress={() => {
                       // TODO: Open create story dialog
                       Alert.alert("Coming Soon", "Story creation coming soon!");
                     }}
                   >
-                    <View style={[styles.storyCircle, styles.createStoryCircle]}>
+                    <View className="w-[70px] h-[70px] rounded-full border-2 border-blue-500 p-0.5 mb-1">
                       <Image
                         source={{ uri: getAvatarUrl() }}
-                        style={styles.storyAvatar}
+                        className="w-full h-full rounded-[32px]"
                         contentFit="cover"
                       />
-                      <View style={styles.createStoryPlus}>
+                      <View className="absolute bottom-0 right-0 w-6 h-6 rounded-xl bg-blue-500 border-2 border-white items-center justify-center">
                         <Ionicons name="add" size={16} color="#FFFFFF" />
                       </View>
                     </View>
-                    <Text style={styles.storyUsername} numberOfLines={1}>
+                    <Text className="text-xs text-black dark:text-white text-center max-w-[70px]" numberOfLines={1}>
                       Your story
                     </Text>
                   </TouchableOpacity>
@@ -756,7 +750,7 @@ export default function HomeScreen() {
 
                 {/* Other Stories */}
                 {isLoadingStories ? (
-                  <View style={styles.storyItem}>
+                  <View className="items-center w-[70px]">
                     <ActivityIndicator size="small" color="#007AFF" />
                   </View>
                 ) : (
@@ -769,21 +763,21 @@ export default function HomeScreen() {
 
             {/* Loading Posts */}
             {isLoadingPosts && (
-              <View style={styles.loadingContainer}>
+              <View className="p-8 items-center justify-center">
                 <ActivityIndicator size="large" color="#007AFF" />
               </View>
             )}
 
             {/* Empty State */}
             {!isLoadingPosts && posts.length === 0 && (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No posts available</Text>
+              <View className="p-8 items-center justify-center">
+                <Text className="text-sm text-gray-500 dark:text-gray-400">No posts available</Text>
               </View>
             )}
           </View>
         }
         ListEmptyComponent={null}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{ paddingBottom: 16 }}
         onViewableItemsChanged={({ viewableItems }) => {
           const visibleVideo = viewableItems.find(
             (item) => item.item.postVideo
@@ -802,19 +796,19 @@ export default function HomeScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsCommentsModalOpen(false)}
       >
-        <SafeAreaView style={styles.modalContainer} edges={["top"]}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Comments</Text>
+        <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
+          <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+            <Text className="text-lg font-semibold text-black dark:text-white">Comments</Text>
             <TouchableOpacity
               onPress={() => setIsCommentsModalOpen(false)}
-              style={styles.modalCloseButton}
+              className="p-1"
             >
               <Ionicons name="close" size={24} color="#000" />
             </TouchableOpacity>
           </View>
 
           {isLoadingComments ? (
-            <View style={styles.loadingContainer}>
+            <View className="p-8 items-center justify-center">
               <ActivityIndicator size="large" color="#007AFF" />
             </View>
           ) : (
@@ -822,38 +816,39 @@ export default function HomeScreen() {
               data={comments}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <View style={styles.commentItem}>
+                <View className="flex-row px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                   <Image
                     source={{
                       uri: item.user.profileImage || getAvatarUrl(),
                     }}
-                    style={styles.commentAvatar}
+                    className="w-8 h-8 rounded-2xl mr-3"
                     contentFit="cover"
                   />
-                  <View style={styles.commentContent}>
-                    <View style={styles.commentHeader}>
-                      <Text style={styles.commentUsername}>
+                  <View className="flex-1">
+                    <View className="flex-row items-center gap-2 mb-1">
+                      <Text className="text-sm font-semibold text-black dark:text-white">
                         {item.user.firstName} {item.user.surName}
                       </Text>
-                      <Text style={styles.commentTime}>
+                      <Text className="text-xs text-gray-500 dark:text-gray-400">
                         {formatTimeAgo(item.createdAt)}
                       </Text>
                     </View>
-                    <Text style={styles.commentText}>{item.comment}</Text>
+                    <Text className="text-sm text-black dark:text-white leading-5 mb-1">{item.comment}</Text>
                     <TouchableOpacity
                       onPress={() => {
                         setReplyingTo(replyingTo === item.id ? null : item.id);
                       }}
                     >
-                      <Text style={styles.replyButton}>
+                      <Text className="text-xs text-blue-500 dark:text-blue-400 mt-1">
                         {replyingTo === item.id ? "Cancel" : "Reply"}
                       </Text>
                     </TouchableOpacity>
                     {replyingTo === item.id && (
-                      <View style={styles.replyInputContainer}>
+                      <View className="flex-row items-center gap-2 mt-2 pl-2">
                         <TextInput
-                          style={styles.replyInput}
+                          className="flex-1 text-sm text-black dark:text-white py-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-[20px] max-h-[100px]"
                           placeholder="Write a reply..."
+                          placeholderTextColor="#8E8E93"
                           value={replyText[item.id] || ""}
                           onChangeText={(text) =>
                             setReplyText({ ...replyText, [item.id]: text })
@@ -877,26 +872,26 @@ export default function HomeScreen() {
                       </View>
                     )}
                     {item.replies && item.replies.length > 0 && (
-                      <View style={styles.repliesContainer}>
+                      <View className="mt-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
                         {item.replies.map((reply) => (
-                          <View key={reply.id} style={styles.replyItem}>
+                          <View key={reply.id} className="flex-row mt-2">
                             <Image
                               source={{
                                 uri: reply.user.profileImage || getAvatarUrl(),
                               }}
-                              style={styles.replyAvatar}
+                              className="w-6 h-6 rounded-xl mr-2"
                               contentFit="cover"
                             />
-                            <View style={styles.replyContent}>
-                              <View style={styles.commentHeader}>
-                                <Text style={styles.commentUsername}>
+                            <View className="flex-1">
+                              <View className="flex-row items-center gap-2 mb-1">
+                                <Text className="text-sm font-semibold text-black dark:text-white">
                                   {reply.user.firstName} {reply.user.surName}
                                 </Text>
-                                <Text style={styles.commentTime}>
+                                <Text className="text-xs text-gray-500 dark:text-gray-400">
                                   {formatTimeAgo(reply.createdAt)}
                                 </Text>
                               </View>
-                              <Text style={styles.commentText}>
+                              <Text className="text-sm text-black dark:text-white leading-5">
                                 {reply.comment}
                               </Text>
                             </View>
@@ -908,17 +903,18 @@ export default function HomeScreen() {
                 </View>
               )}
               ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>No comments yet</Text>
+                <View className="p-8 items-center justify-center">
+                  <Text className="text-sm text-gray-500 dark:text-gray-400">No comments yet</Text>
                 </View>
               }
             />
           )}
 
-          <View style={styles.commentInputContainer}>
+          <View className="flex-row items-center px-4 py-3 border-t border-gray-200 dark:border-gray-800 gap-3">
             <TextInput
-              style={styles.commentInput}
+              className="flex-1 text-sm text-black dark:text-white py-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-[20px] max-h-[100px]"
               placeholder="Add a comment..."
+              placeholderTextColor="#8E8E93"
               value={newComment}
               onChangeText={setNewComment}
               multiline
@@ -940,276 +936,3 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  listContent: {
-    paddingBottom: 16,
-  },
-  storiesContainer: {
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-    paddingVertical: 12,
-  },
-  storiesContent: {
-    paddingHorizontal: 12,
-    gap: 12,
-  },
-  storyItem: {
-    alignItems: "center",
-    width: 70,
-  },
-  storyCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 2,
-    borderColor: "#E5E5EA",
-    padding: 2,
-    marginBottom: 4,
-  },
-  createStoryCircle: {
-    borderColor: "#007AFF",
-  },
-  storyAvatar: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 32,
-  },
-  createStoryPlus: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#007AFF",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  storyUsername: {
-    fontSize: 12,
-    color: "#000",
-    textAlign: "center",
-    maxWidth: 70,
-  },
-  loadingContainer: {
-    padding: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyContainer: {
-    padding: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    color: "#8E8E93",
-  },
-  postContainer: {
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  postHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  postHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  postAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  postHeaderInfo: {
-    flex: 1,
-  },
-  postDisplayName: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#000",
-  },
-  postUsername: {
-    fontSize: 15,
-    color: "#8E8E93",
-  },
-  postTime: {
-    fontSize: 15,
-    color: "#8E8E93",
-  },
-  postContent: {
-    fontSize: 15,
-    color: "#000",
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  postImage: {
-    width: "100%",
-    aspectRatio: 1,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  videoContainer: {
-    width: "100%",
-    aspectRatio: 1,
-    borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 12,
-    backgroundColor: "#000",
-  },
-  video: {
-    width: "100%",
-    height: "100%",
-  },
-  postActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 24,
-    marginTop: 8,
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  actionText: {
-    fontSize: 14,
-    color: "#000",
-  },
-  actionTextLiked: {
-    color: "#EF4444",
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#000",
-  },
-  modalCloseButton: {
-    padding: 4,
-  },
-  commentItem: {
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F2F2F7",
-  },
-  commentAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 12,
-  },
-  commentContent: {
-    flex: 1,
-  },
-  commentHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 4,
-  },
-  commentUsername: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#000",
-  },
-  commentTime: {
-    fontSize: 12,
-    color: "#8E8E93",
-  },
-  commentText: {
-    fontSize: 14,
-    color: "#000",
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  replyButton: {
-    fontSize: 12,
-    color: "#007AFF",
-    marginTop: 4,
-  },
-  replyInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 8,
-    paddingLeft: 8,
-  },
-  replyInput: {
-    flex: 1,
-    fontSize: 14,
-    color: "#000",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "#F2F2F7",
-    borderRadius: 20,
-    maxHeight: 100,
-  },
-  repliesContainer: {
-    marginTop: 8,
-    paddingLeft: 8,
-    borderLeftWidth: 2,
-    borderLeftColor: "#E5E5EA",
-  },
-  replyItem: {
-    flexDirection: "row",
-    marginTop: 8,
-  },
-  replyAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: 8,
-  },
-  replyContent: {
-    flex: 1,
-  },
-  commentInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E5EA",
-    gap: 12,
-  },
-  commentInput: {
-    flex: 1,
-    fontSize: 14,
-    color: "#000",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "#F2F2F7",
-    borderRadius: 20,
-    maxHeight: 100,
-  },
-});

@@ -10,7 +10,6 @@ import {
   FlatList,
   Modal,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -140,7 +139,7 @@ export default function ReelsScreen() {
       }
     }, [shouldPlay, player]);
 
-    return <VideoView player={player} style={styles.video} contentFit="cover" />;
+    return <VideoView player={player} className="w-full h-full" contentFit="cover" />;
   };
 
   // Fetch videos
@@ -508,7 +507,7 @@ export default function ReelsScreen() {
     const isSaved = savedPosts.has(item.id);
 
     return (
-      <View style={[styles.videoContainer, { height: screenHeight }]}>
+      <View className="w-full relative" style={{ height: screenHeight }}>
         <VideoPlayer
           videoUrl={item.url}
           isMuted={isMuted}
@@ -517,7 +516,7 @@ export default function ReelsScreen() {
 
         {/* Mute/Unmute Button - Top Right */}
         <TouchableOpacity
-          style={styles.muteButton}
+          className="absolute top-[50px] right-4 p-2 rounded-[20px] bg-black/50"
           onPress={() => {
             if (isMuted) {
               setMutedVideos((prev) => {
@@ -542,9 +541,9 @@ export default function ReelsScreen() {
         </TouchableOpacity>
 
         {/* Right Side Actions */}
-        <View style={styles.rightActions}>
+        <View className="absolute right-4 bottom-[100px] items-center gap-6">
           <TouchableOpacity
-            style={styles.actionButton}
+            className="items-center gap-1"
             onPress={() => handleLike(item.id)}
           >
             <Ionicons
@@ -552,24 +551,24 @@ export default function ReelsScreen() {
               size={32}
               color={isLiked ? "#EF4444" : "#FFFFFF"}
             />
-            <Text style={styles.actionText}>{formatNumber(item.likesCount)}</Text>
+            <Text className="text-white text-xs font-semibold">{formatNumber(item.likesCount)}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionButton}
+            className="items-center gap-1"
             onPress={() => {
               setSelectedVideo(item);
               setIsCommentsModalOpen(true);
             }}
           >
             <Ionicons name="chatbubble-outline" size={32} color="#FFFFFF" />
-            <Text style={styles.actionText}>
+            <Text className="text-white text-xs font-semibold">
               {formatNumber(item.commentsCount)}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionButton}
+            className="items-center gap-1"
             onPress={() => handleSave(item.id)}
           >
             <Ionicons
@@ -581,9 +580,9 @@ export default function ReelsScreen() {
         </View>
 
         {/* Bottom Info */}
-        <View style={styles.bottomInfo}>
+        <View className="absolute bottom-[50px] left-4 right-20">
           {item.user && (
-            <View style={styles.userInfo}>
+            <View className="flex-row items-center gap-3">
               <TouchableOpacity
                 onPress={() => {
                   if (item.user?.username) {
@@ -598,11 +597,11 @@ export default function ReelsScreen() {
                       getAvatarUrl() ||
                       `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.user.username}`,
                   }}
-                  style={styles.userAvatar}
+                  className="w-8 h-8 rounded-2xl border-2 border-white"
                   contentFit="cover"
                 />
               </TouchableOpacity>
-              <View style={styles.userDetails}>
+              <View className="flex-1">
                 <TouchableOpacity
                   onPress={() => {
                     if (item.user?.username) {
@@ -610,12 +609,12 @@ export default function ReelsScreen() {
                     }
                   }}
                 >
-                  <Text style={styles.username}>
+                  <Text className="text-white text-sm font-semibold mb-1">
                     @{item.user.username || "unknown"}
                   </Text>
                 </TouchableOpacity>
                 {item.caption && (
-                  <Text style={styles.caption} numberOfLines={2}>
+                  <Text className="text-white text-sm leading-[18px]" numberOfLines={2}>
                     {item.caption}
                   </Text>
                 )}
@@ -629,17 +628,17 @@ export default function ReelsScreen() {
 
   if (videos.length === 0) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.emptyContainer}>
+      <SafeAreaView className="flex-1 bg-black" edges={["top"]}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.emptyText}>Loading videos...</Text>
+          <Text className="text-base text-white mt-3">Loading videos...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
+    <SafeAreaView className="flex-1 bg-black" edges={[]}>
       <FlatList
         ref={flatListRef}
         data={videos}
@@ -664,21 +663,21 @@ export default function ReelsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsCommentsModalOpen(false)}
       >
-        <SafeAreaView style={styles.modalContainer} edges={["top"]}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Comments</Text>
+        <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
+          <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+            <Text className="text-lg font-semibold text-black dark:text-white">Comments</Text>
             <TouchableOpacity onPress={() => setIsCommentsModalOpen(false)}>
               <Ionicons name="close" size={24} color="#000000" />
             </TouchableOpacity>
           </View>
 
           {isLoadingComments ? (
-            <View style={styles.commentsLoadingContainer}>
+            <View className="flex-1 justify-center items-center">
               <ActivityIndicator size="large" color="#007AFF" />
             </View>
           ) : comments.length === 0 ? (
-            <View style={styles.emptyCommentsContainer}>
-              <Text style={styles.emptyCommentsText}>
+            <View className="flex-1 justify-center items-center p-4">
+              <Text className="text-base text-gray-500 dark:text-gray-400 text-center">
                 No comments yet. Be the first to comment!
               </Text>
             </View>
@@ -687,7 +686,7 @@ export default function ReelsScreen() {
               data={comments}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <View style={styles.commentItem}>
+                <View className="flex-row gap-3 mb-4">
                   <Image
                     source={{
                       uri:
@@ -695,21 +694,21 @@ export default function ReelsScreen() {
                         getAvatarUrl() ||
                         `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.user?.username || "user"}`,
                     }}
-                    style={styles.commentAvatar}
+                    className="w-8 h-8 rounded-2xl"
                     contentFit="cover"
                   />
-                  <View style={styles.commentContent}>
-                    <View style={styles.commentHeader}>
-                      <Text style={styles.commentUsername}>
+                  <View className="flex-1">
+                    <View className="flex-row items-center gap-2 mb-1">
+                      <Text className="text-sm font-semibold text-black dark:text-white">
                         @{item.user?.username || "unknown"}
                       </Text>
-                      <Text style={styles.commentTime}>
+                      <Text className="text-xs text-gray-500 dark:text-gray-400">
                         {formatTimeAgo(item.createdAt)}
                       </Text>
                     </View>
-                    <Text style={styles.commentText}>{item.comment}</Text>
+                    <Text className="text-sm text-black dark:text-white leading-5 mb-2">{item.comment}</Text>
                     <TouchableOpacity
-                      style={styles.replyButton}
+                      className="mt-1"
                       onPress={() => {
                         setReplyingTo(replyingTo === item.id ? null : item.id);
                         if (replyingTo !== item.id) {
@@ -717,13 +716,14 @@ export default function ReelsScreen() {
                         }
                       }}
                     >
-                      <Text style={styles.replyButtonText}>Reply</Text>
+                      <Text className="text-xs text-gray-500 dark:text-gray-400">Reply</Text>
                     </TouchableOpacity>
                     {replyingTo === item.id && (
-                      <View style={styles.replyInputContainer}>
+                      <View className="mt-2 flex-row gap-2 items-end">
                         <TextInput
-                          style={styles.replyInput}
+                          className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm max-h-[100px] text-black dark:text-white"
                           placeholder={`Reply to @${item.user?.username || "user"}...`}
+                          placeholderTextColor="#8E8E93"
                           value={replyText[item.id] || ""}
                           onChangeText={(text) =>
                             setReplyText((prev) => ({ ...prev, [item.id]: text }))
@@ -731,25 +731,20 @@ export default function ReelsScreen() {
                           multiline
                         />
                         <TouchableOpacity
-                          style={[
-                            styles.sendButton,
-                            (!replyText[item.id]?.trim() ||
-                              isSubmittingComment) &&
-                              styles.sendButtonDisabled,
-                          ]}
+                          className={`px-4 py-2 rounded-lg ${(!replyText[item.id]?.trim() || isSubmittingComment) ? "opacity-50 bg-gray-300 dark:bg-gray-700" : "bg-blue-500"}`}
                           onPress={() => handleSubmitComment(item.id)}
                           disabled={
                             !replyText[item.id]?.trim() || isSubmittingComment
                           }
                         >
-                          <Text style={styles.sendButtonText}>Send</Text>
+                          <Text className="text-white text-sm font-semibold">Send</Text>
                         </TouchableOpacity>
                       </View>
                     )}
                   </View>
                 </View>
               )}
-              contentContainerStyle={styles.commentsList}
+              contentContainerStyle={{ padding: 16 }}
             />
           )}
 

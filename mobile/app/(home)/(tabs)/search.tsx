@@ -6,7 +6,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -180,24 +179,24 @@ export default function SearchScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.resultItem}
+        className="flex-row items-center py-3 gap-3"
         onPress={() => handleUserClick(item.username)}
       >
-        <Image source={{ uri: avatarUrl }} style={styles.resultAvatar} contentFit="cover" />
-        <View style={styles.resultInfo}>
-          <View style={styles.resultHeader}>
-            <Text style={styles.resultUsername}>{item.username}</Text>
+        <Image source={{ uri: avatarUrl }} className="w-12 h-12 rounded-full" contentFit="cover" />
+        <View className="flex-1">
+          <View className="flex-row items-center gap-1.5 mb-1">
+            <Text className="text-base font-semibold text-black dark:text-white">{item.username}</Text>
             {item.isVerified && (
               <Ionicons name="checkmark-circle" size={16} color="#007AFF" />
             )}
           </View>
           {(item.firstName || item.surName) && (
-            <Text style={styles.resultFullName}>
+            <Text className="text-sm text-gray-500 dark:text-gray-400 mb-0.5">
               {item.firstName} {item.surName}
             </Text>
           )}
           {item.followers !== undefined && (
-            <Text style={styles.resultFollowers}>
+            <Text className="text-xs text-gray-500 dark:text-gray-400">
               {item.followers.toLocaleString()} followers
             </Text>
           )}
@@ -214,28 +213,28 @@ export default function SearchScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.recentItem}
+        className="flex-row items-center py-3 gap-3"
         onPress={() => handleUserClick(item.username)}
       >
-        <Image source={{ uri: avatarUrl }} style={styles.recentAvatar} contentFit="cover" />
-        <View style={styles.recentInfo}>
-          <View style={styles.recentUserHeader}>
-            <Text style={styles.recentUsername}>{item.username}</Text>
+        <Image source={{ uri: avatarUrl }} className="w-12 h-12 rounded-full" contentFit="cover" />
+        <View className="flex-1">
+          <View className="flex-row items-center gap-1.5 mb-1">
+            <Text className="text-base font-semibold text-black dark:text-white">{item.username}</Text>
             {item.isVerified && (
               <Ionicons name="checkmark-circle" size={16} color="#007AFF" />
             )}
           </View>
           {item.fullName && (
-            <Text style={styles.recentFullName}>{item.fullName}</Text>
+            <Text className="text-sm text-gray-500 dark:text-gray-400 mb-0.5">{item.fullName}</Text>
           )}
           {item.followers > 0 && (
-            <Text style={styles.recentFollowers}>
+            <Text className="text-xs text-gray-500 dark:text-gray-400">
               {item.followers.toLocaleString()} followers
             </Text>
           )}
         </View>
         <TouchableOpacity
-          style={styles.removeButton}
+          className="p-1"
           onPress={() => handleRemoveRecent(item.id)}
         >
           <Ionicons name="close" size={20} color="#8E8E93" />
@@ -245,17 +244,17 @@ export default function SearchScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
       {/* Search Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Search</Text>
+      <View className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+        <Text className="text-2xl font-bold text-black dark:text-white">Search</Text>
       </View>
 
       {/* Search Input */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#8E8E93" style={styles.searchIcon} />
+      <View className="flex-row items-center mx-4 my-3 px-3 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-[10px]">
+        <Ionicons name="search" size={20} color="#8E8E93" className="mr-2" />
         <TextInput
-          style={styles.searchInput}
+          className="flex-1 text-base text-black dark:text-white"
           placeholder="Search"
           placeholderTextColor="#8E8E93"
           value={searchQuery}
@@ -265,7 +264,7 @@ export default function SearchScreen() {
         {searchQuery.length > 0 && (
           <TouchableOpacity
             onPress={() => setSearchQuery("")}
-            style={styles.clearButton}
+            className="ml-2"
           >
             <Ionicons name="close-circle" size={20} color="#8E8E93" />
           </TouchableOpacity>
@@ -275,199 +274,43 @@ export default function SearchScreen() {
       {/* Search Results or Recent Searches */}
       {searchQuery ? (
         isSearching ? (
-          <View style={styles.loadingContainer}>
+          <View className="flex-1 justify-center items-center py-12">
             <ActivityIndicator size="large" color="#007AFF" />
-            <Text style={styles.loadingText}>Searching...</Text>
+            <Text className="mt-3 text-base text-gray-500 dark:text-gray-400">Searching...</Text>
           </View>
         ) : searchResults.length > 0 ? (
           <FlatList
             data={searchResults}
             renderItem={renderSearchResult}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.resultsList}
+            contentContainerStyle={{ padding: 16 }}
           />
         ) : (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No results found</Text>
+          <View className="flex-1 justify-center items-center py-12">
+            <Text className="text-base text-gray-500 dark:text-gray-400">No results found</Text>
           </View>
         )
       ) : recentSearches.length > 0 ? (
-        <View style={styles.recentContainer}>
-          <View style={styles.recentHeader}>
-            <Text style={styles.recentTitle}>Recent</Text>
+        <View className="flex-1">
+          <View className="flex-row justify-between items-center px-4 py-3">
+            <Text className="text-base font-semibold text-black dark:text-white">Recent</Text>
             <TouchableOpacity onPress={handleClearRecent}>
-              <Text style={styles.clearAllText}>Clear all</Text>
+              <Text className="text-sm text-blue-500 dark:text-blue-400 font-semibold">Clear all</Text>
             </TouchableOpacity>
           </View>
           <FlatList
             data={recentSearches}
             renderItem={renderRecentSearch}
             keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.recentList}
+            contentContainerStyle={{ paddingHorizontal: 16 }}
           />
         </View>
       ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No recent searches</Text>
+        <View className="flex-1 justify-center items-center py-12">
+          <Text className="text-base text-gray-500 dark:text-gray-400">No recent searches</Text>
         </View>
       )}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000000",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: 16,
-    marginVertical: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: "#F2F2F7",
-    borderRadius: 10,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#000000",
-  },
-  clearButton: {
-    marginLeft: 8,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 48,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#8E8E93",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 48,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#8E8E93",
-  },
-  resultsList: {
-    padding: 16,
-  },
-  resultItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    gap: 12,
-  },
-  resultAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  resultInfo: {
-    flex: 1,
-  },
-  resultHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 4,
-  },
-  resultUsername: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000000",
-  },
-  resultFullName: {
-    fontSize: 14,
-    color: "#8E8E93",
-    marginBottom: 2,
-  },
-  resultFollowers: {
-    fontSize: 12,
-    color: "#8E8E93",
-  },
-  recentContainer: {
-    flex: 1,
-  },
-  recentHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  recentTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000000",
-  },
-  clearAllText: {
-    fontSize: 14,
-    color: "#007AFF",
-    fontWeight: "600",
-  },
-  recentList: {
-    paddingHorizontal: 16,
-  },
-  recentItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    gap: 12,
-  },
-  recentAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  recentInfo: {
-    flex: 1,
-  },
-  recentUserHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 4,
-  },
-  recentUsername: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000000",
-  },
-  recentFullName: {
-    fontSize: 14,
-    color: "#8E8E93",
-    marginBottom: 2,
-  },
-  recentFollowers: {
-    fontSize: 12,
-    color: "#8E8E93",
-  },
-  removeButton: {
-    padding: 4,
-  },
-});

@@ -562,10 +562,15 @@ export default function HomePage() {
                   return (
                     <div
                       key={storyGroup.userId}
-                      className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 relative"
+                      className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 cursor-pointer"
+                      onClick={() => {
+                        navigate(
+                          `/stories/@${storyGroup.user?.username}/${firstStory.id}`
+                        );
+                      }}
                     >
                       <div
-                        className="relative p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 cursor-pointer"
+                        className="relative p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (storyGroup.user?.username) {
@@ -588,7 +593,7 @@ export default function HomePage() {
                         </div>
                       </div>
                       <span
-                        className="text-[10px] sm:text-xs text-foreground truncate max-w-[60px] sm:max-w-[70px] text-center cursor-pointer hover:underline"
+                        className="text-[10px] sm:text-xs text-foreground truncate max-w-[60px] sm:max-w-[70px] text-center hover:underline"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (storyGroup.user?.username) {
@@ -598,14 +603,6 @@ export default function HomePage() {
                       >
                         @{storyGroup.user.username || "unknown"}
                       </span>
-                      <div
-                        className="absolute inset-0 cursor-pointer z-[-1]"
-                        onClick={() => {
-                          navigate(
-                            `/stories/@${storyGroup.user?.username}/${firstStory.id}`
-                          );
-                        }}
-                      />
                     </div>
                   );
                 })

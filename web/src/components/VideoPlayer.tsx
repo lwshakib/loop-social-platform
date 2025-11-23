@@ -30,7 +30,6 @@ interface VideoPlayerProps {
 
 export default function VideoPlayer({
   src,
-  videoId,
   className,
   containerClassName,
   autoPlay = false,

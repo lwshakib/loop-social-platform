@@ -26,7 +26,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import VideoPlayer from "@/components/VideoPlayer";

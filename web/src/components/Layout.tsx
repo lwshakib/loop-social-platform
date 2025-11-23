@@ -18,7 +18,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { EmojiPicker } from "frimousse";
 import {
   Bell,
-  Check,
   Compass,
   Home,
   Play,

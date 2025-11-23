@@ -562,14 +562,17 @@ export default function HomePage() {
                   return (
                     <div
                       key={storyGroup.userId}
-                      className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 cursor-pointer"
-                      onClick={() => {
-                        navigate(
-                          `/stories/@${storyGroup.user?.username}/${firstStory.id}`
-                        );
-                      }}
+                      className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 relative"
                     >
-                      <div className="relative p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500">
+                      <div
+                        className="relative p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (storyGroup.user?.username) {
+                            navigate(`/${storyGroup.user.username}`);
+                          }
+                        }}
+                      >
                         <div className="rounded-full bg-background p-[2px]">
                           <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
                             <AvatarImage
@@ -584,9 +587,25 @@ export default function HomePage() {
                           </Avatar>
                         </div>
                       </div>
-                      <span className="text-[10px] sm:text-xs text-foreground truncate max-w-[60px] sm:max-w-[70px] text-center">
-                        {storyGroup.user.username || "unknown"}
+                      <span
+                        className="text-[10px] sm:text-xs text-foreground truncate max-w-[60px] sm:max-w-[70px] text-center cursor-pointer hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (storyGroup.user?.username) {
+                            navigate(`/${storyGroup.user.username}`);
+                          }
+                        }}
+                      >
+                        @{storyGroup.user.username || "unknown"}
                       </span>
+                      <div
+                        className="absolute inset-0 cursor-pointer z-[-1]"
+                        onClick={() => {
+                          navigate(
+                            `/stories/@${storyGroup.user?.username}/${firstStory.id}`
+                          );
+                        }}
+                      />
                     </div>
                   );
                 })
@@ -758,7 +777,14 @@ export default function HomePage() {
                     className="flex items-center justify-between gap-2"
                   >
                     <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                      <Avatar className="h-7 w-7 md:h-8 md:w-8 shrink-0">
+                      <Avatar
+                        className="h-7 w-7 md:h-8 md:w-8 shrink-0 cursor-pointer"
+                        onClick={() => {
+                          if (storyGroup.user?.username) {
+                            navigate(`/${storyGroup.user.username}`);
+                          }
+                        }}
+                      >
                         <AvatarImage
                           src={storyGroup.user.profileImage || ""}
                           alt={storyGroup.user.username || ""}
@@ -770,8 +796,15 @@ export default function HomePage() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-xs md:text-sm truncate">
-                          {storyGroup.user.username || "unknown"}
+                        <p
+                          className="font-semibold text-xs md:text-sm truncate cursor-pointer hover:underline"
+                          onClick={() => {
+                            if (storyGroup.user?.username) {
+                              navigate(`/${storyGroup.user.username}`);
+                            }
+                          }}
+                        >
+                          @{storyGroup.user.username || "unknown"}
                         </p>
                         <p className="text-[10px] md:text-xs text-muted-foreground truncate">
                           Suggested for you

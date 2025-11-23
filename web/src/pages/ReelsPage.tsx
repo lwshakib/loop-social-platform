@@ -1178,7 +1178,14 @@ export default function ReelsPage() {
                 <div className="absolute bottom-12 left-0 right-0 p-4 sm:p-6">
                   {video.user && (
                     <div className="flex items-center gap-2 mb-2">
-                      <Avatar className="h-6 w-6 sm:h-7 sm:w-7 border border-white/50 shrink-0">
+                      <Avatar
+                        className="h-6 w-6 sm:h-7 sm:w-7 border border-white/50 shrink-0 cursor-pointer"
+                        onClick={() => {
+                          if (video.user?.username) {
+                            navigate(`/${video.user.username}`);
+                          }
+                        }}
+                      >
                         <AvatarImage
                           src={video.user.profileImage || ""}
                           alt={video.user.username || ""}
@@ -1190,8 +1197,15 @@ export default function ReelsPage() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                        <p className="font-semibold text-white text-xs sm:text-sm truncate">
-                          {video.user.username || "unknown"}
+                        <p
+                          className="font-semibold text-white text-xs sm:text-sm truncate cursor-pointer hover:underline"
+                          onClick={() => {
+                            if (video.user?.username) {
+                              navigate(`/${video.user.username}`);
+                            }
+                          }}
+                        >
+                          @{video.user.username || "unknown"}
                         </p>
                         <span className="text-white/60 text-xs">·</span>
                         <Button
@@ -1408,7 +1422,14 @@ export default function ReelsPage() {
                           return (
                             <div key={comment.id} className="space-y-2">
                               <div className="flex gap-3">
-                                <Avatar className="h-8 w-8 shrink-0">
+                                <Avatar
+                                  className="h-8 w-8 shrink-0 cursor-pointer"
+                                  onClick={() => {
+                                    if (comment.user?.username) {
+                                      navigate(`/${comment.user.username}`);
+                                    }
+                                  }}
+                                >
                                   <AvatarImage
                                     src={comment.user.profileImage || ""}
                                     alt={comment.user.username || ""}
@@ -1421,7 +1442,14 @@ export default function ReelsPage() {
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-semibold text-sm">
+                                    <span
+                                      className="font-semibold text-sm cursor-pointer hover:underline"
+                                      onClick={() => {
+                                        if (comment.user?.username) {
+                                          navigate(`/${comment.user.username}`);
+                                        }
+                                      }}
+                                    >
                                       @{comment.user.username || "unknown"}
                                     </span>
                                     <span className="text-xs text-muted-foreground">
@@ -1557,8 +1585,15 @@ export default function ReelsPage() {
                                           key={reply.id}
                                           className="space-y-2"
                                         >
-                                          <div className="flex gap-3">
-                                            <Avatar className="h-7 w-7 shrink-0">
+                                            <div className="flex gap-3">
+                                            <Avatar
+                                              className="h-7 w-7 shrink-0 cursor-pointer"
+                                              onClick={() => {
+                                                if (reply.user?.username) {
+                                                  navigate(`/${reply.user.username}`);
+                                                }
+                                              }}
+                                            >
                                               <AvatarImage
                                                 src={
                                                   reply.user.profileImage || ""
@@ -1573,7 +1608,14 @@ export default function ReelsPage() {
                                             </Avatar>
                                             <div className="flex-1 min-w-0">
                                               <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-semibold text-sm">
+                                                <span
+                                                  className="font-semibold text-sm cursor-pointer hover:underline"
+                                                  onClick={() => {
+                                                    if (reply.user?.username) {
+                                                      navigate(`/${reply.user.username}`);
+                                                    }
+                                                  }}
+                                                >
                                                   @
                                                   {reply.user.username ||
                                                     "unknown"}

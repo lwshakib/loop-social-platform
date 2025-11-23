@@ -443,7 +443,14 @@ export default function StoriesPage() {
         <div className="p-4 space-y-3">
           {/* User Info */}
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border-2 border-white shrink-0">
+            <Avatar
+              className="h-10 w-10 border-2 border-white shrink-0 cursor-pointer"
+              onClick={() => {
+                if (currentStory.user?.username) {
+                  navigate(`/${currentStory.user.username}`);
+                }
+              }}
+            >
               <AvatarImage
                 src={currentStory.user?.profileImage || ""}
                 alt={currentStory.user?.username || ""}
@@ -455,8 +462,15 @@ export default function StoriesPage() {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-white font-semibold text-sm">
-                {currentStory.user?.username || "unknown"}
+              <p
+                className="text-white font-semibold text-sm cursor-pointer hover:underline"
+                onClick={() => {
+                  if (currentStory.user?.username) {
+                    navigate(`/${currentStory.user.username}`);
+                  }
+                }}
+              >
+                @{currentStory.user?.username || "unknown"}
               </p>
               <p className="text-white/70 text-xs">
                 {new Date(currentStory.createdAt).toLocaleTimeString([], {

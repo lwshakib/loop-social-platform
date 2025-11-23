@@ -1,4 +1,5 @@
-import { Link, Stack } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -12,21 +13,88 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignIn() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSignIn = async () => {
     if (!email || !password) {
+      setError("Please fill in all fields");
       return;
     }
 
     setIsLoading(true);
-    // TODO: Implement sign in logic
-    setTimeout(() => {
+    setError("");
+
+    try {
+      const serverUrl = process.env.EXPO_PUBLIC_SERVER_URL || "";
+
+      if (!serverUrl) {
+        setError(
+          "Server URL is not configured. Please set EXPO_PUBLIC_SERVER_URL"
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${serverUrl}/auth/sign-in`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const userData = result.data;
+
+        // Store tokens and user data
+        if (userData.accessToken) {
+          await AsyncStorage.setItem("accessToken", userData.accessToken);
+        }
+        if (userData.refreshToken) {
+          await AsyncStorage.setItem("refreshToken", userData.refreshToken);
+        }
+        if (userData.id) {
+          await AsyncStorage.setItem("userId", userData.id.toString());
+        }
+
+        // Store user data
+        await AsyncStorage.setItem("userData", JSON.stringify(userData));
+
+        // Navigate to home
+        router.replace("/(home)/(tabs)/home");
+      } else {
+        // Try to parse error response, but handle non-JSON responses
+        let errorMessage = "Failed to sign in. Please check your credentials.";
+        try {
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const errorData = await response.json();
+            errorMessage =
+              errorData.message ||
+              errorData.error ||
+              errorData.data?.message ||
+              errorMessage;
+          } else {
+            const text = await response.text();
+            errorMessage = text || errorMessage;
+          }
+        } catch (parseError) {
+          console.error("Error parsing error response:", parseError);
+          errorMessage = `Server returned status ${response.status}`;
+        }
+        setError(errorMessage);
+      }
+    } catch (error) {
+      console.error("Error signing in:", error);
+      setError("An error occurred. Please try again.");
+    } finally {
       setIsLoading(false);
-      // router.replace("/(tabs)");
-    }, 1000);
+    }
   };
 
   return (
@@ -42,11 +110,19 @@ export default function SignIn() {
           <View className="flex-1 px-6 pt-12 pb-8">
             {/* Header */}
             <View className="mb-12">
+              <View className="mb-6">
+                <Text className="text-5xl font-bold text-blue-600 dark:text-blue-500 text-center">
+                  Loop
+                </Text>
+                <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1">
+                  Social Media Platform
+                </Text>
+              </View>
               <Text className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
                 Welcome back
               </Text>
               <Text className="text-base text-gray-600 dark:text-gray-300">
-                Sign in to continue to your account
+                Sign in to continue to your Loop account
               </Text>
             </View>
 
@@ -85,6 +161,15 @@ export default function SignIn() {
                   autoCorrect={false}
                 />
               </View>
+
+              {/* Error Message */}
+              {error && (
+                <View className="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <Text className="text-sm text-red-600 dark:text-red-400">
+                    {error}
+                  </Text>
+                </View>
+              )}
 
               <TouchableOpacity
                 className="w-full bg-blue-600 dark:bg-blue-500 py-4 rounded-lg mb-4"

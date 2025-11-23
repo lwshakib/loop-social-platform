@@ -48,14 +48,21 @@ const format = winston.format.combine(
 );
 
 // Define which transports the logger must use to print out messages.
-// In this example, we are using three different transports
-const transports = [
+// In development, use console and file transports.
+// In production/deployment, only use console to avoid creating logs folder.
+const transports: winston.transport[] = [
   // Allow the use the console to print the messages
   new winston.transports.Console(),
-  new winston.transports.File({ filename: "logs/error.log", level: "error" }),
-  new winston.transports.File({ filename: "logs/info.log", level: "info" }),
-  new winston.transports.File({ filename: "logs/http.log", level: "http" }),
 ];
+
+// Only add file transports in development mode
+if (envs.NODE_ENV === "development") {
+  transports.push(
+    new winston.transports.File({ filename: "logs/error.log", level: "error" }),
+    new winston.transports.File({ filename: "logs/info.log", level: "info" }),
+    new winston.transports.File({ filename: "logs/http.log", level: "http" })
+  );
+}
 
 // Create the logger instance that has to be exported
 // and used to log messages.

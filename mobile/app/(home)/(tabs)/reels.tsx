@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { Audio } from "expo-av";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,

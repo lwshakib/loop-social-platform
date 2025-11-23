@@ -735,33 +735,6 @@ export default function HomePage() {
 
         {/* Right Sidebar */}
         <div className="hidden lg:block space-y-4 md:space-y-6 w-72 xl:w-80">
-          {/* User Profile */}
-          <div className="bg-card border rounded-lg p-3 md:p-4">
-            <div className="flex items-center gap-2 md:gap-3">
-              <Avatar className="h-12 w-12 md:h-14 md:w-14">
-                <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=You" />
-                <AvatarFallback className="text-xs md:text-sm">
-                  YO
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-xs md:text-sm truncate">
-                  your_username
-                </p>
-                <p className="text-xs md:text-sm text-muted-foreground truncate">
-                  Your Name
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-primary text-xs md:text-sm shrink-0"
-              >
-                Switch
-              </Button>
-            </div>
-          </div>
-
           {/* Suggestions */}
           <div className="bg-card border rounded-lg p-3 md:p-4">
             <div className="flex items-center justify-between mb-3 md:mb-4">

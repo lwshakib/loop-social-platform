@@ -45,17 +45,6 @@ const InstagramLogo = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Mock recent searches
-const mockRecentSearches = [
-  {
-    id: 1,
-    username: "dr.mizanur.rahman.azhari",
-    fullName: "Dr. Mizanur Rahman Azhari",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mizanur",
-    followers: "530K",
-    isVerified: true,
-  },
-];
 
 // Helper function to format time ago
 const formatTimeAgo = (date: string | Date): string => {
@@ -197,8 +186,7 @@ export default function Layout() {
   const isMobile = useIsMobile();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [recentSearches, setRecentSearches] = useState(mockRecentSearches);
+  const [recentSearches, setRecentSearches] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
@@ -278,7 +266,6 @@ export default function Layout() {
 
   const handleSearchClose = () => {
     setIsSearchOpen(false);
-    setSearchQuery("");
   };
 
   // Fetch notifications
@@ -380,10 +367,6 @@ export default function Layout() {
     setIsSearchOpen(false);
     setIsNotificationsOpen(false);
     navigate("/messages");
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery("");
   };
 
   const handleClearRecent = () => {
@@ -1202,29 +1185,8 @@ export default function Layout() {
                 mass: 0.6,
               }}
             >
-              {/* Search Input */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-9 h-10 bg-muted/50"
-                  autoFocus
-                />
-                {searchQuery && (
-                  <button
-                    onClick={handleClearSearch}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                  >
-                    <X className="h-4 w-4 text-muted-foreground" />
-                  </button>
-                )}
-              </div>
-
               {/* Recent Searches */}
-              {recentSearches.length > 0 && !searchQuery && (
+              {recentSearches.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-sm">Recent</p>
@@ -1248,31 +1210,21 @@ export default function Layout() {
                           setIsSearchOpen(false);
                         }}
           >
-                        <div className="flex items-center gap-3 flex-1">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage
-                              src={search.avatar}
-                              alt={search.username}
-                            />
-                            <AvatarFallback>
-                              {search.username[0].toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1">
-                              <p className="font-semibold text-sm truncate">
-                                {search.username}
-                              </p>
-                              {search.isVerified && (
-                                <Check className="h-4 w-4 text-blue-500 fill-current shrink-0" />
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <p className="truncate">{search.fullName}</p>
-                              <span>·</span>
-                              <p>{search.followers} followers</p>
-                            </div>
+                        <div className="flex items-center gap-2 flex-1">
+                          <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                            {search.avatar ? (
+                              <img
+                                src={search.avatar}
+                                alt={search.username}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-xs font-medium">
+                                {search.username[0].toUpperCase()}
+                              </span>
+                            )}
                           </div>
+                          <p className="text-sm truncate">{search.username}</p>
                         </div>
                         <button
                           onClick={(e) => {
@@ -1289,15 +1241,8 @@ export default function Layout() {
                 </div>
               )}
 
-              {/* Search Results (when typing) */}
-              {searchQuery && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p className="text-sm">No results found</p>
-                </div>
-              )}
-
               {/* Empty State */}
-              {recentSearches.length === 0 && !searchQuery && (
+              {recentSearches.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-sm">No recent searches</p>
                 </div>
@@ -1526,47 +1471,11 @@ export default function Layout() {
           </DialogHeader>
 
               <div className="flex flex-col h-full sm:max-h-[80vh]">
-                {/* Search Input */}
-                <div className="px-4 sm:px-6 py-4 border-b">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-                      type="text"
-                      placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 pr-9 h-10 bg-muted/50"
-              autoFocus
-            />
-                    {searchQuery && (
-                      <button
-                        onClick={handleClearSearch}
-                        className="absolute right-3 top-1/2 -translate-y-1/2"
-                      >
-                        <X className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                    )}
-                  </div>
-          </div>
-          
                 {/* Search Results */}
                 <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
                   {/* Recent Searches */}
-                  {recentSearches.length > 0 && !searchQuery && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold text-sm">Recent</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleClearRecent}
-                          className="text-primary text-xs h-auto py-1"
-                        >
-                          Clear all
-                        </Button>
-              </div>
-
-                      <div className="space-y-2">
+                  {recentSearches.length > 0 && (
+                <div className="space-y-2">
                         {recentSearches.map((search) => (
                   <div 
                             key={search.id}
@@ -1576,31 +1485,21 @@ export default function Layout() {
                       setIsSearchOpen(false);
                     }}
                   >
-                            <div className="flex items-center gap-3 flex-1">
-                              <Avatar className="h-10 w-10">
-                                <AvatarImage
-                                  src={search.avatar}
-                                  alt={search.username}
-                                />
-                                <AvatarFallback>
-                                  {search.username[0].toUpperCase()}
-                                </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1">
-                                  <p className="font-semibold text-sm truncate">
-                                    {search.username}
-                                  </p>
-                                  {search.isVerified && (
-                                    <Check className="h-4 w-4 text-blue-500 fill-current shrink-0" />
-                        )}
-                      </div>
-                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                  <p className="truncate">{search.fullName}</p>
-                                  <span>·</span>
-                                  <p>{search.followers} followers</p>
-                    </div>
+                            <div className="flex items-center gap-2 flex-1">
+                              <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                                {search.avatar ? (
+                                  <img
+                                    src={search.avatar}
+                                    alt={search.username}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-xs font-medium">
+                                    {search.username[0].toUpperCase()}
+                                  </span>
+                                )}
                               </div>
+                              <p className="text-sm truncate">{search.username}</p>
                             </div>
                             <button
                               onClick={(e) => {
@@ -1615,17 +1514,10 @@ export default function Layout() {
                 ))}
                       </div>
               </div>
-            )}
-
-                  {/* Search Results (when typing) */}
-                  {searchQuery && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p className="text-sm">No results found</p>
-                    </div>
                   )}
 
                   {/* Empty State */}
-                  {recentSearches.length === 0 && !searchQuery && (
+                  {recentSearches.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
                       <p className="text-sm">No recent searches</p>
                     </div>

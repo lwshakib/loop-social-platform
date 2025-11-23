@@ -8,6 +8,7 @@ import {
   followUser,
   unfollowUser,
   getSuggestedUsers,
+  searchUsers,
 } from "../controllers/user.controllers.js";
 import { updateProfileSchema } from "../validators/user.validators.js";
 
@@ -23,6 +24,9 @@ router.patch(
 
 // Get suggested users (requires authentication)
 router.get("/suggestions", verifyJWT, getSuggestedUsers);
+
+// Search users by query (optional authentication to get following status)
+router.get("/search", optionalVerifyJWT, searchUsers);
 
 // Get user by username (optional authentication to get following status)
 router.get("/:username", optionalVerifyJWT, getUserByUsername);

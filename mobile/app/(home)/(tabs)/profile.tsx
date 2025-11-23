@@ -11,7 +11,6 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -429,7 +428,8 @@ export default function ProfileScreen() {
 
     return (
       <TouchableOpacity
-        style={[styles.postItem, { width: itemSize, height: itemSize }]}
+        className="m-0.5 bg-gray-200 dark:bg-gray-800 overflow-hidden"
+        style={{ width: itemSize, height: itemSize }}
         onPress={() => {
           setSelectedPost(item);
           setIsPostModalOpen(true);
@@ -437,32 +437,32 @@ export default function ProfileScreen() {
       >
         {item.url ? (
           item.type === "video" ? (
-            <View style={styles.postVideoContainer}>
+            <View className="w-full h-full relative">
               <Image
                 source={{ uri: item.url }}
-                style={styles.postImage}
+                className="w-full h-full"
                 contentFit="cover"
               />
-              <View style={styles.playIconOverlay}>
+              <View className="absolute inset-0 justify-center items-center bg-black/20">
                 <Ionicons name="play" size={20} color="#FFFFFF" />
               </View>
             </View>
           ) : (
             <Image
               source={{ uri: item.url }}
-              style={styles.postImage}
+              className="w-full h-full"
               contentFit="cover"
             />
           )
         ) : (
-          <View style={styles.postTextContainer}>
-            <Text style={styles.postText} numberOfLines={3}>
+          <View className="w-full h-full justify-center items-center p-2">
+            <Text className="text-xs text-black dark:text-white text-center" numberOfLines={3}>
               {item.caption || "Post"}
             </Text>
           </View>
         )}
         {item.type === "video" && (
-          <View style={styles.videoIndicator}>
+          <View className="absolute top-2 right-2">
             <Ionicons name="play-circle" size={16} color="#FFFFFF" />
           </View>
         )}
@@ -472,10 +472,10 @@ export default function ProfileScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.loadingContainer}>
+      <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Loading profile...</Text>
+          <Text className="mt-3 text-base text-gray-500 dark:text-gray-400">Loading profile...</Text>
         </View>
       </SafeAreaView>
     );
@@ -483,9 +483,9 @@ export default function ProfileScreen() {
 
   if (!userData) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>User not found</Text>
+      <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-base text-gray-500 dark:text-gray-400">User not found</Text>
         </View>
       </SafeAreaView>
     );
@@ -497,57 +497,49 @@ export default function ProfileScreen() {
     userData.coverImage || "https://picsum.photos/800/300?random=profile";
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Cover Image */}
-        <View style={styles.coverImageContainer}>
+        <View className="w-full h-[200px] bg-gray-200 dark:bg-gray-800">
           <Image
             source={{ uri: coverImageUrl }}
-            style={styles.coverImage}
+            className="w-full h-full"
             contentFit="cover"
           />
         </View>
 
         {/* Profile Info */}
-        <View style={styles.profileInfoContainer}>
-          <View style={styles.profileHeader}>
-            <View style={styles.avatarContainer}>
+        <View className="px-4 pb-4 border-b border-gray-200 dark:border-gray-800">
+          <View className="flex-row justify-between items-end -mt-[60px] mb-4">
+            <View className="w-[120px] h-[120px] rounded-full border-4 border-white dark:border-gray-900 overflow-hidden bg-gray-200 dark:bg-gray-800">
               <Image
                 source={{ uri: avatarUrl }}
-                style={styles.avatar}
+                className="w-full h-full"
                 contentFit="cover"
               />
             </View>
-            <View style={styles.actionButtons}>
+            <View className="flex-row gap-2 items-center">
               {isOwnProfile ? (
                 <TouchableOpacity
-                  style={styles.editButton}
+                  className="flex-row items-center gap-1.5 px-4 py-2 rounded-lg border border-blue-500"
                   onPress={handleEditProfileClick}
                 >
                   <Ionicons name="create-outline" size={18} color="#007AFF" />
-                  <Text style={styles.editButtonText}>Edit Profile</Text>
+                  <Text className="text-sm font-semibold text-blue-500">Edit Profile</Text>
                 </TouchableOpacity>
               ) : (
                 <>
-                  <TouchableOpacity style={styles.messageButton}>
+                  <TouchableOpacity className="p-2 rounded-lg border border-gray-200 dark:border-gray-700">
                     <Ionicons name="chatbubble-outline" size={18} color="#000000" />
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[
-                      styles.followButton,
-                      isFollowing && styles.followingButton,
-                    ]}
+                    className={`px-4 py-2 rounded-lg ${isFollowing ? "bg-transparent border border-gray-200 dark:border-gray-700" : "bg-blue-500"}`}
                   >
-                    <Text
-                      style={[
-                        styles.followButtonText,
-                        isFollowing && styles.followingButtonText,
-                      ]}
-                    >
+                    <Text className={`text-sm font-semibold ${isFollowing ? "text-black dark:text-white" : "text-white"}`}>
                       {isFollowing ? "Following" : "Follow"}
                     </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.moreButton}>
+                  <TouchableOpacity className="p-2 rounded-lg border border-gray-200 dark:border-gray-700">
                     <Ionicons name="ellipsis-horizontal" size={18} color="#000000" />
                   </TouchableOpacity>
                 </>
@@ -555,47 +547,47 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View style={styles.userInfo}>
-            <Text style={styles.displayName}>{displayName}</Text>
-            <Text style={styles.username}>@{userData.username}</Text>
-            {userData.bio && <Text style={styles.bio}>{userData.bio}</Text>}
-            <View style={styles.joinDateContainer}>
+          <View className="mb-4">
+            <Text className="text-2xl font-bold text-black dark:text-white mb-1">{displayName}</Text>
+            <Text className="text-base text-gray-500 dark:text-gray-400 mb-2">@{userData.username}</Text>
+            {userData.bio && <Text className="text-sm text-black dark:text-white mb-2 leading-5">{userData.bio}</Text>}
+            <View className="flex-row items-center gap-1">
               <Ionicons name="calendar-outline" size={14} color="#8E8E93" />
-              <Text style={styles.joinDate}>
+              <Text className="text-sm text-gray-500 dark:text-gray-400">
                 Joined {formatDate(userData.createdAt)}
               </Text>
             </View>
           </View>
 
-          <View style={styles.statsContainer}>
-            <TouchableOpacity style={styles.statItem}>
-              <Text style={styles.statNumber}>
+          <View className="flex-row gap-6">
+            <TouchableOpacity className="items-start">
+              <Text className="text-lg font-semibold text-black dark:text-white mb-0.5">
                 {userData.following.toLocaleString()}
               </Text>
-              <Text style={styles.statLabel}>Following</Text>
+              <Text className="text-sm text-gray-500 dark:text-gray-400">Following</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.statItem}>
-              <Text style={styles.statNumber}>
+            <TouchableOpacity className="items-start">
+              <Text className="text-lg font-semibold text-black dark:text-white mb-0.5">
                 {userData.followers.toLocaleString()}
               </Text>
-              <Text style={styles.statLabel}>Followers</Text>
+              <Text className="text-sm text-gray-500 dark:text-gray-400">Followers</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.statItem}
+              className="items-start"
               onPress={() => setActiveTab("posts")}
             >
-              <Text style={styles.statNumber}>
+              <Text className="text-lg font-semibold text-black dark:text-white mb-0.5">
                 {userData.postsCount.toLocaleString()}
               </Text>
-              <Text style={styles.statLabel}>Posts</Text>
+              <Text className="text-sm text-gray-500 dark:text-gray-400">Posts</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Tabs */}
-        <View style={styles.tabsContainer}>
+        <View className="flex-row border-b border-gray-200 dark:border-gray-800">
           <TouchableOpacity
-            style={[styles.tab, activeTab === "posts" && styles.activeTab]}
+            className={`flex-1 items-center justify-center py-3 border-b-2 ${activeTab === "posts" ? "border-blue-500" : "border-transparent"}`}
             onPress={() => setActiveTab("posts")}
           >
             <Ionicons
@@ -605,7 +597,7 @@ export default function ProfileScreen() {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, activeTab === "reels" && styles.activeTab]}
+            className={`flex-1 items-center justify-center py-3 border-b-2 ${activeTab === "reels" ? "border-blue-500" : "border-transparent"}`}
             onPress={() => setActiveTab("reels")}
           >
             <Ionicons
@@ -615,7 +607,7 @@ export default function ProfileScreen() {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, activeTab === "liked" && styles.activeTab]}
+            className={`flex-1 items-center justify-center py-3 border-b-2 ${activeTab === "liked" ? "border-blue-500" : "border-transparent"}`}
             onPress={() => setActiveTab("liked")}
           >
             <Ionicons
@@ -625,7 +617,7 @@ export default function ProfileScreen() {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, activeTab === "saved" && styles.activeTab]}
+            className={`flex-1 items-center justify-center py-3 border-b-2 ${activeTab === "saved" ? "border-blue-500" : "border-transparent"}`}
             onPress={() => setActiveTab("saved")}
           >
             <Ionicons
@@ -638,13 +630,13 @@ export default function ProfileScreen() {
 
         {/* Posts Grid */}
         {isLoadingPosts ? (
-          <View style={styles.postsLoadingContainer}>
+          <View className="py-12 items-center">
             <ActivityIndicator size="large" color="#007AFF" />
-            <Text style={styles.loadingText}>Loading posts...</Text>
+            <Text className="mt-3 text-base text-gray-500 dark:text-gray-400">Loading posts...</Text>
           </View>
         ) : posts.length === 0 ? (
-          <View style={styles.emptyPostsContainer}>
-            <Text style={styles.emptyPostsText}>
+          <View className="py-12 items-center">
+            <Text className="text-base text-gray-500 dark:text-gray-400">
               {activeTab === "posts" && "No posts yet"}
               {activeTab === "reels" && "No reels yet"}
               {activeTab === "liked" && "No liked posts yet"}
@@ -658,7 +650,7 @@ export default function ProfileScreen() {
             keyExtractor={(item) => item.id}
             numColumns={3}
             scrollEnabled={false}
-            contentContainerStyle={styles.postsGrid}
+            contentContainerStyle={{ padding: 0.5 }}
           />
         )}
       </ScrollView>
@@ -670,74 +662,74 @@ export default function ProfileScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsEditModalOpen(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+        <SafeAreaView className="flex-1 bg-white dark:bg-gray-900">
+          <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-800">
             <TouchableOpacity onPress={() => setIsEditModalOpen(false)}>
-              <Text style={styles.modalCancelButton}>Cancel</Text>
+              <Text className="text-base text-gray-500 dark:text-gray-400">Cancel</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Edit Profile</Text>
+            <Text className="text-lg font-semibold text-black dark:text-white">Edit Profile</Text>
             <TouchableOpacity
               onPress={handleUpdateProfile}
               disabled={isUploading}
             >
-              <Text
-                style={[
-                  styles.modalSaveButton,
-                  isUploading && styles.modalSaveButtonDisabled,
-                ]}
-              >
+              <Text className={`text-base font-semibold ${isUploading ? "opacity-50 text-blue-500" : "text-blue-500"}`}>
                 {isUploading ? "Saving..." : "Save"}
               </Text>
             </TouchableOpacity>
           </View>
-          <ScrollView style={styles.modalContent}>
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>First Name</Text>
+          <ScrollView className="flex-1 p-4">
+            <View className="mb-5">
+              <Text className="text-sm font-semibold text-black dark:text-white mb-2">First Name</Text>
               <TextInput
-                style={styles.input}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-base text-black dark:text-white bg-white dark:bg-gray-800"
                 value={editFormData.firstName}
                 onChangeText={(text) =>
                   setEditFormData((prev) => ({ ...prev, firstName: text }))
                 }
                 placeholder="First name"
+                placeholderTextColor="#8E8E93"
               />
             </View>
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Surname</Text>
+            <View className="mb-5">
+              <Text className="text-sm font-semibold text-black dark:text-white mb-2">Surname</Text>
               <TextInput
-                style={styles.input}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-base text-black dark:text-white bg-white dark:bg-gray-800"
                 value={editFormData.surName}
                 onChangeText={(text) =>
                   setEditFormData((prev) => ({ ...prev, surName: text }))
                 }
                 placeholder="Surname"
+                placeholderTextColor="#8E8E93"
               />
             </View>
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Username</Text>
+            <View className="mb-5">
+              <Text className="text-sm font-semibold text-black dark:text-white mb-2">Username</Text>
               <TextInput
-                style={styles.input}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-base text-black dark:text-white bg-white dark:bg-gray-800"
                 value={editFormData.username}
                 onChangeText={(text) =>
                   setEditFormData((prev) => ({ ...prev, username: text }))
                 }
                 placeholder="Username"
+                placeholderTextColor="#8E8E93"
               />
             </View>
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Bio</Text>
+            <View className="mb-5">
+              <Text className="text-sm font-semibold text-black dark:text-white mb-2">Bio</Text>
               <TextInput
-                style={[styles.input, styles.textArea]}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-base text-black dark:text-white bg-white dark:bg-gray-800 h-[100px]"
                 value={editFormData.bio}
                 onChangeText={(text) =>
                   setEditFormData((prev) => ({ ...prev, bio: text }))
                 }
                 placeholder="Tell us about yourself"
+                placeholderTextColor="#8E8E93"
                 multiline
                 numberOfLines={4}
                 maxLength={160}
+                textAlignVertical="top"
               />
-              <Text style={styles.charCount}>
+              <Text className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-right">
                 {editFormData.bio.length}/160
               </Text>
             </View>
@@ -752,15 +744,15 @@ export default function ProfileScreen() {
         transparent={true}
         onRequestClose={() => setIsPostModalOpen(false)}
       >
-        <View style={styles.postModalOverlay}>
+        <View className="flex-1 bg-black/90 justify-center items-center">
           <Pressable
-            style={styles.postModalBackdrop}
+            className="absolute inset-0"
             onPress={() => setIsPostModalOpen(false)}
           />
           {selectedPost && (
-            <View style={styles.postModalContent}>
+            <View className="w-[90%] max-h-[80%] bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
               <TouchableOpacity
-                style={styles.postModalCloseButton}
+                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/50 justify-center items-center"
                 onPress={() => setIsPostModalOpen(false)}
               >
                 <Ionicons name="close" size={24} color="#FFFFFF" />
@@ -768,13 +760,13 @@ export default function ProfileScreen() {
               {selectedPost.url && (
                 <Image
                   source={{ uri: selectedPost.url }}
-                  style={styles.postModalImage}
+                  className="w-full h-[400px] bg-black"
                   contentFit="contain"
                 />
               )}
-              <View style={styles.postModalActions}>
+              <View className="flex-row p-4 gap-4 border-b border-gray-200 dark:border-gray-800">
                 <TouchableOpacity
-                  style={styles.postModalAction}
+                  className="flex-row items-center gap-2"
                   onPress={() => handleLike(selectedPost.id)}
                 >
                   <Ionicons
@@ -782,18 +774,18 @@ export default function ProfileScreen() {
                     size={24}
                     color={likedPosts.has(selectedPost.id) ? "#EF4444" : "#000000"}
                   />
-                  <Text style={styles.postModalActionText}>
+                  <Text className="text-base font-semibold text-black dark:text-white">
                     {selectedPost.likesCount}
                   </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.postModalAction}>
+                <TouchableOpacity className="flex-row items-center gap-2">
                   <Ionicons name="chatbubble-outline" size={24} color="#000000" />
-                  <Text style={styles.postModalActionText}>
+                  <Text className="text-base font-semibold text-black dark:text-white">
                     {selectedPost.commentsCount}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.postModalAction}
+                  className="flex-row items-center gap-2"
                   onPress={() => handleSave(selectedPost.id)}
                 >
                   <Ionicons
@@ -804,8 +796,8 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </View>
               {selectedPost.caption && (
-                <View style={styles.postModalCaption}>
-                  <Text style={styles.postModalCaptionText}>
+                <View className="p-4">
+                  <Text className="text-sm text-black dark:text-white leading-5">
                     {selectedPost.caption}
                   </Text>
                 </View>
@@ -818,360 +810,3 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#8E8E93",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorText: {
-    fontSize: 16,
-    color: "#8E8E93",
-  },
-  coverImageContainer: {
-    width: "100%",
-    height: 200,
-    backgroundColor: "#E5E5EA",
-  },
-  coverImage: {
-    width: "100%",
-    height: "100%",
-  },
-  profileInfoContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-  },
-  profileHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    marginTop: -60,
-    marginBottom: 16,
-  },
-  avatarContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 4,
-    borderColor: "#FFFFFF",
-    overflow: "hidden",
-    backgroundColor: "#E5E5EA",
-  },
-  avatar: {
-    width: "100%",
-    height: "100%",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-  },
-  editButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#007AFF",
-  },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#007AFF",
-  },
-  messageButton: {
-    padding: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-  },
-  followButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: "#007AFF",
-  },
-  followingButton: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-  },
-  followButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  followingButtonText: {
-    color: "#000000",
-  },
-  moreButton: {
-    padding: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-  },
-  userInfo: {
-    marginBottom: 16,
-  },
-  displayName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000000",
-    marginBottom: 4,
-  },
-  username: {
-    fontSize: 16,
-    color: "#8E8E93",
-    marginBottom: 8,
-  },
-  bio: {
-    fontSize: 14,
-    color: "#000000",
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  joinDateContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  joinDate: {
-    fontSize: 14,
-    color: "#8E8E93",
-  },
-  statsContainer: {
-    flexDirection: "row",
-    gap: 24,
-  },
-  statItem: {
-    alignItems: "flex-start",
-  },
-  statNumber: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#000000",
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: "#8E8E93",
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
-  },
-  activeTab: {
-    borderBottomColor: "#007AFF",
-  },
-  postsLoadingContainer: {
-    paddingVertical: 48,
-    alignItems: "center",
-  },
-  emptyPostsContainer: {
-    paddingVertical: 48,
-    alignItems: "center",
-  },
-  emptyPostsText: {
-    fontSize: 16,
-    color: "#8E8E93",
-  },
-  postsGrid: {
-    padding: 0.5,
-  },
-  postItem: {
-    margin: 0.5,
-    backgroundColor: "#E5E5EA",
-    overflow: "hidden",
-  },
-  postImage: {
-    width: "100%",
-    height: "100%",
-  },
-  postVideoContainer: {
-    width: "100%",
-    height: "100%",
-    position: "relative",
-  },
-  playIconOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
-  },
-  postTextContainer: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 8,
-  },
-  postText: {
-    fontSize: 12,
-    color: "#000000",
-    textAlign: "center",
-  },
-  videoIndicator: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-  },
-  modalCancelButton: {
-    fontSize: 16,
-    color: "#8E8E93",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#000000",
-  },
-  modalSaveButton: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#007AFF",
-  },
-  modalSaveButtonDisabled: {
-    opacity: 0.5,
-  },
-  modalContent: {
-    flex: 1,
-    padding: 16,
-  },
-  formGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#000000",
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: "#000000",
-    backgroundColor: "#FFFFFF",
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
-  },
-  charCount: {
-    fontSize: 12,
-    color: "#8E8E93",
-    marginTop: 4,
-    textAlign: "right",
-  },
-  postModalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  postModalBackdrop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  postModalContent: {
-    width: "90%",
-    maxHeight: "80%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  postModalCloseButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    zIndex: 1,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  postModalImage: {
-    width: "100%",
-    height: 400,
-    backgroundColor: "#000000",
-  },
-  postModalActions: {
-    flexDirection: "row",
-    padding: 16,
-    gap: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-  },
-  postModalAction: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  postModalActionText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000000",
-  },
-  postModalCaption: {
-    padding: 16,
-  },
-  postModalCaptionText: {
-    fontSize: 14,
-    color: "#000000",
-    lineHeight: 20,
-  },
-});

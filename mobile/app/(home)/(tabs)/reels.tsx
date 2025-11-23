@@ -749,24 +749,21 @@ export default function ReelsScreen() {
           )}
 
           {/* Comment Input */}
-          <View style={styles.commentInputContainer}>
+          <View className="flex-row p-4 border-t border-gray-200 dark:border-gray-800 gap-2 items-end">
             <TextInput
-              style={styles.commentInput}
+              className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm max-h-[100px] text-black dark:text-white"
               placeholder="Add a comment..."
+              placeholderTextColor="#8E8E93"
               value={newComment}
               onChangeText={setNewComment}
               multiline
             />
             <TouchableOpacity
-              style={[
-                styles.sendButton,
-                (!newComment.trim() || isSubmittingComment) &&
-                  styles.sendButtonDisabled,
-              ]}
+              className={`px-4 py-2 rounded-lg ${(!newComment.trim() || isSubmittingComment) ? "opacity-50 bg-gray-300 dark:bg-gray-700" : "bg-blue-500"}`}
               onPress={() => handleSubmitComment()}
               disabled={!newComment.trim() || isSubmittingComment}
             >
-              <Text style={styles.sendButtonText}>
+              <Text className="text-white text-sm font-semibold">
                 {isSubmittingComment ? "Posting..." : "Post"}
               </Text>
             </TouchableOpacity>
@@ -777,209 +774,3 @@ export default function ReelsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000000",
-  },
-  videoContainer: {
-    width: "100%",
-    position: "relative",
-  },
-  video: {
-    width: "100%",
-    height: "100%",
-  },
-  muteButton: {
-    position: "absolute",
-    top: 50,
-    right: 16,
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  rightActions: {
-    position: "absolute",
-    right: 16,
-    bottom: 100,
-    alignItems: "center",
-    gap: 24,
-  },
-  actionButton: {
-    alignItems: "center",
-    gap: 4,
-  },
-  actionText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  bottomInfo: {
-    position: "absolute",
-    bottom: 50,
-    left: 16,
-    right: 80,
-  },
-  userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
-  },
-  userDetails: {
-    flex: 1,
-  },
-  username: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  caption: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    marginTop: 12,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#000000",
-  },
-  commentsLoadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyCommentsContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-  },
-  emptyCommentsText: {
-    fontSize: 16,
-    color: "#8E8E93",
-    textAlign: "center",
-  },
-  commentsList: {
-    padding: 16,
-  },
-  commentItem: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 16,
-  },
-  commentAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  commentContent: {
-    flex: 1,
-  },
-  commentHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 4,
-  },
-  commentUsername: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#000000",
-  },
-  commentTime: {
-    fontSize: 12,
-    color: "#8E8E93",
-  },
-  commentText: {
-    fontSize: 14,
-    color: "#000000",
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  replyButton: {
-    marginTop: 4,
-  },
-  replyButtonText: {
-    fontSize: 12,
-    color: "#8E8E93",
-  },
-  replyInputContainer: {
-    marginTop: 8,
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "flex-end",
-  },
-  replyInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    maxHeight: 100,
-  },
-  commentInputContainer: {
-    flexDirection: "row",
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E5EA",
-    gap: 8,
-    alignItems: "flex-end",
-  },
-  commentInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    maxHeight: 100,
-  },
-  sendButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: "#007AFF",
-  },
-  sendButtonDisabled: {
-    opacity: 0.5,
-  },
-  sendButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-});

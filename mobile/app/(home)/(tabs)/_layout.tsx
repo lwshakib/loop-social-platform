@@ -43,7 +43,6 @@ export default function TabsLayout() {
           borderTopWidth: 1,
           borderTopColor: "#E5E5EA",
         },
-        tabBarClassName: "bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800",
       }}
     >
       <Tabs.Screen

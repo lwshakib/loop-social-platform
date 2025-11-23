@@ -1585,12 +1585,14 @@ export default function ReelsPage() {
                                           key={reply.id}
                                           className="space-y-2"
                                         >
-                                            <div className="flex gap-3">
+                                          <div className="flex gap-3">
                                             <Avatar
                                               className="h-7 w-7 shrink-0 cursor-pointer"
                                               onClick={() => {
                                                 if (reply.user?.username) {
-                                                  navigate(`/${reply.user.username}`);
+                                                  navigate(
+                                                    `/${reply.user.username}`
+                                                  );
                                                 }
                                               }}
                                             >
@@ -1612,7 +1614,9 @@ export default function ReelsPage() {
                                                   className="font-semibold text-sm cursor-pointer hover:underline"
                                                   onClick={() => {
                                                     if (reply.user?.username) {
-                                                      navigate(`/${reply.user.username}`);
+                                                      navigate(
+                                                        `/${reply.user.username}`
+                                                      );
                                                     }
                                                   }}
                                                 >

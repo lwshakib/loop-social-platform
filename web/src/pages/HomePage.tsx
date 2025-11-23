@@ -790,40 +790,6 @@ export default function HomePage() {
               })}
             </div>
           </div>
-
-          {/* Footer Links */}
-          <div className="text-[10px] md:text-xs text-muted-foreground space-y-1.5 md:space-y-2">
-            <div className="flex flex-wrap gap-1.5 md:gap-2">
-              <a href="#" className="hover:underline">
-                About
-              </a>
-              <span>·</span>
-              <a href="#" className="hover:underline">
-                Help
-              </a>
-              <span>·</span>
-              <a href="#" className="hover:underline">
-                Press
-              </a>
-              <span>·</span>
-              <a href="#" className="hover:underline">
-                API
-              </a>
-              <span>·</span>
-              <a href="#" className="hover:underline">
-                Jobs
-              </a>
-              <span>·</span>
-              <a href="#" className="hover:underline">
-                Privacy
-              </a>
-              <span>·</span>
-              <a href="#" className="hover:underline">
-                Terms
-              </a>
-            </div>
-            <p className="text-[10px] md:text-xs">© 2024 Loop</p>
-          </div>
         </div>
       </div>
 

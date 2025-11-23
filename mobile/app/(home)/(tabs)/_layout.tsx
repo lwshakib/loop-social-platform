@@ -1,5 +1,36 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { Tabs } from "expo-router";
+import { View } from "react-native";
+import { useUserStore } from "../../../store/userStore";
+
+function ProfileTabIcon({ color, size }: { color: string; size: number }) {
+  const { userData, getAvatarUrl } = useUserStore();
+  const avatarUrl = userData ? getAvatarUrl() : null;
+
+  if (avatarUrl) {
+    return (
+      <View
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          overflow: "hidden",
+          borderWidth: 1,
+          borderColor: color === "#007AFF" ? "#007AFF" : "transparent",
+        }}
+      >
+        <Image
+          source={{ uri: avatarUrl }}
+          style={{ width: size, height: size }}
+          contentFit="cover"
+        />
+      </View>
+    );
+  }
+
+  return <Ionicons name="person" size={size} color={color} />;
+}
 
 export default function TabsLayout() {
   return (
@@ -25,11 +56,30 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="search"
+        options={{
+          title: "Search",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="search" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="reels"
         options={{
           title: "Reels",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="film" size={size} color={color} />
+            <Ionicons name="play-circle" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <ProfileTabIcon color={color} size={size} />
           ),
         }}
       />

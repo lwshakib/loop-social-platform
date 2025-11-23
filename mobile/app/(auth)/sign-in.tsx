@@ -11,9 +11,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useUserStore } from "../../store/userStore";
 
 export default function SignIn() {
   const router = useRouter();
+  const setUserData = useUserStore((state) => state.setUserData);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,18 +35,13 @@ export default function SignIn() {
 
       if (!serverUrl) {
         setError(
-          "Server URL is not configured. Please set EXPO_PUBLIC_SERVER_URL"
+          "Server URL is not configured. Please set EXPO_PUBLIC_SERVER_URL in your .env file"
         );
         setIsLoading(false);
         return;
       }
 
-      const fullUrl = `${serverUrl}/auth/sign-in`;
-      console.log("🔗 Sign-in request URL:", fullUrl);
-      console.log("📝 Request body:", { email, password: "***" });
-      console.log("🌐 Server URL from env:", serverUrl);
-
-      const response = await fetch(fullUrl, {
+      const response = await fetch(`${serverUrl}/auth/sign-in`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,7 +53,7 @@ export default function SignIn() {
         const result = await response.json();
         const userData = result.data;
 
-        // Store tokens and user data
+        // Store tokens
         if (userData.accessToken) {
           await AsyncStorage.setItem("accessToken", userData.accessToken);
         }
@@ -67,8 +64,11 @@ export default function SignIn() {
           await AsyncStorage.setItem("userId", userData.id.toString());
         }
 
-        // Store user data
-        await AsyncStorage.setItem("userData", JSON.stringify(userData));
+        // Store user data in Zustand store (excluding tokens)
+        const userDataWithoutTokens = { ...userData };
+        delete userDataWithoutTokens.accessToken;
+        delete userDataWithoutTokens.refreshToken;
+        setUserData(userDataWithoutTokens);
 
         // Navigate to home
         router.replace("/(home)/(tabs)/home");
@@ -101,15 +101,15 @@ export default function SignIn() {
         name: error instanceof Error ? error.name : typeof error,
         stack: error instanceof Error ? error.stack : undefined,
       });
-      
+
       // Provide more helpful error message
       const errorMessage =
         error instanceof TypeError && error.message === "Network request failed"
           ? "Network request failed. Common causes:\n• Server URL might be incorrect\n• On Android emulator, use 10.0.2.2 instead of localhost\n• On physical device, use your computer's IP address\n• Make sure the server is running and accessible"
           : error instanceof Error
-          ? error.message
-          : "An error occurred. Please try again.";
-      
+            ? error.message
+            : "An error occurred. Please try again.";
+
       setError(errorMessage);
     } finally {
       setIsLoading(false);

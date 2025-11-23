@@ -44,7 +44,6 @@ const InstagramLogo = ({ className }: { className?: string }) => (
   </svg>
 );
 
-
 // Type for recent search item
 type RecentSearch = {
   id: number;
@@ -53,6 +52,19 @@ type RecentSearch = {
   avatar: string;
   isVerified: boolean;
   followers: number;
+};
+
+// Type for search result user
+type SearchUser = {
+  id: string;
+  firstName?: string;
+  surName?: string;
+  username: string;
+  profileImage?: string;
+  isVerified?: boolean;
+  isFollowing?: boolean;
+  bio?: string;
+  followers?: number;
 };
 
 // Load recent searches from localStorage
@@ -109,6 +121,22 @@ type Notification = {
   postImage?: string;
   postId?: string;
   postType?: "text" | "image" | "video";
+  isRead: boolean;
+};
+
+// Type for raw notification data from API
+type ApiNotification = {
+  id: string;
+  type: string;
+  username: string;
+  fullName: string;
+  avatar?: string;
+  action: string;
+  comment?: string;
+  time: string | Date;
+  postImage?: string;
+  postId?: string;
+  postType?: string;
   isRead: boolean;
 };
 
@@ -218,9 +246,11 @@ export default function Layout() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>(() => loadRecentSearches());
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>(() =>
+    loadRecentSearches()
+  );
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
@@ -336,7 +366,7 @@ export default function Layout() {
         const result = await response.json();
         if (result.data?.notifications) {
           const transformedNotifications: Notification[] =
-            result.data.notifications.map((notif: any) => ({
+            result.data.notifications.map((notif: ApiNotification) => ({
               id: notif.id,
               type: notif.type,
               username: notif.username,
@@ -453,7 +483,9 @@ export default function Layout() {
         }
 
         const response = await fetch(
-          `${serverUrl}/users/search?q=${encodeURIComponent(searchQuery.trim())}&limit=20`,
+          `${serverUrl}/users/search?q=${encodeURIComponent(
+            searchQuery.trim()
+          )}&limit=20`,
           {
             method: "GET",
             headers,
@@ -499,7 +531,10 @@ export default function Layout() {
         const newSearch: RecentSearch = {
           id: Date.now(),
           username: userResult.username,
-          fullName: `${userResult.firstName || ""} ${userResult.surName || ""}`.trim() || userResult.username,
+          fullName:
+            `${userResult.firstName || ""} ${
+              userResult.surName || ""
+            }`.trim() || userResult.username,
           avatar: userResult.profileImage || "",
           isVerified: userResult.isVerified || false,
           followers: userResult.followers || 0,
@@ -892,14 +927,16 @@ export default function Layout() {
                   onClick={handleNotificationsClick}
                 >
                   <div className="relative">
-                  <Bell
-                    className={`h-6 w-6 ${
-                      isNotificationsOpen ? "fill-current" : ""
-                    }`}
-                  />
+                    <Bell
+                      className={`h-6 w-6 ${
+                        isNotificationsOpen ? "fill-current" : ""
+                      }`}
+                    />
                     {unreadNotificationCount > 0 && (
                       <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-white text-[10px] flex items-center justify-center">
-                        {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                        {unreadNotificationCount > 9
+                          ? "9+"
+                          : unreadNotificationCount}
                       </span>
                     )}
                   </div>
@@ -930,7 +967,7 @@ export default function Layout() {
                   </Avatar>
                 </Button>
               </nav>
-              
+
               {/* Mode Toggle at Bottom */}
               <div className="w-full flex items-center justify-center mt-auto pb-4">
                 <ModeToggle />
@@ -1156,14 +1193,16 @@ export default function Layout() {
                 onClick={handleNotificationsClick}
               >
                 <div className="relative">
-                <Bell
-                  className={`h-6 w-6 ${
-                    isNotificationsOpen ? "fill-current" : ""
-                  }`}
-                />
+                  <Bell
+                    className={`h-6 w-6 ${
+                      isNotificationsOpen ? "fill-current" : ""
+                    }`}
+                  />
                   {unreadNotificationCount > 0 && (
                     <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-white text-[10px] flex items-center justify-center">
-                      {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                      {unreadNotificationCount > 9
+                        ? "9+"
+                        : unreadNotificationCount}
                     </span>
                   )}
                 </div>
@@ -1247,10 +1286,10 @@ export default function Layout() {
             <div
               className="w-full flex items-center justify-start gap-3 h-12 mt-auto"
               style={{
-                    opacity: isSearchOpen || isNotificationsOpen ? 0 : 1,
+                opacity: isSearchOpen || isNotificationsOpen ? 0 : 1,
                 pointerEvents:
                   isSearchOpen || isNotificationsOpen ? "none" : "auto",
-                  }}
+              }}
             >
               <ModeToggle />
             </div>
@@ -1383,8 +1422,8 @@ export default function Layout() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-sm">Recent</p>
-          <Button
-            variant="ghost"
+                    <Button
+                      variant="ghost"
                       size="sm"
                       onClick={handleClearRecent}
                       className="text-primary text-xs h-auto py-1"
@@ -1402,7 +1441,7 @@ export default function Layout() {
                           navigate(`/@${search.username}`);
                           setIsSearchOpen(false);
                         }}
-          >
+                      >
                         <div className="flex items-center gap-2 flex-1">
                           <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
                             {search.avatar ? (
@@ -1446,17 +1485,17 @@ export default function Layout() {
           {/* Notifications - morphs smoothly */}
           <motion.div
             className="flex flex-col h-full"
-              initial={false}
-              animate={{
+            initial={false}
+            animate={{
               opacity: isNotificationsOpen && !isSearchOpen ? 1 : 0,
               width: isNotificationsOpen && !isSearchOpen ? "100%" : 0,
-              }}
-              transition={{
-                type: "spring",
+            }}
+            transition={{
+              type: "spring",
               stiffness: 300,
               damping: 30,
               mass: 0.8,
-              }}
+            }}
             style={{
               position:
                 isNotificationsOpen && !isSearchOpen ? "relative" : "absolute",
@@ -1481,12 +1520,12 @@ export default function Layout() {
               }}
             >
               <h2 className="text-xl font-semibold">Notifications</h2>
-          <Button
-            variant="ghost"
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={handleNotificationsClose}
                 className="h-8 w-8"
-          >
+              >
                 <X className="h-4 w-4" />
               </Button>
             </motion.div>
@@ -1508,7 +1547,7 @@ export default function Layout() {
               {isLoadingNotifications ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-        </div>
+                </div>
               ) : notifications.length > 0 ? (
                 <div className="p-4 space-y-2">
                   {notifications.map((notification) => (
@@ -1529,7 +1568,8 @@ export default function Layout() {
                             return null;
                           };
 
-                          const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+                          const serverUrl =
+                            import.meta.env.VITE_SERVER_URL || "";
                           const accessToken = getCookie("accessToken");
 
                           if (accessToken) {
@@ -1570,7 +1610,9 @@ export default function Layout() {
                           if (notification.postType === "video") {
                             // If it's a comment notification, add query parameter to open comments
                             if (notification.type === "comment") {
-                              navigate(`/reels/${notification.postId}?openComments=true`);
+                              navigate(
+                                `/reels/${notification.postId}?openComments=true`
+                              );
                             } else {
                               navigate(`/reels/${notification.postId}`);
                             }
@@ -1655,13 +1697,13 @@ export default function Layout() {
 
         {/* Search Dialog - Mobile only */}
         {isMobile && (
-      <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+          <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
             <DialogContent className="w-full h-full sm:h-auto sm:max-w-md sm:rounded-lg p-0">
               <DialogHeader className="px-4 sm:px-6 py-4 border-b">
                 <DialogTitle className="text-lg font-semibold">
                   Search
                 </DialogTitle>
-          </DialogHeader>
+              </DialogHeader>
 
               <div className="flex flex-col h-full sm:max-h-[80vh]">
                 {/* Search Input */}
@@ -1748,7 +1790,9 @@ export default function Layout() {
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm truncate">{search.username}</p>
+                            <p className="text-sm truncate">
+                              {search.username}
+                            </p>
                           </div>
                           <button
                             onClick={(e) => {
@@ -1769,8 +1813,8 @@ export default function Layout() {
                   )}
                 </div>
               </div>
-        </DialogContent>
-      </Dialog>
+            </DialogContent>
+          </Dialog>
         )}
 
         {/* Notifications Dialog - Mobile only */}
@@ -1779,13 +1823,13 @@ export default function Layout() {
             open={isNotificationsOpen}
             onOpenChange={setIsNotificationsOpen}
           >
-        <DialogContent className="w-full h-full sm:h-auto sm:max-w-md sm:rounded-lg p-0">
+            <DialogContent className="w-full h-full sm:h-auto sm:max-w-md sm:rounded-lg p-0">
               <DialogHeader className="px-4 sm:px-6 py-4 border-b">
                 <DialogTitle className="text-lg font-semibold">
                   Notifications
                 </DialogTitle>
-          </DialogHeader>
-          
+              </DialogHeader>
+
               <div className="flex-1 overflow-y-auto min-h-0">
                 {isLoadingNotifications ? (
                   <div className="flex items-center justify-center py-8">
@@ -1794,11 +1838,11 @@ export default function Layout() {
                 ) : notifications.length > 0 ? (
                   <div className="p-4 sm:p-6 space-y-2">
                     {notifications.map((notification) => (
-                <div
-                  key={notification.id}
+                      <div
+                        key={notification.id}
                         className={`flex items-start gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors ${
                           !notification.isRead ? "bg-accent/50" : ""
-                  }`}
+                        }`}
                         onClick={async () => {
                           // Mark notification as read
                           if (!notification.isRead) {
@@ -1811,7 +1855,8 @@ export default function Layout() {
                               return null;
                             };
 
-                            const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+                            const serverUrl =
+                              import.meta.env.VITE_SERVER_URL || "";
                             const accessToken = getCookie("accessToken");
 
                             if (accessToken) {
@@ -1852,7 +1897,9 @@ export default function Layout() {
                             if (notification.postType === "video") {
                               // If it's a comment notification, add query parameter to open comments
                               if (notification.type === "comment") {
-                                navigate(`/reels/${notification.postId}?openComments=true`);
+                                navigate(
+                                  `/reels/${notification.postId}?openComments=true`
+                                );
                               } else {
                                 navigate(`/reels/${notification.postId}`);
                               }
@@ -1860,13 +1907,13 @@ export default function Layout() {
                               // For image/text posts, navigate to home page (or you could create a post detail page)
                               navigate(`/`);
                             }
-                      setIsNotificationsOpen(false);
+                            setIsNotificationsOpen(false);
                           } else if (notification.type === "follow") {
                             navigate(`/@${notification.username}`);
-                      setIsNotificationsOpen(false);
-                    }
-                  }}
-                >
+                            setIsNotificationsOpen(false);
+                          }
+                        }}
+                      >
                         <Avatar className="h-10 w-10 shrink-0">
                           <AvatarImage
                             src={notification.avatar}
@@ -1875,63 +1922,63 @@ export default function Layout() {
                           <AvatarFallback>
                             {notification.username[0].toUpperCase()}
                           </AvatarFallback>
-                    </Avatar>
-                  <div className="flex-1 min-w-0">
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
-                    <p className="text-sm">
+                              <p className="text-sm">
                                 <span className="font-semibold">
                                   {notification.username}
                                 </span>{" "}
                                 <span className="text-muted-foreground">
-                      {notification.action}
+                                  {notification.action}
                                 </span>
                               </p>
-                      {notification.comment && (
+                              {notification.comment && (
                                 <p className="text-sm text-muted-foreground mt-1">
-                          "{notification.comment}"
-                    </p>
+                                  "{notification.comment}"
+                                </p>
                               )}
-                    <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground mt-1">
                                 {formatTimeAgo(notification.time)}
-                    </p>
-                  </div>
-                  {notification.postImage && (
+                              </p>
+                            </div>
+                            {notification.postImage && (
                               <div className="shrink-0">
                                 {notification.postType === "video" ? (
                                   <div className="relative w-12 h-12 rounded overflow-hidden bg-muted">
                                     <video
-                          src={notification.postImage} 
+                                      src={notification.postImage}
                                       className="w-full h-full object-cover"
                                       muted
                                     />
                                     <div className="absolute inset-0 flex items-center justify-center">
                                       <Play className="h-4 w-4 text-white" />
-                          </div>
+                                    </div>
                                   </div>
                                 ) : (
-                              <img
-                                src={notification.postImage}
-                                alt="Post"
-                                className="w-12 h-12 rounded object-cover"
-                              />
+                                  <img
+                                    src={notification.postImage}
+                                    alt="Post"
+                                    className="w-12 h-12 rounded object-cover"
+                                  />
                                 )}
-                            </div>
-                          )}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      {!notification.isRead && (
+                        {!notification.isRead && (
                           <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p className="text-sm">No notifications</p>
-                </div>
-              )}
-        </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p className="text-sm">No notifications</p>
+                  </div>
+                )}
+              </div>
             </DialogContent>
           </Dialog>
         )}
@@ -1944,16 +1991,16 @@ export default function Layout() {
             Loop
           </h1>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="h-9 w-9 sm:h-10 sm:w-10"
               onClick={handleSearchClick}
             >
               <Search className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="h-9 w-9 sm:h-10 sm:w-10"
               onClick={handleCreateClick}

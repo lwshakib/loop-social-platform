@@ -47,37 +47,17 @@ const InstagramLogo = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Type for recent search item
-type RecentSearch = {
-  id: number;
-  username: string;
-  fullName: string;
-  avatar: string;
-  isVerified: boolean;
-  followers: number;
-};
-
-// Load recent searches from localStorage
-const loadRecentSearches = (): RecentSearch[] => {
-  try {
-    const stored = localStorage.getItem("recentSearches");
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (error) {
-    console.error("Error loading recent searches:", error);
-  }
-  return [];
-};
-
-// Save recent searches to localStorage
-const saveRecentSearches = (searches: RecentSearch[]): void => {
-  try {
-    localStorage.setItem("recentSearches", JSON.stringify(searches));
-  } catch (error) {
-    console.error("Error saving recent searches:", error);
-  }
-};
+// Mock recent searches
+const mockRecentSearches = [
+  {
+    id: 1,
+    username: "dr.mizanur.rahman.azhari",
+    fullName: "Dr. Mizanur Rahman Azhari",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mizanur",
+    followers: "530K",
+    isVerified: true,
+  },
+];
 
 // Helper function to format time ago
 const formatTimeAgo = (date: string | Date): string => {
@@ -220,9 +200,7 @@ export default function Layout() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>(() => loadRecentSearches());
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [recentSearches, setRecentSearches] = useState(mockRecentSearches);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
@@ -303,7 +281,6 @@ export default function Layout() {
   const handleSearchClose = () => {
     setIsSearchOpen(false);
     setSearchQuery("");
-    setSearchResults([]);
   };
 
   // Fetch notifications
@@ -417,99 +394,6 @@ export default function Layout() {
 
   const handleRemoveRecent = (id: number) => {
     setRecentSearches((prev) => prev.filter((search) => search.id !== id));
-  };
-
-  // Persist recent searches to localStorage whenever they change
-  useEffect(() => {
-    saveRecentSearches(recentSearches);
-  }, [recentSearches]);
-
-  // Search users API call
-  useEffect(() => {
-    const searchUsers = async () => {
-      if (!searchQuery.trim()) {
-        setSearchResults([]);
-        return;
-      }
-
-      const getCookie = (name: string): string | null => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) {
-          return parts.pop()?.split(";").shift() || null;
-        }
-        return null;
-      };
-
-      const serverUrl = import.meta.env.VITE_SERVER_URL || "";
-      const accessToken = getCookie("accessToken");
-
-      try {
-        setIsSearching(true);
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (accessToken) {
-          headers["Authorization"] = `Bearer ${accessToken}`;
-        }
-
-        const response = await fetch(
-          `${serverUrl}/users/search?q=${encodeURIComponent(searchQuery.trim())}&limit=20`,
-          {
-            method: "GET",
-            headers,
-            credentials: "include",
-          }
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.data && Array.isArray(result.data)) {
-            setSearchResults(result.data);
-          }
-        } else {
-          setSearchResults([]);
-        }
-      } catch (error) {
-        console.error("Error searching users:", error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    // Debounce search
-    const timeoutId = setTimeout(() => {
-      searchUsers();
-    }, 300); // 300ms delay
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
-
-  const handleUserClick = (username: string) => {
-    navigate(`/@${username}`);
-    setIsSearchOpen(false);
-    setSearchQuery("");
-    
-    // Add to recent searches (will be saved to localStorage via useEffect)
-    const userResult = searchResults.find((r) => r.username === username);
-    if (userResult) {
-      setRecentSearches((prev) => {
-        // Remove if already exists to avoid duplicates
-        const filtered = prev.filter((s) => s.username !== username);
-        const newSearch: RecentSearch = {
-          id: Date.now(),
-          username: userResult.username,
-          fullName: `${userResult.firstName || ""} ${userResult.surName || ""}`.trim() || userResult.username,
-          avatar: userResult.profileImage || "",
-          isVerified: userResult.isVerified || false,
-          followers: userResult.followers || 0,
-        };
-        // Add to beginning and limit to 10 most recent
-        return [newSearch, ...filtered].slice(0, 10);
-      });
-    }
   };
 
   const handleCreateClick = () => {
@@ -1354,12 +1238,13 @@ export default function Layout() {
             >
               {/* Search Input */}
               <div className="relative">
-                <input
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
                   type="text"
                   placeholder="Search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-transparent text-sm focus:outline-none"
+                  className="pl-9 pr-9 h-10 bg-muted/50"
                   autoFocus
                 />
                 {searchQuery && (
@@ -1374,85 +1259,74 @@ export default function Layout() {
 
               {/* Recent Searches */}
               {recentSearches.length > 0 && !searchQuery && (
-                <div className="space-y-2">
-                  {recentSearches.map((search) => (
-                    <div
-                      key={search.id}
-                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer group"
-                      onClick={() => {
-                        navigate(`/@${search.username}`);
-                        setIsSearchOpen(false);
-                        // Move clicked search to the top
-                        setRecentSearches((prev) => {
-                          const filtered = prev.filter((s) => s.id !== search.id);
-                          return [search, ...filtered];
-                        });
-                      }}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-sm">Recent</p>
+          <Button
+            variant="ghost"
+                      size="sm"
+                      onClick={handleClearRecent}
+                      className="text-primary text-xs h-auto py-1"
                     >
-                      <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                        {search.avatar ? (
-                          <img
-                            src={search.avatar}
-                            alt={search.username}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-xs font-medium">
-                            {search.username[0].toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm truncate flex-1">{search.username}</p>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveRecent(search.id);
+                      Clear all
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {recentSearches.map((search) => (
+                      <div
+                        key={search.id}
+                        className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer group"
+                        onClick={() => {
+                          navigate(`/@${search.username}`);
+                          setIsSearchOpen(false);
                         }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-background rounded"
-                        aria-label="Remove search history"
-                      >
-                        <X className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                    </div>
-                  ))}
+          >
+                        <div className="flex items-center gap-3 flex-1">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage
+                              src={search.avatar}
+                              alt={search.username}
+                            />
+                            <AvatarFallback>
+                              {search.username[0].toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                              <p className="font-semibold text-sm truncate">
+                                {search.username}
+                              </p>
+                              {search.isVerified && (
+                                <Check className="h-4 w-4 text-blue-500 fill-current shrink-0" />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <p className="truncate">{search.fullName}</p>
+                              <span>·</span>
+                              <p>{search.followers} followers</p>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveRecent(search.id);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        >
+                          <X className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {/* Search Results (when typing) */}
               {searchQuery && (
-                <div className="space-y-1">
-                  {isSearching ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                    </div>
-                  ) : searchResults.length > 0 ? (
-                    searchResults.map((user) => (
-                      <div
-                        key={user.id}
-                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer"
-                        onClick={() => handleUserClick(user.username)}
-                      >
-                        <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                          {user.profileImage ? (
-                            <img
-                              src={user.profileImage}
-                              alt={user.username || ""}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-xs font-medium">
-                              {user.username?.[0]?.toUpperCase() || "U"}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm truncate">{user.username}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground text-sm">
-                      No results found
-                    </div>
-                  )}
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">No results found</p>
                 </div>
               )}
 
@@ -1689,14 +1563,15 @@ export default function Layout() {
                 {/* Search Input */}
                 <div className="px-4 sm:px-6 py-4 border-b">
                   <div className="relative">
-                    <input
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
                       type="text"
                       placeholder="Search"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-transparent text-sm focus:outline-none"
-                      autoFocus
-                    />
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 pr-9 h-10 bg-muted/50"
+              autoFocus
+            />
                     {searchQuery && (
                       <button
                         onClick={handleClearSearch}
@@ -1706,98 +1581,87 @@ export default function Layout() {
                       </button>
                     )}
                   </div>
-                </div>
+          </div>
           
                 {/* Search Results */}
                 <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
                   {/* Recent Searches */}
                   {recentSearches.length > 0 && !searchQuery && (
-                    <div className="space-y-2">
-                      {recentSearches.map((search) => (
-                        <div
-                          key={search.id}
-                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer group"
-                          onClick={() => {
-                            navigate(`/@${search.username}`);
-                            setIsSearchOpen(false);
-                            // Move clicked search to the top
-                            setRecentSearches((prev) => {
-                              const filtered = prev.filter((s) => s.id !== search.id);
-                              return [search, ...filtered];
-                            });
-                          }}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="font-semibold text-sm">Recent</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleClearRecent}
+                          className="text-primary text-xs h-auto py-1"
                         >
-                          <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                            {search.avatar ? (
-                              <img
-                                src={search.avatar}
-                                alt={search.username}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-xs font-medium">
-                                {search.username[0].toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm truncate flex-1">{search.username}</p>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveRecent(search.id);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-background rounded"
-                            aria-label="Remove search history"
-                          >
-                            <X className="h-4 w-4 text-muted-foreground" />
-                          </button>
-                        </div>
-                      ))}
+                          Clear all
+                        </Button>
+              </div>
+
+                      <div className="space-y-2">
+                        {recentSearches.map((search) => (
+                  <div 
+                            key={search.id}
+                            className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer group"
+                    onClick={() => {
+                              navigate(`/@${search.username}`);
+                      setIsSearchOpen(false);
+                    }}
+                  >
+                            <div className="flex items-center gap-3 flex-1">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage
+                                  src={search.avatar}
+                                  alt={search.username}
+                                />
+                                <AvatarFallback>
+                                  {search.username[0].toUpperCase()}
+                                </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1">
+                                  <p className="font-semibold text-sm truncate">
+                                    {search.username}
+                                  </p>
+                                  {search.isVerified && (
+                                    <Check className="h-4 w-4 text-blue-500 fill-current shrink-0" />
+                        )}
+                      </div>
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <p className="truncate">{search.fullName}</p>
+                                  <span>·</span>
+                                  <p>{search.followers} followers</p>
                     </div>
-                  )}
+                              </div>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveRecent(search.id);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                            >
+                              <X className="h-4 w-4 text-muted-foreground" />
+                            </button>
+                  </div>
+                ))}
+                      </div>
+              </div>
+            )}
 
                   {/* Search Results (when typing) */}
                   {searchQuery && (
-                    <div className="space-y-1">
-                      {isSearching ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                        </div>
-                      ) : searchResults.length > 0 ? (
-                        searchResults.map((user) => (
-                          <div
-                            key={user.id}
-                            className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer"
-                            onClick={() => handleUserClick(user.username)}
-                          >
-                            <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                              {user.profileImage ? (
-                                <img
-                                  src={user.profileImage}
-                                  alt={user.username || ""}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-xs font-medium">
-                                  {user.username?.[0]?.toUpperCase() || "U"}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm truncate">{user.username}</p>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-8 text-muted-foreground text-sm">
-                          No results found
-                        </div>
-                      )}
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p className="text-sm">No results found</p>
                     </div>
                   )}
 
                   {/* Empty State */}
                   {recentSearches.length === 0 && !searchQuery && (
-                    <div className="text-center py-8 text-muted-foreground text-sm">
-                      No recent searches
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p className="text-sm">No recent searches</p>
                     </div>
                   )}
                 </div>

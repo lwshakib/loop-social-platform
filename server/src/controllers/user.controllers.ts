@@ -13,6 +13,56 @@ import {
   updateProfileSchema,
   type UpdateProfileInput,
 } from "../validators/user.validators.js";
+import { createNotification } from "./notification.controllers.js";
+
+/**
+ * Get suggested users (users not being followed by current user)
+ * GET /api/users/suggestions
+ * Requires authentication
+ */
+export const getSuggestedUsers = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Get user from request (set by verifyJWT middleware)
+    const currentUser = (req as any).user;
+    if (!currentUser) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    // Get list of users the current user is following
+    const followingRecords = await Follow.find({
+      followerId: currentUser._id,
+    }).select("followingId");
+
+    const followingUserIds = followingRecords.map(
+      (follow: any) => follow.followingId
+    );
+    followingUserIds.push(currentUser._id); // Exclude current user
+
+    // Get users who are not being followed (limit to 20 for suggestions)
+    const suggestedUsers = await User.find({
+      _id: { $nin: followingUserIds },
+    })
+      .select("firstName surName username profileImage")
+      .limit(20)
+      .sort({ createdAt: -1 }); // Get recent users
+
+    // Transform users to match frontend expectations
+    const transformedUsers = suggestedUsers.map((user: any) => ({
+      userId: user._id.toString(),
+      user: {
+        id: user._id.toString(),
+        firstName: user.firstName || "",
+        surName: user.surName || "",
+        username: user.username || "",
+        profileImage: user.profileImage || "",
+      },
+    }));
+
+    res.status(200).json(
+      new ApiResponse(200, transformedUsers, "Suggested users fetched successfully")
+    );
+  }
+);
 
 /**
  * Get user by username
@@ -381,6 +431,13 @@ export const followUser = asyncHandler(
       followingId: userToFollow._id,
     });
 
+    // Create notification for the user being followed
+    await createNotification(
+      userToFollow._id,
+      currentUser._id,
+      "follow"
+    );
+
     res
       .status(201)
       .json(new ApiResponse(201, follow, "User followed successfully"));
@@ -430,5 +487,73 @@ export const unfollowUser = asyncHandler(
     res
       .status(200)
       .json(new ApiResponse(200, {}, "User unfollowed successfully"));
+  }
+);
+
+/**
+ * Search users by query (username, firstName, surName)
+ * GET /api/users/search?q=query
+ * Optional authentication (to get following status)
+ */
+export const searchUsers = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const query = req.query.q as string;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    if (!query || query.trim().length === 0) {
+      throw new ApiError(400, "Search query is required");
+    }
+
+    // Get current user if authenticated (optional)
+    const currentUser = (req as any).user;
+
+    // Search for users matching the query (case-insensitive)
+    const searchRegex = new RegExp(query.trim(), "i");
+
+    const users = await User.find({
+      $or: [
+        { username: { $regex: searchRegex } },
+        { firstName: { $regex: searchRegex } },
+        { surName: { $regex: searchRegex } },
+      ],
+    })
+      .select("-password -refreshToken")
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    // Get following status for each user if authenticated
+    let followingMap: Map<string, boolean> = new Map();
+    if (currentUser) {
+      const followingRecords = await Follow.find({
+        followerId: currentUser._id,
+      }).select("followingId");
+
+      followingRecords.forEach((follow: any) => {
+        followingMap.set(follow.followingId.toString(), true);
+      });
+    }
+
+    // Transform users to match frontend expectations
+    const transformedUsers = users.map((user: any) => {
+      const userId = user._id.toString();
+      return {
+        id: userId,
+        firstName: user.firstName || "",
+        surName: user.surName || "",
+        username: user.username || "",
+        profileImage: user.profileImage || "",
+        isVerified: user.isVerified || false,
+        isFollowing: currentUser ? followingMap.has(userId) : false,
+        bio: user.bio || "",
+      };
+    });
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        transformedUsers,
+        "Users found successfully"
+      )
+    );
   }
 );

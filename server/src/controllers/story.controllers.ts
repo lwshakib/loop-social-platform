@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 import logger from "../logger/winston.logger.js";
 import Story from "../models/story.model.js";
+import Follow from "../models/follow.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -99,7 +100,7 @@ export const createStory = asyncHandler(
  * Get all stories grouped by user
  * GET /api/stories
  * Requires authentication
- * Returns stories grouped by userId, with only non-expired stories
+ * Returns stories grouped by userId, with only non-expired stories from followed users (including current user)
  */
 export const getStories = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -109,9 +110,21 @@ export const getStories = asyncHandler(
       throw new ApiError(401, "Unauthorized");
     }
 
-    // Fetch all non-expired stories
+    // Get list of users the current user is following
+    const followingRecords = await Follow.find({
+      followerId: user._id,
+    }).select("followingId");
+
+    // Create array of user IDs to include (followed users + current user)
+    const userIdsToInclude = followingRecords.map(
+      (follow: any) => follow.followingId
+    );
+    userIdsToInclude.push(user._id); // Include current user's own stories
+
+    // Fetch all non-expired stories from followed users (including current user)
     const now = new Date();
     const stories = await Story.find({
+      userId: { $in: userIdsToInclude },
       expiresAt: { $gt: now }, // Only get stories that haven't expired
     })
       .populate("userId", "firstName surName username profileImage")

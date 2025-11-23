@@ -4,6 +4,7 @@ import postRoutes from "./post.routes.js";
 import cloudinaryRoutes from "./cloudinary.routes.js";
 import userRoutes from "./user.routes.js";
 import storyRoutes from "./story.routes.js";
+import notificationRoutes from "./notification.routes.js";
 
 const routes = express.Router();
 
@@ -12,5 +13,6 @@ routes.use("/posts", postRoutes);
 routes.use("/cloudinary", cloudinaryRoutes);
 routes.use("/users", userRoutes);
 routes.use("/stories", storyRoutes);
+routes.use("/notifications", notificationRoutes);
 
 export default routes;

@@ -5,6 +5,7 @@ import Post from "../models/post.model.js";
 import Like from "../models/like.model.js";
 import Comment from "../models/comment.model.js";
 import Saved from "../models/saved.model.js";
+import Follow from "../models/follow.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -13,6 +14,7 @@ import {
   type CreatePostInput,
 } from "../validators/post.validators.js";
 import mongoose from "mongoose";
+import { createNotification } from "./notification.controllers.js";
 
 /**
  * Create a new post
@@ -68,6 +70,33 @@ export const createPost = asyncHandler(
 
     // Populate user data
     await post.populate("userId", "firstName surName username email");
+
+    // Send notifications to all followers
+    try {
+      // Find all users who follow the post creator
+      const followers = await Follow.find({
+        followingId: user._id,
+      }).select("followerId");
+
+      // Create notifications for each follower
+      const notificationPromises = followers.map((follow: any) =>
+        createNotification(
+          follow.followerId,
+          user._id,
+          "post",
+          post._id
+        )
+      );
+
+      // Execute all notifications in parallel (don't wait for them to complete)
+      Promise.all(notificationPromises).catch((error) => {
+        // Log error but don't fail the post creation
+        logger.error("Error creating post notifications:", error);
+      });
+    } catch (error) {
+      // Log error but don't fail the post creation
+      logger.error("Error fetching followers for post notification:", error);
+    }
 
     // Return the created post
     res
@@ -146,18 +175,35 @@ export const getPosts = asyncHandler(
       const postId = post._id.toString();
       const userId = post.userId?._id || post.userId;
       
+      // Ensure user data is properly populated
+      let userData = undefined;
+      if (post.userId) {
+        // Check if userId is populated (object) or just an ObjectId
+        if (typeof post.userId === 'object' && post.userId._id) {
+          // Populated user object
+          userData = {
+            id: post.userId._id.toString(),
+            firstName: post.userId.firstName || "",
+            surName: post.userId.surName || "",
+            username: post.userId.username || "unknown",
+            profileImage: post.userId.profileImage || "",
+          };
+        } else if (typeof post.userId === 'object' && post.userId.username) {
+          // Already populated as object
+          userData = {
+            id: userId?.toString() || post.userId._id?.toString() || "",
+            firstName: post.userId.firstName || "",
+            surName: post.userId.surName || "",
+            username: post.userId.username || "unknown",
+            profileImage: post.userId.profileImage || "",
+          };
+        }
+      }
+      
       return {
         id: postId,
-        userId: userId?.toString() || post.userId?.toString(),
-        user: post.userId
-          ? {
-              id: userId?.toString() || post.userId?._id?.toString(),
-              firstName: post.userId.firstName,
-              surName: post.userId.surName,
-              username: post.userId.username,
-              profileImage: post.userId.profileImage || "",
-            }
-          : undefined,
+        userId: userId?.toString() || post.userId?.toString() || "",
+        user: userData,
         caption: post.caption || "",
         url: post.url || "",
         type: post.type,
@@ -226,6 +272,16 @@ export const likePost = asyncHandler(
       userId: user._id,
       postId: postId,
     });
+
+    // Create notification for the post owner (if not liking own post)
+    if (post.userId.toString() !== user._id.toString()) {
+      await createNotification(
+        post.userId,
+        user._id,
+        "like",
+        postId
+      );
+    }
 
     res
       .status(201)
@@ -408,6 +464,17 @@ export const createComment = asyncHandler(
       comment: comment,
       ...(parentId && typeof parentId === "string" ? { parentId } : {}),
     });
+
+    // Create notification for the post owner (if not commenting on own post)
+    if (post.userId.toString() !== user._id.toString()) {
+      await createNotification(
+        post.userId,
+        user._id,
+        "comment",
+        postId,
+        newComment._id
+      );
+    }
 
     // Populate user data
     await newComment.populate("userId", "firstName surName username profileImage");

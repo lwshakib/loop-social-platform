@@ -447,7 +447,7 @@ export default function StoriesPage() {
               className="h-10 w-10 border-2 border-white shrink-0 cursor-pointer"
               onClick={() => {
                 if (currentStory.user?.username) {
-                  navigate(`/${currentStory.user.username}`);
+                  navigate(`/@${currentStory.user.username}`);
                 }
               }}
             >
@@ -466,7 +466,7 @@ export default function StoriesPage() {
                 className="text-white font-semibold text-sm cursor-pointer hover:underline"
                 onClick={() => {
                   if (currentStory.user?.username) {
-                    navigate(`/${currentStory.user.username}`);
+                    navigate(`/@${currentStory.user.username}`);
                   }
                 }}
               >

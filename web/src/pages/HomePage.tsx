@@ -16,9 +16,9 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  Eye,
   Heart,
   MessageCircle,
-  MoreHorizontal,
   Plus,
   Repeat2,
   Share,
@@ -28,50 +28,43 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import VideoPlayer from "@/components/VideoPlayer";
 
-// Mock data for posts
-const mockPosts = [
-  {
-    id: 1,
-    username: "RealChiefPriest",
-    displayName: "Chief Priest",
-    userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ChiefPriest",
-    postImage: "https://picsum.photos/600/400?random=1",
-    content:
-      "I want to celebrate the 🐐 Davido's 33rd birthday by giving out 33 million naira to all my followers. Just like this post ❤️ and drop your account number below 👇 #DavidoAt33",
-    likes: 17000,
-    comments: 5000,
-    retweets: 1200,
-    views: 548000,
-    timeAgo: "21h",
-  },
-  {
-    id: 2,
-    username: "johndoe",
-    displayName: "John Doe",
-    userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-    postImage: "https://picsum.photos/600/400?random=2",
-    content: "Beautiful sunset today! 🌅 #sunset #nature",
-    likes: 1234,
-    comments: 89,
-    retweets: 45,
-    views: 12000,
-    timeAgo: "2h",
-  },
-  {
-    id: 3,
-    username: "janedoe",
-    displayName: "Jane Doe",
-    userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
-    postImage: null,
-    content: "Coffee and code ☕️💻 Perfect way to start the day!",
-    likes: 567,
-    comments: 23,
-    retweets: 12,
-    views: 8900,
-    timeAgo: "5h",
-  },
-];
+// Helper function to format time ago
+const formatTimeAgo = (date: string | Date): string => {
+  const now = new Date();
+  const postDate = typeof date === "string" ? new Date(date) : date;
+  const diffInSeconds = Math.floor((now.getTime() - postDate.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return `${diffInSeconds}s`;
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
+  if (diffInSeconds < 31536000)
+    return `${Math.floor(diffInSeconds / 2592000)}mo`;
+  return `${Math.floor(diffInSeconds / 31536000)}y`;
+};
+
+
+type Post = {
+  id: string;
+  username: string;
+  displayName: string;
+  userAvatar: string;
+  postImage: string | null;
+  postVideo: string | null;
+  postType: "text" | "image" | "video";
+  content: string;
+  likes: number;
+  comments: number;
+  retweets: number;
+  views: number;
+  timeAgo: string;
+  createdAt: string;
+  isLiked?: boolean;
+  isSaved?: boolean;
+};
 
 type StoryGroup = {
   userId: string;
@@ -102,8 +95,10 @@ type StoryGroup = {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
-  const [savedPosts, setSavedPosts] = useState<Set<number>>(new Set());
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
   const storiesScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -117,6 +112,11 @@ export default function HomePage() {
   });
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [followingUserIds, setFollowingUserIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [suggestedUsers, setSuggestedUsers] = useState<StoryGroup[]>([]);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // Get user data from store
   const { userData, getAvatarUrl, getAvatarFallback } = useUserStore();
@@ -196,6 +196,230 @@ export default function HomePage() {
     };
 
     fetchStories();
+  }, []);
+
+  // Fetch posts from API
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const getCookie = (name: string): string | null => {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) {
+            return parts.pop()?.split(";").shift() || null;
+          }
+          return null;
+        };
+
+        const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+        const accessToken = getCookie("accessToken");
+
+        if (!accessToken) {
+          setIsLoadingPosts(false);
+          return;
+        }
+
+        const response = await fetch(`${serverUrl}/posts?limit=50`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data?.posts) {
+            // Transform posts to match UI structure
+            const transformedPosts: Post[] = result.data.posts.map((post: any) => {
+              // The API returns user data in post.user field (populated from userId)
+              // Backend transforms post.userId to post.user in the response
+              const user = post.user || {};
+              
+              // Build display name from firstName and surName
+              let displayName = "Unknown User";
+              if (user.firstName && user.surName) {
+                displayName = `${user.firstName} ${user.surName}`;
+              } else if (user.firstName) {
+                displayName = user.firstName;
+              } else if (user.username) {
+                displayName = user.username;
+              }
+
+              // Get username - ensure it's not empty
+              const username = user.username && user.username.trim() 
+                ? user.username.trim() 
+                : "unknown";
+
+              return {
+                id: post._id?.toString() || post.id,
+                username,
+                displayName,
+                userAvatar: user.profileImage || "",
+                postImage: post.type === "image" ? post.url : null,
+                postVideo: post.type === "video" ? post.url : null,
+                postType: post.type || "text",
+                content: post.caption || "",
+                likes: post.likesCount || 0,
+                comments: post.commentsCount || 0,
+                retweets: 0, // Retweets not implemented yet
+                views: 0, // Views not implemented yet
+                timeAgo: formatTimeAgo(post.createdAt),
+                createdAt: post.createdAt,
+                isLiked: post.isLiked || false,
+                isSaved: post.isSaved || false,
+              };
+            });
+
+            setPosts(transformedPosts);
+
+            // Initialize liked and saved posts
+            const likedPostIds = transformedPosts
+              .filter((post) => post.isLiked)
+              .map((post) => post.id);
+            setLikedPosts(new Set(likedPostIds));
+
+            const savedPostIds = transformedPosts
+              .filter((post) => post.isSaved)
+              .map((post) => post.id);
+            setSavedPosts(new Set(savedPostIds));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      } finally {
+        setIsLoadingPosts(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  // Set up Intersection Observer to pause videos when they scroll out of view
+  useEffect(() => {
+    if (posts.length === 0) return;
+
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      // Clean up previous observer
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+
+      // Create new observer to detect when videos are out of view
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const container = entry.target as HTMLElement;
+            const video = container.querySelector("video");
+            if (!video) return;
+
+            if (!entry.isIntersecting && !video.paused) {
+              // Video is out of view - pause it if it's playing
+              video.pause();
+            }
+          });
+        },
+        {
+          threshold: 0.1, // Trigger when less than 10% of video is visible
+          rootMargin: "0px",
+        }
+      );
+
+      // Observe all video containers
+      posts.forEach((post) => {
+        if (post.postVideo) {
+          const element = document.querySelector(
+            `[data-video-id="${post.id}"]`
+          );
+          if (element && observerRef.current) {
+            observerRef.current.observe(element);
+          }
+        }
+      });
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [posts]);
+
+  // Fetch suggested users
+  useEffect(() => {
+    const fetchSuggestedUsers = async () => {
+      try {
+        const getCookie = (name: string): string | null => {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) {
+            return parts.pop()?.split(";").shift() || null;
+          }
+          return null;
+        };
+
+        const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+        const accessToken = getCookie("accessToken");
+
+        if (!accessToken) {
+          return;
+        }
+
+        const response = await fetch(`${serverUrl}/users/suggestions`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data && Array.isArray(result.data)) {
+            setSuggestedUsers(result.data);
+
+            // Check following status for suggested users
+            const followingSet = new Set<string>();
+            await Promise.all(
+              result.data.slice(0, 10).map(async (userGroup: StoryGroup) => {
+                if (!userGroup.user?.username) return;
+                try {
+                  const userResponse = await fetch(
+                    `${serverUrl}/users/${userGroup.user.username}`,
+                    {
+                      method: "GET",
+                      headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                      },
+                      credentials: "include",
+                    }
+                  );
+
+                  if (userResponse.ok) {
+                    const userResult = await userResponse.json();
+                    if (userResult.data?.isFollowing && userGroup.userId) {
+                      followingSet.add(userGroup.userId);
+                    }
+                  }
+                } catch (error) {
+                  console.error(
+                    `Error checking following status for ${userGroup.user.username}:`,
+                    error
+                  );
+                }
+              })
+            );
+            setFollowingUserIds(followingSet);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching suggested users:", error);
+      }
+    };
+
+    fetchSuggestedUsers();
   }, []);
 
   // Refresh stories after creating a new one
@@ -451,28 +675,284 @@ export default function HomePage() {
     };
   }, [createStoryData.preview]);
 
-  const toggleLike = (postId: number) => {
-    setLikedPosts((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(postId)) {
-        newSet.delete(postId);
-      } else {
-        newSet.add(postId);
+  const handleLike = async (postId: string) => {
+    const getCookie = (name: string): string | null => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) {
+        return parts.pop()?.split(";").shift() || null;
       }
-      return newSet;
-    });
+      return null;
+    };
+
+    const accessToken = getCookie("accessToken");
+    if (!accessToken) {
+      toast.error("Error", {
+        description: "You must be logged in to like posts",
+      });
+      return;
+    }
+
+    const isLiked = likedPosts.has(postId);
+    const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+
+    // Get current likes count for revert
+    const currentPost = posts.find((p) => p.id === postId);
+    const previousLikesCount = currentPost?.likes || 0;
+
+    // Optimistic update
+    if (isLiked) {
+      setLikedPosts((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId
+            ? { ...post, likes: Math.max(0, post.likes - 1), isLiked: false }
+            : post
+        )
+      );
+    } else {
+      setLikedPosts((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(postId);
+        return newSet;
+      });
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId
+            ? { ...post, likes: post.likes + 1, isLiked: true }
+            : post
+        )
+      );
+    }
+
+    try {
+      if (isLiked) {
+        const response = await fetch(`${serverUrl}/posts/${postId}/like`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          // Revert on error
+          setLikedPosts((prev) => {
+            const newSet = new Set(prev);
+            newSet.add(postId);
+            return newSet;
+          });
+          setPosts((prev) =>
+            prev.map((post) =>
+              post.id === postId
+                ? { ...post, likes: previousLikesCount, isLiked: true }
+                : post
+            )
+          );
+          const error = await response.json();
+          toast.error("Error", {
+            description: error.message || "Failed to unlike post",
+          });
+        }
+      } else {
+        const response = await fetch(`${serverUrl}/posts/${postId}/like`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          // Revert on error
+          setLikedPosts((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(postId);
+            return newSet;
+          });
+          setPosts((prev) =>
+            prev.map((post) =>
+              post.id === postId
+                ? { ...post, likes: previousLikesCount, isLiked: false }
+                : post
+            )
+          );
+          const error = await response.json();
+          toast.error("Error", {
+            description: error.message || "Failed to like post",
+          });
+        }
+      }
+    } catch (error) {
+      // Revert on error
+      if (isLiked) {
+        setLikedPosts((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(postId);
+          return newSet;
+        });
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId
+              ? { ...post, likes: previousLikesCount, isLiked: true }
+              : post
+          )
+        );
+      } else {
+        setLikedPosts((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(postId);
+          return newSet;
+        });
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId
+              ? { ...post, likes: previousLikesCount, isLiked: false }
+              : post
+          )
+        );
+      }
+      console.error("Error liking post:", error);
+      toast.error("Error", {
+        description: "Failed to like post",
+      });
+    }
   };
 
-  const toggleSave = (postId: number) => {
-    setSavedPosts((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(postId)) {
-        newSet.delete(postId);
-      } else {
-        newSet.add(postId);
+  const handleSave = async (postId: string) => {
+    const getCookie = (name: string): string | null => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) {
+        return parts.pop()?.split(";").shift() || null;
       }
-      return newSet;
-    });
+      return null;
+    };
+
+    const accessToken = getCookie("accessToken");
+    if (!accessToken) {
+      toast.error("Error", {
+        description: "You must be logged in to save posts",
+      });
+      return;
+    }
+
+    const isSaved = savedPosts.has(postId);
+    const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+
+    // Optimistic update
+    if (isSaved) {
+      setSavedPosts((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, isSaved: false } : post
+        )
+      );
+    } else {
+      setSavedPosts((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(postId);
+        return newSet;
+      });
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, isSaved: true } : post
+        )
+      );
+    }
+
+    try {
+      if (isSaved) {
+        const response = await fetch(`${serverUrl}/posts/${postId}/saved`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          // Revert on error
+          setSavedPosts((prev) => {
+            const newSet = new Set(prev);
+            newSet.add(postId);
+            return newSet;
+          });
+          setPosts((prev) =>
+            prev.map((post) =>
+              post.id === postId ? { ...post, isSaved: true } : post
+            )
+          );
+          const error = await response.json();
+          toast.error("Error", {
+            description: error.message || "Failed to unsave post",
+          });
+        }
+      } else {
+        const response = await fetch(`${serverUrl}/posts/${postId}/saved`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          // Revert on error
+          setSavedPosts((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(postId);
+            return newSet;
+          });
+          setPosts((prev) =>
+            prev.map((post) =>
+              post.id === postId ? { ...post, isSaved: false } : post
+            )
+          );
+          const error = await response.json();
+          toast.error("Error", {
+            description: error.message || "Failed to save post",
+          });
+        }
+      }
+    } catch (error) {
+      // Revert on error
+      if (isSaved) {
+        setSavedPosts((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(postId);
+          return newSet;
+        });
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId ? { ...post, isSaved: true } : post
+          )
+        );
+      } else {
+        setSavedPosts((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(postId);
+          return newSet;
+        });
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId ? { ...post, isSaved: false } : post
+          )
+        );
+      }
+      console.error("Error saving post:", error);
+      toast.error("Error", {
+        description: "Failed to save post",
+      });
+    }
   };
 
   return (
@@ -564,19 +1044,15 @@ export default function HomePage() {
                       key={storyGroup.userId}
                       className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 cursor-pointer"
                       onClick={() => {
+                        if (storyGroup.user?.username && firstStory?.id) {
                         navigate(
-                          `/stories/@${storyGroup.user?.username}/${firstStory.id}`
+                            `/stories/@${storyGroup.user.username}/${firstStory.id}`
                         );
+                        }
                       }}
                     >
                       <div
                         className="relative p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (storyGroup.user?.username) {
-                            navigate(`/${storyGroup.user.username}`);
-                          }
-                        }}
                       >
                         <div className="rounded-full bg-background p-[2px]">
                           <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
@@ -594,12 +1070,6 @@ export default function HomePage() {
                       </div>
                       <span
                         className="text-[10px] sm:text-xs text-foreground truncate max-w-[60px] sm:max-w-[70px] text-center hover:underline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (storyGroup.user?.username) {
-                            navigate(`/${storyGroup.user.username}`);
-                          }
-                        }}
                       >
                         @{storyGroup.user.username || "unknown"}
                       </span>
@@ -611,42 +1081,51 @@ export default function HomePage() {
           </div>
 
           {/* Posts */}
-          <div className="space-y-3 sm:space-y-4 md:space-y-6 w-full">
-            {mockPosts.map((post) => (
+          <div className="space-y-0 w-full">
+            {isLoadingPosts ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <p className="text-sm">No posts available</p>
+              </div>
+            ) : (
+              posts.map((post) => (
               <div
                 key={post.id}
-                className="bg-card border border-b border-border hover:bg-accent/5 transition-colors cursor-pointer rounded-lg sm:rounded-none mb-3 sm:mb-0 w-full overflow-hidden shadow-sm"
+                className="border-b border-border hover:bg-accent/5 transition-colors cursor-pointer w-full"
               >
-                <div className="p-2.5 sm:p-3 md:p-4 w-full min-w-0">
+                <div className="px-4 py-3 w-full min-w-0">
                   {/* Post Header */}
-                  <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="flex items-start gap-3 mb-2">
                     <Avatar
-                      className="h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 shrink-0 cursor-pointer"
-                      onClick={() => navigate(`/${post.username}`)}
+                      className="h-10 w-10 shrink-0 cursor-pointer"
+                      onClick={() => navigate(`/@${post.username}`)}
                     >
                       <AvatarImage src={post.userAvatar} alt={post.username} />
-                      <AvatarFallback className="text-xs sm:text-sm">
+                      <AvatarFallback className="text-sm">
                         {(post.displayName || post.username)[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 mb-1 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span
-                          className="font-semibold text-xs sm:text-sm hover:underline cursor-pointer truncate"
-                          onClick={() => navigate(`/${post.username}`)}
+                          className="font-bold text-[15px] hover:underline cursor-pointer leading-5"
+                          onClick={() => navigate(`/@${post.username}`)}
                         >
                           {post.displayName || post.username}
                         </span>
                         <span
-                          className="text-[10px] sm:text-xs md:text-sm text-muted-foreground hover:underline cursor-pointer hidden sm:inline"
-                          onClick={() => navigate(`/${post.username}`)}
+                          className="text-[15px] text-muted-foreground hover:underline cursor-pointer leading-5"
+                          onClick={() => navigate(`/@${post.username}`)}
                         >
                           @{post.username}
                         </span>
-                        <span className="text-[10px] sm:text-xs md:text-sm text-muted-foreground hidden sm:inline">
+                        <span className="text-[15px] text-muted-foreground leading-5">
                           ·
                         </span>
-                        <span className="text-[10px] sm:text-xs md:text-sm text-muted-foreground hover:underline">
+                        <span className="text-[15px] text-muted-foreground hover:underline leading-5">
                           {post.timeAgo}
                         </span>
                       </div>
@@ -654,98 +1133,140 @@ export default function HomePage() {
                   </div>
 
                   {/* Post Content */}
-                  <div className="text-xs sm:text-sm mb-2 sm:mb-3 whitespace-pre-wrap break-words overflow-wrap-anywhere word-break-break-word">
+                  <div className="text-[15px] mb-3 whitespace-pre-wrap break-words leading-[20px]">
                     {post.content}
                   </div>
 
-                  {/* Post Image */}
+                  {/* Post Image or Video */}
                   {post.postImage && (
-                    <div className="rounded-xl sm:rounded-2xl overflow-hidden mb-2 sm:mb-3 border border-border w-full">
+                    <div className="rounded-2xl overflow-hidden mb-3 w-full">
                       <img
                         src={post.postImage}
                         alt="Post"
-                        className="w-full h-auto object-cover max-w-full"
+                        className="w-full h-auto object-cover"
+                      />
+                    </div>
+                  )}
+                  {post.postVideo && (
+                    <div className="mb-3 w-full">
+                      <VideoPlayer
+                        src={post.postVideo}
+                        videoId={post.id}
+                        containerClassName="w-full"
+                        className="max-h-[600px]"
+                        intersectionObserverId={post.id}
+                        maxHeight="600px"
                       />
                     </div>
                   )}
 
                   {/* Action Buttons */}
-                  <div className="flex items-center justify-between gap-1 sm:gap-2 w-full min-w-0">
-                    <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-1 min-w-0">
+                  <div className="flex items-center justify-between max-w-[425px] -ml-1 mt-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full h-9 px-2 group"
+                    >
+                      <MessageCircle className="h-[18.75px] w-[18.75px] mr-2 group-hover:scale-110 transition-transform" />
+                      <span className="text-[13px]">
+                        {post.comments >= 1000
+                          ? (() => {
+                              const value = post.comments / 1000;
+                              return value % 1 === 0
+                                ? `${value}K`
+                                : `${value.toFixed(1)}K`;
+                            })()
+                          : post.comments.toLocaleString()}
+                      </span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-green-500 hover:bg-green-500/10 rounded-full h-9 px-2 group"
+                    >
+                      <Repeat2 className="h-[18.75px] w-[18.75px] mr-2 group-hover:scale-110 transition-transform" />
+                      <span className="text-[13px]">
+                        {post.retweets >= 1000
+                          ? (() => {
+                              const value = post.retweets / 1000;
+                              return value % 1 === 0
+                                ? `${value}K`
+                                : `${value.toFixed(1)}K`;
+                            })()
+                          : post.retweets.toLocaleString()}
+                      </span>
+                    </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full flex-1 sm:flex-none h-8 sm:h-9 px-1.5 sm:px-2 md:px-3 min-w-0"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 sm:mr-1 md:mr-2 shrink-0" />
-                        <span className="text-[10px] sm:text-xs md:text-sm hidden min-[375px]:inline truncate">
-                          {post.comments.toLocaleString()}
-                        </span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground hover:text-green-500 hover:bg-green-500/10 rounded-full flex-1 sm:flex-none h-8 sm:h-9 px-1.5 sm:px-2 md:px-3 min-w-0"
-                      >
-                        <Repeat2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 sm:mr-1 md:mr-2 shrink-0" />
-                        <span className="text-[10px] sm:text-xs md:text-sm hidden min-[375px]:inline truncate">
-                          {post.retweets.toLocaleString()}
-                        </span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleLike(post.id)}
-                        className={`rounded-full flex-1 sm:flex-none h-8 sm:h-9 px-1.5 sm:px-2 md:px-3 min-w-0 ${
+                        onClick={() => handleLike(post.id)}
+                        className={`rounded-full h-9 px-2 group ${
                           likedPosts.has(post.id)
                             ? "text-red-500 hover:bg-red-500/10"
                             : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                         }`}
                       >
                         <Heart
-                          className={`h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 sm:mr-1 md:mr-2 shrink-0 ${
+                          className={`h-[18.75px] w-[18.75px] mr-2 group-hover:scale-110 transition-transform ${
                             likedPosts.has(post.id) ? "fill-current" : ""
                           }`}
                         />
-                        <span className="text-[10px] sm:text-xs md:text-sm hidden min-[375px]:inline truncate">
-                          {post.likes.toLocaleString()}
+                        <span className="text-[13px]">
+                          {post.likes >= 1000
+                            ? (() => {
+                                const value = post.likes / 1000;
+                                return value % 1 === 0
+                                  ? `${value}K`
+                                  : `${value.toFixed(1)}K`;
+                              })()
+                            : post.likes.toLocaleString()}
                         </span>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full hidden sm:flex h-8 sm:h-9 shrink-0"
-                      >
-                        <Share className="h-4 w-4 md:h-5 md:w-5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleSave(post.id)}
-                        className={`rounded-full hidden sm:flex h-8 sm:h-9 shrink-0 ${
-                          savedPosts.has(post.id)
-                            ? "text-primary hover:bg-primary/10"
-                            : "text-muted-foreground hover:text-primary hover:bg-primary/10"
-                        }`}
-                      >
-                        <Bookmark
-                          className={`h-4 w-4 md:h-5 md:w-5 ${
-                            savedPosts.has(post.id) ? "fill-current" : ""
-                          }`}
-                        />
-                      </Button>
-                    </div>
                     <Button
                       variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 text-muted-foreground hover:text-foreground flex-shrink-0"
+                      size="sm"
+                      className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full h-9 px-2 group"
                     >
-                      <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                      <Share className="h-[18.75px] w-[18.75px] group-hover:scale-110 transition-transform" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full h-9 px-2 group"
+                    >
+                      <Eye className="h-[18.75px] w-[18.75px] mr-2 group-hover:scale-110 transition-transform" />
+                      <span className="text-[13px]">
+                        {post.views >= 1000
+                          ? (() => {
+                              const value = post.views / 1000;
+                              return value % 1 === 0
+                                ? `${value}K`
+                                : `${value.toFixed(1)}K`;
+                            })()
+                          : post.views.toLocaleString()}
+                      </span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSave(post.id)}
+                      className={`rounded-full h-9 px-2 group ${
+                        savedPosts.has(post.id)
+                          ? "text-primary hover:bg-primary/10"
+                          : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      }`}
+                    >
+                      <Bookmark
+                        className={`h-[18.75px] w-[18.75px] group-hover:scale-110 transition-transform ${
+                          savedPosts.has(post.id) ? "fill-current" : ""
+                        }`}
+                      />
                     </Button>
                   </div>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -766,58 +1287,200 @@ export default function HomePage() {
               </Button>
             </div>
             <div className="space-y-2 md:space-y-3">
-              {stories.slice(0, 5).map((storyGroup) => {
-                if (!storyGroup.user) return null;
-                return (
-                  <div
-                    key={storyGroup.userId}
-                    className="flex items-center justify-between gap-2"
-                  >
-                    <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                      <Avatar
-                        className="h-7 w-7 md:h-8 md:w-8 shrink-0 cursor-pointer"
-                        onClick={() => {
-                          if (storyGroup.user?.username) {
-                            navigate(`/${storyGroup.user.username}`);
-                          }
-                        }}
-                      >
-                        <AvatarImage
-                          src={storyGroup.user.profileImage || ""}
-                          alt={storyGroup.user.username || ""}
-                        />
-                        <AvatarFallback className="text-[10px] md:text-xs">
-                          {storyGroup.user.firstName?.[0] ||
-                            storyGroup.user.username?.[0] ||
-                            "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className="font-semibold text-xs md:text-sm truncate cursor-pointer hover:underline"
+              {suggestedUsers
+                .filter((userGroup) => {
+                  // Filter out current user
+                  if (userData?.id && userGroup.userId === userData.id) {
+                    return false;
+                  }
+                  if (
+                    userData?.username &&
+                    userGroup.user?.username === userData.username
+                  ) {
+                    return false;
+                  }
+                  // Filter out users that are already being followed
+                  if (
+                    userGroup.userId &&
+                    followingUserIds.has(userGroup.userId)
+                  ) {
+                    return false;
+                  }
+                  return userGroup.user !== null;
+                })
+                .slice(0, 5)
+                .map((userGroup) => {
+                  if (!userGroup.user) return null;
+                  return (
+                    <div
+                      key={userGroup.userId}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                        <Avatar
+                          className="h-7 w-7 md:h-8 md:w-8 shrink-0 cursor-pointer"
                           onClick={() => {
-                            if (storyGroup.user?.username) {
-                              navigate(`/${storyGroup.user.username}`);
+                            if (userGroup.user?.username) {
+                              navigate(`/@${userGroup.user.username}`);
                             }
                           }}
                         >
-                          @{storyGroup.user.username || "unknown"}
-                        </p>
-                        <p className="text-[10px] md:text-xs text-muted-foreground truncate">
-                          Suggested for you
-                        </p>
+                          <AvatarImage
+                            src={userGroup.user.profileImage || ""}
+                            alt={userGroup.user.username || ""}
+                          />
+                          <AvatarFallback className="text-[10px] md:text-xs">
+                            {userGroup.user.firstName?.[0] ||
+                              userGroup.user.username?.[0] ||
+                              "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className="font-semibold text-xs md:text-sm truncate cursor-pointer hover:underline"
+                            onClick={() => {
+                              if (userGroup.user?.username) {
+                                navigate(`/@${userGroup.user.username}`);
+                              }
+                            }}
+                          >
+                            @{userGroup.user.username || "unknown"}
+                          </p>
+                          <p className="text-[10px] md:text-xs text-muted-foreground truncate">
+                            Suggested for you
+                          </p>
+                        </div>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary text-[10px] md:text-xs h-auto py-1 shrink-0"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!userGroup.user?.username || !userGroup.userId)
+                            return;
+
+                          const getCookie = (name: string): string | null => {
+                            const value = `; ${document.cookie}`;
+                            const parts = value.split(`; ${name}=`);
+                            if (parts.length === 2) {
+                              return parts.pop()?.split(";").shift() || null;
+                            }
+                            return null;
+                          };
+
+                          const serverUrl =
+                            import.meta.env.VITE_SERVER_URL || "";
+                          const accessToken = getCookie("accessToken");
+
+                          if (!accessToken) {
+                            toast.error("Error", {
+                              description:
+                                "You must be logged in to follow users",
+                            });
+                            return;
+                          }
+
+                          const isCurrentlyFollowing = followingUserIds.has(
+                            userGroup.userId
+                          );
+
+                          // Optimistic update
+                          if (isCurrentlyFollowing) {
+                            setFollowingUserIds((prev) => {
+                              const newSet = new Set(prev);
+                              newSet.delete(userGroup.userId);
+                              return newSet;
+                            });
+                          } else {
+                            setFollowingUserIds((prev) => {
+                              const newSet = new Set(prev);
+                              newSet.add(userGroup.userId);
+                              return newSet;
+                            });
+                          }
+
+                          try {
+                            if (isCurrentlyFollowing) {
+                              const response = await fetch(
+                                `${serverUrl}/users/${userGroup.user.username}/follow`,
+                                {
+                                  method: "DELETE",
+                                  headers: {
+                                    Authorization: `Bearer ${accessToken}`,
+                                  },
+                                  credentials: "include",
+                                }
+                              );
+
+                              if (!response.ok) {
+                                // Revert on error
+                                setFollowingUserIds((prev) => {
+                                  const newSet = new Set(prev);
+                                  newSet.add(userGroup.userId);
+                                  return newSet;
+                                });
+                                const error = await response.json();
+                                toast.error("Error", {
+                                  description:
+                                    error.message || "Failed to unfollow user",
+                                });
+                              }
+                            } else {
+                              const response = await fetch(
+                                `${serverUrl}/users/${userGroup.user.username}/follow`,
+                                {
+                                  method: "POST",
+                                  headers: {
+                                    Authorization: `Bearer ${accessToken}`,
+                                  },
+                                  credentials: "include",
+                                }
+                              );
+
+                              if (!response.ok) {
+                                // Revert on error
+                                setFollowingUserIds((prev) => {
+                                  const newSet = new Set(prev);
+                                  newSet.delete(userGroup.userId);
+                                  return newSet;
+                                });
+                                const error = await response.json();
+                                toast.error("Error", {
+                                  description:
+                                    error.message || "Failed to follow user",
+                                });
+                              }
+                            }
+                          } catch (error) {
+                            // Revert on error
+                            if (isCurrentlyFollowing) {
+                              setFollowingUserIds((prev) => {
+                                const newSet = new Set(prev);
+                                newSet.add(userGroup.userId);
+                                return newSet;
+                              });
+                            } else {
+                              setFollowingUserIds((prev) => {
+                                const newSet = new Set(prev);
+                                newSet.delete(userGroup.userId);
+                                return newSet;
+                              });
+                            }
+                            console.error("Error following user:", error);
+                            toast.error("Error", {
+                              description: "Failed to follow user",
+                            });
+                          }
+                        }}
+                      >
+                        {followingUserIds.has(userGroup.userId)
+                          ? "Following"
+                          : "Follow"}
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-primary text-[10px] md:text-xs h-auto py-1 shrink-0"
-                    >
-                      Follow
-                    </Button>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         </div>

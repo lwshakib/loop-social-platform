@@ -26,9 +26,10 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
+import VideoPlayer from "@/components/VideoPlayer";
 
 type TabType = "posts" | "reels" | "liked" | "saved";
 
@@ -124,6 +125,7 @@ const formatDate = (date: string): string => {
   ];
   return `${months[d.getMonth()]} ${d.getFullYear()}`;
 };
+
 
 export default function ProfilePage() {
   const { username } = useParams<{ username: string }>();
@@ -618,9 +620,29 @@ export default function ProfilePage() {
 
     try {
       setIsLoading(true);
+      const getCookie = (name: string): string | null => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+          return parts.pop()?.split(";").shift() || null;
+        }
+        return null;
+      };
+
       const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+      const accessToken = getCookie("accessToken");
+      
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      
+      if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`;
+      }
+
       const response = await fetch(`${serverUrl}/users/${cleanUsername}`, {
         method: "GET",
+        headers,
         credentials: "include",
       });
 
@@ -1575,6 +1597,15 @@ export default function ProfilePage() {
         onOpenChange={(open) => {
           setIsPostDialogOpen(open);
           if (!open) {
+            // Pause video when dialog closes
+            if (selectedPost?.type === "video") {
+              const videoElement = document.querySelector(
+                `[data-video-id="${selectedPost.id}"] video`
+              ) as HTMLVideoElement;
+              if (videoElement) {
+                videoElement.pause();
+              }
+            }
             setSelectedPost(null);
             setMediaAspectRatio(null);
             // Reset reply states when dialog closes
@@ -1652,20 +1683,13 @@ export default function ProfilePage() {
               <div className="relative w-full md:w-2/5 bg-black flex items-center justify-center overflow-hidden h-full max-h-full p-0 m-0">
                 {selectedPost.url ? (
                   selectedPost.type === "video" ? (
-                    <div className="w-full h-full flex items-center justify-center" style={{ aspectRatio: "9/16" }}>
-                      <video
+                    <VideoPlayer
                         src={selectedPost.url}
-                        controls
-                        className="w-full h-full object-contain"
-                        playsInline
-                        style={{
-                          margin: 0,
-                          padding: 0,
-                        }}
-                      >
-                        Your browser does not support the video tag.
-                      </video>
-                    </div>
+                      videoId={selectedPost.id}
+                      containerClassName="w-full h-full"
+                      className="w-full h-full"
+                      aspectRatio="9/16"
+                    />
                     ) : (
                       <img
                       src={selectedPost.url}

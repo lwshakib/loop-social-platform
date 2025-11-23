@@ -20,7 +20,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 
 type Post = {
@@ -101,6 +101,7 @@ const formatTime = (seconds: number): string => {
 
 export default function ReelsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { videoId } = useParams<{ videoId?: string }>();
   const [videos, setVideos] = useState<Post[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
@@ -235,6 +236,18 @@ export default function ReelsPage() {
                   console.error("Error playing video:", error);
                 });
               }
+
+              // Check if we should open comments (from notification)
+              const searchParams = new URLSearchParams(location.search);
+              if (searchParams.get("openComments") === "true") {
+                const videoPost = videos.find((v) => v.id === videoId);
+                if (videoPost) {
+                  setSelectedVideo(videoPost);
+                  setIsCommentsDialogOpen(true);
+                  // Remove the query parameter from URL
+                  navigate(`/reels/${videoId}`, { replace: true });
+                }
+              }
             }, 500);
           }
         }, 100);
@@ -316,6 +329,22 @@ export default function ReelsPage() {
                             console.error("Error playing video:", error);
                           });
                         }
+
+                        // Check if we should open comments (from notification)
+                        const searchParams = new URLSearchParams(
+                          location.search
+                        );
+                        if (searchParams.get("openComments") === "true") {
+                          const videoPost = videoPosts.find(
+                            (post: Post) => post.id === videoId
+                          );
+                          if (videoPost) {
+                            setSelectedVideo(videoPost);
+                            setIsCommentsDialogOpen(true);
+                            // Remove the query parameter from URL
+                            navigate(`/reels/${videoId}`, { replace: true });
+                          }
+                        }
                       }, 500);
                     }
                   }, 100);
@@ -339,7 +368,7 @@ export default function ReelsPage() {
         fetchSpecificVideo();
       }
     }
-  }, [videoId, videos, navigate]);
+  }, [videoId, videos, navigate, location.search]);
 
   // Set up Intersection Observer to update URL when video is in view
   useEffect(() => {
@@ -929,14 +958,14 @@ export default function ReelsPage() {
   };
 
   if (videos.length === 0) {
-    return (
+  return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <p className="text-muted-foreground">No videos found</p>
         </div>
-      </div>
-    );
-  }
+    </div>
+  );
+}
 
   const scrollToNext = () => {
     if (containerRef.current) {
@@ -1182,7 +1211,7 @@ export default function ReelsPage() {
                         className="h-6 w-6 sm:h-7 sm:w-7 border border-white/50 shrink-0 cursor-pointer"
                         onClick={() => {
                           if (video.user?.username) {
-                            navigate(`/${video.user.username}`);
+                            navigate(`/@${video.user.username}`);
                           }
                         }}
                       >
@@ -1201,7 +1230,7 @@ export default function ReelsPage() {
                           className="font-semibold text-white text-xs sm:text-sm truncate cursor-pointer hover:underline"
                           onClick={() => {
                             if (video.user?.username) {
-                              navigate(`/${video.user.username}`);
+                              navigate(`/@${video.user.username}`);
                             }
                           }}
                         >
@@ -1426,7 +1455,7 @@ export default function ReelsPage() {
                                   className="h-8 w-8 shrink-0 cursor-pointer"
                                   onClick={() => {
                                     if (comment.user?.username) {
-                                      navigate(`/${comment.user.username}`);
+                                      navigate(`/@${comment.user.username}`);
                                     }
                                   }}
                                 >
@@ -1446,7 +1475,9 @@ export default function ReelsPage() {
                                       className="font-semibold text-sm cursor-pointer hover:underline"
                                       onClick={() => {
                                         if (comment.user?.username) {
-                                          navigate(`/${comment.user.username}`);
+                                          navigate(
+                                            `/@${comment.user.username}`
+                                          );
                                         }
                                       }}
                                     >

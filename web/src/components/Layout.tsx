@@ -47,75 +47,72 @@ const InstagramLogo = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Mock recent searches
-const mockRecentSearches = [
-  {
-    id: 1,
-    username: "dr.mizanur.rahman.azhari",
-    fullName: "Dr. Mizanur Rahman Azhari",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mizanur",
-    followers: "530K",
-    isVerified: true,
-  },
-];
+// Type for recent search item
+type RecentSearch = {
+  id: number;
+  username: string;
+  fullName: string;
+  avatar: string;
+  isVerified: boolean;
+  followers: number;
+};
 
-// Mock notifications
-const mockNotifications = [
-  {
-    id: 1,
-    type: "like",
-    username: "jane_doe",
-    fullName: "Jane Doe",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
-    action: "liked your post",
-    time: "2m ago",
-    postImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Post1",
-    isRead: false,
-  },
-  {
-    id: 2,
-    type: "comment",
-    username: "john_smith",
-    fullName: "John Smith",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-    action: "commented on your post",
-    comment: "Great post!",
-    time: "15m ago",
-    postImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Post2",
-    isRead: false,
-  },
-  {
-    id: 3,
-    type: "follow",
-    username: "sarah_wilson",
-    fullName: "Sarah Wilson",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-    action: "started following you",
-    time: "1h ago",
-    isRead: true,
-  },
-  {
-    id: 4,
-    type: "like",
-    username: "mike_jones",
-    fullName: "Mike Jones",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike",
-    action: "liked your post",
-    time: "2h ago",
-    postImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Post3",
-    isRead: true,
-  },
-  {
-    id: 5,
-    type: "mention",
-    username: "emily_brown",
-    fullName: "Emily Brown",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emily",
-    action: "mentioned you in a comment",
-    time: "3h ago",
-    isRead: false,
-  },
-];
+// Load recent searches from localStorage
+const loadRecentSearches = (): RecentSearch[] => {
+  try {
+    const stored = localStorage.getItem("recentSearches");
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error("Error loading recent searches:", error);
+  }
+  return [];
+};
+
+// Save recent searches to localStorage
+const saveRecentSearches = (searches: RecentSearch[]): void => {
+  try {
+    localStorage.setItem("recentSearches", JSON.stringify(searches));
+  } catch (error) {
+    console.error("Error saving recent searches:", error);
+  }
+};
+
+// Helper function to format time ago
+const formatTimeAgo = (date: string | Date): string => {
+  const now = new Date();
+  const notificationDate = typeof date === "string" ? new Date(date) : date;
+  const diffInSeconds = Math.floor(
+    (now.getTime() - notificationDate.getTime()) / 1000
+  );
+
+  if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+  if (diffInSeconds < 604800)
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  if (diffInSeconds < 2592000)
+    return `${Math.floor(diffInSeconds / 604800)}w ago`;
+  if (diffInSeconds < 31536000)
+    return `${Math.floor(diffInSeconds / 2592000)}mo ago`;
+  return `${Math.floor(diffInSeconds / 31536000)}y ago`;
+};
+
+type Notification = {
+  id: string;
+  type: "like" | "comment" | "follow" | "post";
+  username: string;
+  fullName: string;
+  avatar: string;
+  action: string;
+  comment?: string;
+  time: string | Date;
+  postImage?: string;
+  postId?: string;
+  postType?: "text" | "image" | "video";
+  isRead: boolean;
+};
 
 // Mobile Menu Component - defined outside to avoid recreation on each render
 type MobileMenuProps = {
@@ -197,7 +194,7 @@ const MobileMenu = ({
         variant="ghost"
         size="icon"
         onClick={() => {
-          navigate(`/${userData?.username}`);
+          navigate(`/@${userData?.username}`);
           setIsSearchOpen(false);
           setIsNotificationsOpen(false);
         }}
@@ -223,8 +220,12 @@ export default function Layout() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [recentSearches, setRecentSearches] = useState(mockRecentSearches);
-  const [notifications] = useState(mockNotifications);
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>(() => loadRecentSearches());
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
@@ -302,7 +303,76 @@ export default function Layout() {
   const handleSearchClose = () => {
     setIsSearchOpen(false);
     setSearchQuery("");
+    setSearchResults([]);
   };
+
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    const getCookie = (name: string): string | null => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) {
+        return parts.pop()?.split(";").shift() || null;
+      }
+      return null;
+    };
+
+    const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+    const accessToken = getCookie("accessToken");
+
+    if (!accessToken) {
+      return;
+    }
+
+    try {
+      setIsLoadingNotifications(true);
+      const response = await fetch(`${serverUrl}/notifications`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data?.notifications) {
+          const transformedNotifications: Notification[] =
+            result.data.notifications.map((notif: any) => ({
+              id: notif.id,
+              type: notif.type,
+              username: notif.username,
+              fullName: notif.fullName,
+              avatar: notif.avatar || "",
+              action: notif.action,
+              comment: notif.comment,
+              time: notif.time,
+              postImage: notif.postImage,
+              postId: notif.postId,
+              postType: notif.postType,
+              isRead: notif.isRead,
+            }));
+          setNotifications(transformedNotifications);
+          setUnreadNotificationCount(result.data.unreadCount || 0);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  };
+
+  // Fetch notifications on mount and when notifications panel opens
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  useEffect(() => {
+    if (isNotificationsOpen) {
+      fetchNotifications();
+    }
+  }, [isNotificationsOpen]);
 
   const handleNotificationsClick = () => {
     setIsNotificationsOpen(true);
@@ -347,6 +417,99 @@ export default function Layout() {
 
   const handleRemoveRecent = (id: number) => {
     setRecentSearches((prev) => prev.filter((search) => search.id !== id));
+  };
+
+  // Persist recent searches to localStorage whenever they change
+  useEffect(() => {
+    saveRecentSearches(recentSearches);
+  }, [recentSearches]);
+
+  // Search users API call
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (!searchQuery.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      const getCookie = (name: string): string | null => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+          return parts.pop()?.split(";").shift() || null;
+        }
+        return null;
+      };
+
+      const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+      const accessToken = getCookie("accessToken");
+
+      try {
+        setIsSearching(true);
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+
+        if (accessToken) {
+          headers["Authorization"] = `Bearer ${accessToken}`;
+        }
+
+        const response = await fetch(
+          `${serverUrl}/users/search?q=${encodeURIComponent(searchQuery.trim())}&limit=20`,
+          {
+            method: "GET",
+            headers,
+            credentials: "include",
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data && Array.isArray(result.data)) {
+            setSearchResults(result.data);
+          }
+        } else {
+          setSearchResults([]);
+        }
+      } catch (error) {
+        console.error("Error searching users:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    // Debounce search
+    const timeoutId = setTimeout(() => {
+      searchUsers();
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  const handleUserClick = (username: string) => {
+    navigate(`/@${username}`);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+    
+    // Add to recent searches (will be saved to localStorage via useEffect)
+    const userResult = searchResults.find((r) => r.username === username);
+    if (userResult) {
+      setRecentSearches((prev) => {
+        // Remove if already exists to avoid duplicates
+        const filtered = prev.filter((s) => s.username !== username);
+        const newSearch: RecentSearch = {
+          id: Date.now(),
+          username: userResult.username,
+          fullName: `${userResult.firstName || ""} ${userResult.surName || ""}`.trim() || userResult.username,
+          avatar: userResult.profileImage || "",
+          isVerified: userResult.isVerified || false,
+          followers: userResult.followers || 0,
+        };
+        // Add to beginning and limit to 10 most recent
+        return [newSearch, ...filtered].slice(0, 10);
+      });
+    }
   };
 
   const handleCreateClick = () => {
@@ -730,11 +893,18 @@ export default function Layout() {
                   style={{ cursor: "pointer" }}
                   onClick={handleNotificationsClick}
                 >
+                  <div className="relative">
                   <Bell
                     className={`h-6 w-6 ${
                       isNotificationsOpen ? "fill-current" : ""
                     }`}
                   />
+                    {unreadNotificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-white text-[10px] flex items-center justify-center">
+                        {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                      </span>
+                    )}
+                  </div>
                 </Button>
                 <Button
                   variant="ghost"
@@ -996,11 +1166,18 @@ export default function Layout() {
                 style={{ cursor: "pointer" }}
                 onClick={handleNotificationsClick}
               >
+                <div className="relative">
                 <Bell
                   className={`h-6 w-6 ${
                     isNotificationsOpen ? "fill-current" : ""
                   }`}
                 />
+                  {unreadNotificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-white text-[10px] flex items-center justify-center">
+                      {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                    </span>
+                  )}
+                </div>
                 <motion.span
                   initial={false}
                   animate={{
@@ -1104,10 +1281,10 @@ export default function Layout() {
             <div
               className="w-full flex items-center justify-start gap-3 h-12 mt-auto"
               style={{
-                opacity: isSearchOpen || isNotificationsOpen ? 0 : 1,
+                    opacity: isSearchOpen || isNotificationsOpen ? 0 : 1,
                 pointerEvents:
                   isSearchOpen || isNotificationsOpen ? "none" : "auto",
-              }}
+                  }}
             >
               <ModeToggle />
             </div>
@@ -1177,13 +1354,12 @@ export default function Layout() {
             >
               {/* Search Input */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
+                <input
                   type="text"
                   placeholder="Search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-9 h-10 bg-muted/50"
+                  className="w-full h-10 px-3 rounded-md border border-input bg-transparent text-sm focus:outline-none"
                   autoFocus
                 />
                 {searchQuery && (
@@ -1198,74 +1374,85 @@ export default function Layout() {
 
               {/* Recent Searches */}
               {recentSearches.length > 0 && !searchQuery && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold text-sm">Recent</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleClearRecent}
-                      className="text-primary text-xs h-auto py-1"
+                <div className="space-y-2">
+                  {recentSearches.map((search) => (
+                    <div
+                      key={search.id}
+                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer group"
+                      onClick={() => {
+                        navigate(`/@${search.username}`);
+                        setIsSearchOpen(false);
+                        // Move clicked search to the top
+                        setRecentSearches((prev) => {
+                          const filtered = prev.filter((s) => s.id !== search.id);
+                          return [search, ...filtered];
+                        });
+                      }}
                     >
-                      Clear all
-                    </Button>
-                  </div>
-
-                  <div className="space-y-2">
-                    {recentSearches.map((search) => (
-                      <div
-                        key={search.id}
-                        className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer group"
-                        onClick={() => {
-                          navigate(`/${search.username}`);
-                          setIsSearchOpen(false);
-                        }}
-                      >
-                        <div className="flex items-center gap-3 flex-1">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage
-                              src={search.avatar}
-                              alt={search.username}
-                            />
-                            <AvatarFallback>
-                              {search.username[0].toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1">
-                              <p className="font-semibold text-sm truncate">
-                                {search.username}
-                              </p>
-                              {search.isVerified && (
-                                <Check className="h-4 w-4 text-blue-500 fill-current shrink-0" />
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <p className="truncate">{search.fullName}</p>
-                              <span>·</span>
-                              <p>{search.followers} followers</p>
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveRecent(search.id);
-                          }}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                        >
-                          <X className="h-4 w-4 text-muted-foreground" />
-                        </button>
+                      <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                        {search.avatar ? (
+                          <img
+                            src={search.avatar}
+                            alt={search.username}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs font-medium">
+                            {search.username[0].toUpperCase()}
+                          </span>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                      <p className="text-sm truncate flex-1">{search.username}</p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveRecent(search.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-background rounded"
+                        aria-label="Remove search history"
+                      >
+                        <X className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
 
               {/* Search Results (when typing) */}
               {searchQuery && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p className="text-sm">No results found</p>
+                <div className="space-y-1">
+                  {isSearching ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    searchResults.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer"
+                        onClick={() => handleUserClick(user.username)}
+                      >
+                        <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                          {user.profileImage ? (
+                            <img
+                              src={user.profileImage}
+                              alt={user.username || ""}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-xs font-medium">
+                              {user.username?.[0]?.toUpperCase() || "U"}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm truncate">{user.username}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      No results found
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1281,17 +1468,17 @@ export default function Layout() {
           {/* Notifications - morphs smoothly */}
           <motion.div
             className="flex flex-col h-full"
-            initial={false}
-            animate={{
+              initial={false}
+              animate={{
               opacity: isNotificationsOpen && !isSearchOpen ? 1 : 0,
               width: isNotificationsOpen && !isSearchOpen ? "100%" : 0,
-            }}
-            transition={{
-              type: "spring",
+              }}
+              transition={{
+                type: "spring",
               stiffness: 300,
               damping: 30,
               mass: 0.8,
-            }}
+              }}
             style={{
               position:
                 isNotificationsOpen && !isSearchOpen ? "relative" : "absolute",
@@ -1316,12 +1503,12 @@ export default function Layout() {
               }}
             >
               <h2 className="text-xl font-semibold">Notifications</h2>
-              <Button
-                variant="ghost"
+          <Button
+            variant="ghost"
                 size="icon"
                 onClick={handleNotificationsClose}
                 className="h-8 w-8"
-              >
+          >
                 <X className="h-4 w-4" />
               </Button>
             </motion.div>
@@ -1340,7 +1527,11 @@ export default function Layout() {
                 mass: 0.6,
               }}
             >
-              {notifications.length > 0 ? (
+              {isLoadingNotifications ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+        </div>
+              ) : notifications.length > 0 ? (
                 <div className="p-4 space-y-2">
                   {notifications.map((notification) => (
                     <div
@@ -1348,6 +1539,73 @@ export default function Layout() {
                       className={`flex items-start gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors ${
                         !notification.isRead ? "bg-accent/50" : ""
                       }`}
+                      onClick={async () => {
+                        // Mark notification as read
+                        if (!notification.isRead) {
+                          const getCookie = (name: string): string | null => {
+                            const value = `; ${document.cookie}`;
+                            const parts = value.split(`; ${name}=`);
+                            if (parts.length === 2) {
+                              return parts.pop()?.split(";").shift() || null;
+                            }
+                            return null;
+                          };
+
+                          const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+                          const accessToken = getCookie("accessToken");
+
+                          if (accessToken) {
+                            try {
+                              await fetch(
+                                `${serverUrl}/notifications/${notification.id}/read`,
+                                {
+                                  method: "PATCH",
+                                  headers: {
+                                    Authorization: `Bearer ${accessToken}`,
+                                  },
+                                  credentials: "include",
+                                }
+                              );
+                              // Update local state
+                              setNotifications((prev) =>
+                                prev.map((n) =>
+                                  n.id === notification.id
+                                    ? { ...n, isRead: true }
+                                    : n
+                                )
+                              );
+                              setUnreadNotificationCount((prev) =>
+                                Math.max(0, prev - 1)
+                              );
+                            } catch (error) {
+                              console.error(
+                                "Error marking notification as read:",
+                                error
+                              );
+                            }
+                          }
+                        }
+
+                        // Navigate based on notification type
+                        if (notification.postId) {
+                          // Navigate to the post
+                          if (notification.postType === "video") {
+                            // If it's a comment notification, add query parameter to open comments
+                            if (notification.type === "comment") {
+                              navigate(`/reels/${notification.postId}?openComments=true`);
+                            } else {
+                              navigate(`/reels/${notification.postId}`);
+                            }
+                          } else {
+                            // For image/text posts, navigate to home page (or you could create a post detail page)
+                            navigate(`/`);
+                          }
+                          setIsNotificationsOpen(false);
+                        } else if (notification.type === "follow") {
+                          navigate(`/@${notification.username}`);
+                          setIsNotificationsOpen(false);
+                        }
+                      }}
                     >
                       <Avatar className="h-10 w-10 shrink-0">
                         <AvatarImage
@@ -1375,16 +1633,29 @@ export default function Layout() {
                               </p>
                             )}
                             <p className="text-xs text-muted-foreground mt-1">
-                              {notification.time}
+                              {formatTimeAgo(notification.time)}
                             </p>
                           </div>
                           {notification.postImage && (
                             <div className="shrink-0">
-                              <img
-                                src={notification.postImage}
-                                alt="Post"
-                                className="w-12 h-12 rounded object-cover"
-                              />
+                              {notification.postType === "video" ? (
+                                <div className="relative w-12 h-12 rounded overflow-hidden bg-muted">
+                                  <video
+                                    src={notification.postImage}
+                                    className="w-full h-full object-cover"
+                                    muted
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <Play className="h-4 w-4 text-white" />
+                                  </div>
+                                </div>
+                              ) : (
+                                <img
+                                  src={notification.postImage}
+                                  alt="Post"
+                                  className="w-12 h-12 rounded object-cover"
+                                />
+                              )}
                             </div>
                           )}
                         </div>
@@ -1406,25 +1677,24 @@ export default function Layout() {
 
         {/* Search Dialog - Mobile only */}
         {isMobile && (
-          <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+      <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
             <DialogContent className="w-full h-full sm:h-auto sm:max-w-md sm:rounded-lg p-0">
               <DialogHeader className="px-4 sm:px-6 py-4 border-b">
                 <DialogTitle className="text-lg font-semibold">
                   Search
                 </DialogTitle>
-              </DialogHeader>
+          </DialogHeader>
 
               <div className="flex flex-col h-full sm:max-h-[80vh]">
                 {/* Search Input */}
                 <div className="px-4 sm:px-6 py-4 border-b">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
+                    <input
                       type="text"
                       placeholder="Search"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 pr-9 h-10 bg-muted/50"
+                      className="w-full h-10 px-3 rounded-md border border-input bg-transparent text-sm focus:outline-none"
                       autoFocus
                     />
                     {searchQuery && (
@@ -1437,92 +1707,103 @@ export default function Layout() {
                     )}
                   </div>
                 </div>
-
+          
                 {/* Search Results */}
                 <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
                   {/* Recent Searches */}
                   {recentSearches.length > 0 && !searchQuery && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold text-sm">Recent</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleClearRecent}
-                          className="text-primary text-xs h-auto py-1"
+                    <div className="space-y-2">
+                      {recentSearches.map((search) => (
+                        <div
+                          key={search.id}
+                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer group"
+                          onClick={() => {
+                            navigate(`/@${search.username}`);
+                            setIsSearchOpen(false);
+                            // Move clicked search to the top
+                            setRecentSearches((prev) => {
+                              const filtered = prev.filter((s) => s.id !== search.id);
+                              return [search, ...filtered];
+                            });
+                          }}
                         >
-                          Clear all
-                        </Button>
-                      </div>
-
-                      <div className="space-y-2">
-                        {recentSearches.map((search) => (
-                          <div
-                            key={search.id}
-                            className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer group"
-                            onClick={() => {
-                              navigate(`/${search.username}`);
-                              setIsSearchOpen(false);
-                            }}
-                          >
-                            <div className="flex items-center gap-3 flex-1">
-                              <Avatar className="h-10 w-10">
-                                <AvatarImage
-                                  src={search.avatar}
-                                  alt={search.username}
-                                />
-                                <AvatarFallback>
-                                  {search.username[0].toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1">
-                                  <p className="font-semibold text-sm truncate">
-                                    {search.username}
-                                  </p>
-                                  {search.isVerified && (
-                                    <Check className="h-4 w-4 text-blue-500 fill-current shrink-0" />
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                  <p className="truncate">{search.fullName}</p>
-                                  <span>·</span>
-                                  <p>{search.followers} followers</p>
-                                </div>
-                              </div>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveRecent(search.id);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                            >
-                              <X className="h-4 w-4 text-muted-foreground" />
-                            </button>
+                          <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                            {search.avatar ? (
+                              <img
+                                src={search.avatar}
+                                alt={search.username}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-xs font-medium">
+                                {search.username[0].toUpperCase()}
+                              </span>
+                            )}
                           </div>
-                        ))}
-                      </div>
+                          <p className="text-sm truncate flex-1">{search.username}</p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveRecent(search.id);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-background rounded"
+                            aria-label="Remove search history"
+                          >
+                            <X className="h-4 w-4 text-muted-foreground" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
 
                   {/* Search Results (when typing) */}
                   {searchQuery && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p className="text-sm">No results found</p>
+                    <div className="space-y-1">
+                      {isSearching ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                        </div>
+                      ) : searchResults.length > 0 ? (
+                        searchResults.map((user) => (
+                          <div
+                            key={user.id}
+                            className="flex items-center gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer"
+                            onClick={() => handleUserClick(user.username)}
+                          >
+                            <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                              {user.profileImage ? (
+                                <img
+                                  src={user.profileImage}
+                                  alt={user.username || ""}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-xs font-medium">
+                                  {user.username?.[0]?.toUpperCase() || "U"}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm truncate">{user.username}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground text-sm">
+                          No results found
+                        </div>
+                      )}
                     </div>
                   )}
 
                   {/* Empty State */}
                   {recentSearches.length === 0 && !searchQuery && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p className="text-sm">No recent searches</p>
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      No recent searches
                     </div>
                   )}
                 </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          </div>
+        </DialogContent>
+      </Dialog>
         )}
 
         {/* Notifications Dialog - Mobile only */}
@@ -1531,32 +1812,94 @@ export default function Layout() {
             open={isNotificationsOpen}
             onOpenChange={setIsNotificationsOpen}
           >
-            <DialogContent className="w-full h-full sm:h-auto sm:max-w-md sm:rounded-lg p-0">
+        <DialogContent className="w-full h-full sm:h-auto sm:max-w-md sm:rounded-lg p-0">
               <DialogHeader className="px-4 sm:px-6 py-4 border-b">
                 <DialogTitle className="text-lg font-semibold">
                   Notifications
                 </DialogTitle>
-              </DialogHeader>
-
+          </DialogHeader>
+          
               <div className="flex-1 overflow-y-auto min-h-0">
-                {notifications.length > 0 ? (
+                {isLoadingNotifications ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  </div>
+                ) : notifications.length > 0 ? (
                   <div className="p-4 sm:p-6 space-y-2">
                     {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
+                <div
+                  key={notification.id}
                         className={`flex items-start gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer transition-colors ${
                           !notification.isRead ? "bg-accent/50" : ""
-                        }`}
-                        onClick={() => {
-                          if (notification.postImage) {
-                            // Navigate to post or show post preview
-                            setIsNotificationsOpen(false);
-                          } else if (notification.type === "follow") {
-                            navigate(`/${notification.username}`);
-                            setIsNotificationsOpen(false);
+                  }`}
+                        onClick={async () => {
+                          // Mark notification as read
+                          if (!notification.isRead) {
+                            const getCookie = (name: string): string | null => {
+                              const value = `; ${document.cookie}`;
+                              const parts = value.split(`; ${name}=`);
+                              if (parts.length === 2) {
+                                return parts.pop()?.split(";").shift() || null;
+                              }
+                              return null;
+                            };
+
+                            const serverUrl = import.meta.env.VITE_SERVER_URL || "";
+                            const accessToken = getCookie("accessToken");
+
+                            if (accessToken) {
+                              try {
+                                await fetch(
+                                  `${serverUrl}/notifications/${notification.id}/read`,
+                                  {
+                                    method: "PATCH",
+                                    headers: {
+                                      Authorization: `Bearer ${accessToken}`,
+                                    },
+                                    credentials: "include",
+                                  }
+                                );
+                                // Update local state
+                                setNotifications((prev) =>
+                                  prev.map((n) =>
+                                    n.id === notification.id
+                                      ? { ...n, isRead: true }
+                                      : n
+                                  )
+                                );
+                                setUnreadNotificationCount((prev) =>
+                                  Math.max(0, prev - 1)
+                                );
+                              } catch (error) {
+                                console.error(
+                                  "Error marking notification as read:",
+                                  error
+                                );
+                              }
+                            }
                           }
-                        }}
-                      >
+
+                          // Navigate based on notification type
+                          if (notification.postId) {
+                            // Navigate to the post
+                            if (notification.postType === "video") {
+                              // If it's a comment notification, add query parameter to open comments
+                              if (notification.type === "comment") {
+                                navigate(`/reels/${notification.postId}?openComments=true`);
+                              } else {
+                                navigate(`/reels/${notification.postId}`);
+                              }
+                            } else {
+                              // For image/text posts, navigate to home page (or you could create a post detail page)
+                              navigate(`/`);
+                            }
+                      setIsNotificationsOpen(false);
+                          } else if (notification.type === "follow") {
+                            navigate(`/@${notification.username}`);
+                      setIsNotificationsOpen(false);
+                    }
+                  }}
+                >
                         <Avatar className="h-10 w-10 shrink-0">
                           <AvatarImage
                             src={notification.avatar}
@@ -1565,50 +1908,63 @@ export default function Layout() {
                           <AvatarFallback>
                             {notification.username[0].toUpperCase()}
                           </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
+                    </Avatar>
+                  <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
-                              <p className="text-sm">
+                    <p className="text-sm">
                                 <span className="font-semibold">
                                   {notification.username}
                                 </span>{" "}
                                 <span className="text-muted-foreground">
-                                  {notification.action}
+                      {notification.action}
                                 </span>
                               </p>
-                              {notification.comment && (
+                      {notification.comment && (
                                 <p className="text-sm text-muted-foreground mt-1">
-                                  "{notification.comment}"
-                                </p>
+                          "{notification.comment}"
+                    </p>
                               )}
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {notification.time}
-                              </p>
-                            </div>
-                            {notification.postImage && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                                {formatTimeAgo(notification.time)}
+                    </p>
+                  </div>
+                  {notification.postImage && (
                               <div className="shrink-0">
-                                <img
-                                  src={notification.postImage}
-                                  alt="Post"
-                                  className="w-12 h-12 rounded object-cover"
-                                />
-                              </div>
-                            )}
+                                {notification.postType === "video" ? (
+                                  <div className="relative w-12 h-12 rounded overflow-hidden bg-muted">
+                                    <video
+                          src={notification.postImage} 
+                                      className="w-full h-full object-cover"
+                                      muted
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <Play className="h-4 w-4 text-white" />
                           </div>
+                                  </div>
+                                ) : (
+                              <img
+                                src={notification.postImage}
+                                alt="Post"
+                                className="w-12 h-12 rounded object-cover"
+                              />
+                                )}
+                            </div>
+                          )}
                         </div>
-                        {!notification.isRead && (
-                          <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2" />
-                        )}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p className="text-sm">No notifications</p>
-                  </div>
-                )}
-              </div>
+                      {!notification.isRead && (
+                          <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">No notifications</p>
+                </div>
+              )}
+        </div>
             </DialogContent>
           </Dialog>
         )}
@@ -1621,16 +1977,16 @@ export default function Layout() {
             Loop
           </h1>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
+            <Button 
+              variant="ghost" 
               size="icon"
               className="h-9 w-9 sm:h-10 sm:w-10"
               onClick={handleSearchClick}
             >
               <Search className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <Button
-              variant="ghost"
+            <Button 
+              variant="ghost" 
               size="icon"
               className="h-9 w-9 sm:h-10 sm:w-10"
               onClick={handleCreateClick}
@@ -1708,11 +2064,18 @@ export default function Layout() {
             }`}
             onClick={handleNotificationsClick}
           >
-            <Bell
-              className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                isNotificationsOpen ? "fill-current" : ""
-              }`}
-            />
+            <div className="relative">
+              <Bell
+                className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                  isNotificationsOpen ? "fill-current" : ""
+                }`}
+              />
+              {unreadNotificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-white text-[10px] flex items-center justify-center">
+                  {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                </span>
+              )}
+            </div>
           </Button>
           <Button
             variant="ghost"

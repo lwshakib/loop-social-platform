@@ -96,7 +96,7 @@ export const getPosts = asyncHandler(
 
     // Fetch posts with pagination
     const posts = await Post.find()
-      .populate("userId", "firstName surName username email")
+      .populate("userId", "firstName surName username profileImage")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -104,11 +104,76 @@ export const getPosts = asyncHandler(
     // Get total count
     const total = await Post.countDocuments();
 
+    // Get post IDs for counting likes and comments
+    const postIds = posts.map((post) => post._id);
+
+    // Get likes and comments counts for each post
+    const likesCounts = await Like.aggregate([
+      { $match: { postId: { $in: postIds } } },
+      { $group: { _id: "$postId", count: { $sum: 1 } } },
+    ]);
+    const commentsCounts = await Comment.aggregate([
+      { $match: { postId: { $in: postIds } } },
+      { $group: { _id: "$postId", count: { $sum: 1 } } },
+    ]);
+
+    // Create maps for quick lookup
+    const likesMap = new Map(
+      likesCounts.map((item) => [item._id.toString(), item.count])
+    );
+    const commentsMap = new Map(
+      commentsCounts.map((item) => [item._id.toString(), item.count])
+    );
+
+    // Get posts liked and saved by the current user
+    let userLikedPosts: string[] = [];
+    let userSavedPosts: string[] = [];
+
+    const userLikes = await Like.find({
+      userId: user._id,
+      postId: { $in: postIds },
+    }).select("postId");
+    userLikedPosts = userLikes.map((like) => like.postId.toString());
+
+    const userSaved = await Saved.find({
+      userId: user._id,
+      postId: { $in: postIds },
+    }).select("postId");
+    userSavedPosts = userSaved.map((saved) => saved.postId.toString());
+
+    // Transform posts to include counts and user interaction status
+    const transformedPosts = posts.map((post: any) => {
+      const postId = post._id.toString();
+      const userId = post.userId?._id || post.userId;
+      
+      return {
+        id: postId,
+        userId: userId?.toString() || post.userId?.toString(),
+        user: post.userId
+          ? {
+              id: userId?.toString() || post.userId?._id?.toString(),
+              firstName: post.userId.firstName,
+              surName: post.userId.surName,
+              username: post.userId.username,
+              profileImage: post.userId.profileImage || "",
+            }
+          : undefined,
+        caption: post.caption || "",
+        url: post.url || "",
+        type: post.type,
+        likesCount: likesMap.get(postId) || 0,
+        commentsCount: commentsMap.get(postId) || 0,
+        createdAt: post.createdAt,
+        isLiked: userLikedPosts.includes(postId),
+        isSaved: userSavedPosts.includes(postId),
+      };
+    });
+
     res.status(200).json(
       new ApiResponse(
         200,
         {
-          posts,
+          posts: transformedPosts,
           pagination: {
             page,
             limit,

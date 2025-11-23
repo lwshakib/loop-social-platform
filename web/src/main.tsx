@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage.tsx";
 import ReelsPage from "./pages/ReelsPage.tsx";
 import SignInPage from "./pages/SignInPage.tsx";
 import SignUpPage from "./pages/SignUpPage.tsx";
+import StoriesPage from "./pages/StoriesPage.tsx";
 
 // Helper function to get cookie value by name
 function getCookie(name: string): string | null {
@@ -295,6 +296,14 @@ createRoot(document.getElementById("root")!).render(
               <AuthRoute>
                 <SignInPage />
               </AuthRoute>
+            }
+          />
+          <Route
+            path="/stories/:username/:storyId"
+            element={
+              <ProtectedRoute>
+                <StoriesPage />
+              </ProtectedRoute>
             }
           />
       </Routes>

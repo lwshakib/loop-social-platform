@@ -253,6 +253,12 @@ export default function ProfilePage() {
           const result = await response.json();
           if (result.data?.comments) {
             setComments(result.data.comments);
+            // Reset loaded replies when fetching fresh comments
+            setLoadedReplies(new Set());
+            setRepliesHasMore({});
+            setRepliesTotal({});
+            setReplyingTo(null);
+            setReplyText({});
           }
         }
       } catch (error) {
@@ -737,8 +743,8 @@ export default function ProfilePage() {
 
     // Optimistic update - update UI immediately
     if (isLiked) {
-      setLikedPosts((prev) => {
-        const newSet = new Set(prev);
+    setLikedPosts((prev) => {
+      const newSet = new Set(prev);
         newSet.delete(postId);
         return newSet;
       });
@@ -759,7 +765,7 @@ export default function ProfilePage() {
             : null
         );
       }
-    } else {
+      } else {
       setLikedPosts((prev) => {
         const newSet = new Set(prev);
         newSet.add(postId);
@@ -795,8 +801,8 @@ export default function ProfilePage() {
           setLikedPosts((prev) => {
             const newSet = new Set(prev);
             newSet.add(postId);
-            return newSet;
-          });
+      return newSet;
+    });
           setPosts((prev) =>
             prev.map((post) =>
               post.id === postId
@@ -832,8 +838,8 @@ export default function ProfilePage() {
         if (!response.ok) {
           // Revert on error
           setLikedPosts((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(postId);
+      const newSet = new Set(prev);
+        newSet.delete(postId);
             return newSet;
           });
           setPosts((prev) =>
@@ -864,7 +870,7 @@ export default function ProfilePage() {
       if (isLiked) {
         setLikedPosts((prev) => {
           const newSet = new Set(prev);
-          newSet.add(postId);
+        newSet.add(postId);
           return newSet;
         });
         setPosts((prev) =>
@@ -888,8 +894,8 @@ export default function ProfilePage() {
         setLikedPosts((prev) => {
           const newSet = new Set(prev);
           newSet.delete(postId);
-          return newSet;
-        });
+      return newSet;
+    });
         setPosts((prev) =>
           prev.map((post) =>
             post.id === postId
@@ -1476,8 +1482,8 @@ export default function ProfilePage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-0.5 sm:gap-1 md:gap-2 p-0.5 sm:p-1 md:p-2">
             {posts.map((post) => (
-              <div
-                key={post.id}
+            <div
+              key={post.id}
                 className="group relative aspect-square bg-muted overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
                 onClick={() => {
                   setSelectedPost(post);
@@ -1505,8 +1511,8 @@ export default function ProfilePage() {
                   <>
                     {post.type === "video" ? (
                       <div className="relative w-full h-full">
-                        <video
-                          src={post.url}
+                      <video
+                        src={post.url}
                           className="w-full h-full object-cover"
                           muted
                           playsInline
@@ -1571,6 +1577,12 @@ export default function ProfilePage() {
           if (!open) {
             setSelectedPost(null);
             setMediaAspectRatio(null);
+            // Reset reply states when dialog closes
+            setLoadedReplies(new Set());
+            setRepliesHasMore({});
+            setRepliesTotal({});
+            setReplyingTo(null);
+            setReplyText({});
           }
         }}
       >
@@ -1637,35 +1649,35 @@ export default function ProfilePage() {
           {selectedPost && (
             <div className="flex flex-col md:flex-row h-full overflow-hidden">
               {/* Media Section */}
-              <div className="relative w-full md:w-2/5 bg-black flex items-center justify-center overflow-hidden h-full max-h-full">
+              <div className="relative w-full md:w-2/5 bg-black flex items-center justify-center overflow-hidden h-full max-h-full p-0 m-0">
                 {selectedPost.url ? (
                   selectedPost.type === "video" ? (
-                    <video
+                    <div className="w-full h-full flex items-center justify-center" style={{ aspectRatio: "9/16" }}>
+                      <video
+                        src={selectedPost.url}
+                        controls
+                        className="w-full h-full object-contain"
+                        playsInline
+                        style={{
+                          margin: 0,
+                          padding: 0,
+                        }}
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    </div>
+                    ) : (
+                      <img
                       src={selectedPost.url}
-                      controls
+                        alt="Post"
                       className="object-contain"
-                      playsInline
                       style={{
                         maxHeight: "100%",
                         maxWidth: "100%",
                         width: "auto",
                         height: "auto",
                       }}
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                  ) : (
-                    <img
-                      src={selectedPost.url}
-                      alt="Post"
-                      className="object-contain"
-                      style={{
-                        maxHeight: "100%",
-                        maxWidth: "100%",
-                        width: "auto",
-                        height: "auto",
-                      }}
-                    />
+                      />
                   )
                 ) : (
                   <div className="text-center p-8 text-white">
@@ -1729,55 +1741,55 @@ export default function ProfilePage() {
                 <div className="p-4 border-b">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <button
+                    <button
                         className={`flex items-center gap-2 transition-colors ${
                           likedPosts.has(selectedPost.id)
-                            ? "text-red-500"
-                            : "hover:text-red-500"
-                        }`}
+                          ? "text-red-500"
+                          : "hover:text-red-500"
+                      }`}
                         onClick={() => handleLike(selectedPost.id)}
-                      >
-                        <Heart
+                    >
+                      <Heart
                           className={`h-6 w-6 ${
                             likedPosts.has(selectedPost.id)
                               ? "fill-current"
                               : ""
-                          }`}
-                        />
+                        }`}
+                      />
                         <span className="text-sm font-semibold">
                           {selectedPost.likesCount || 0}
                         </span>
-                      </button>
+                    </button>
                       <button className="flex items-center gap-2 hover:text-primary transition-colors">
                         <MessageCircle className="h-6 w-6" />
                         <span className="text-sm font-semibold">
                           {selectedPost.commentsCount || 0}
                         </span>
-                      </button>
-                    </div>
-                    <button
-                      className={`transition-colors ${
-                        savedPosts.has(selectedPost.id)
-                          ? "text-yellow-500"
-                          : "hover:text-yellow-500"
-                      }`}
-                      onClick={() => handleSave(selectedPost.id)}
-                    >
-                      <Bookmark
-                        className={`h-6 w-6 ${
-                          savedPosts.has(selectedPost.id) ? "fill-current" : ""
-                        }`}
-                      />
                     </button>
                   </div>
+                  <button
+                      className={`transition-colors ${
+                        savedPosts.has(selectedPost.id)
+                        ? "text-yellow-500"
+                        : "hover:text-yellow-500"
+                    }`}
+                      onClick={() => handleSave(selectedPost.id)}
+                  >
+                    <Bookmark
+                        className={`h-6 w-6 ${
+                          savedPosts.has(selectedPost.id) ? "fill-current" : ""
+                      }`}
+                    />
+                  </button>
                 </div>
+              </div>
 
                 {/* Comments Section */}
                 <div className="flex-1 overflow-y-auto min-h-0 border-t">
                   {isLoadingComments ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                    </div>
+            </div>
                   ) : comments.length === 0 ? (
                     <div className="p-4">
                       <p className="text-sm text-muted-foreground text-center py-8">
@@ -1874,7 +1886,7 @@ export default function ProfilePage() {
                                     )}
                                 </div>
                               </div>
-                            </div>
+      </div>
 
                             {/* Reply Input */}
                             {replyingTo === comment.id && (

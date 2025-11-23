@@ -1475,45 +1475,44 @@ export default function Layout() {
                 <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
                   {/* Recent Searches */}
                   {recentSearches.length > 0 && (
-                <div className="space-y-2">
-                        {recentSearches.map((search) => (
-                  <div 
-                            key={search.id}
-                            className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer group"
-                    onClick={() => {
-                              navigate(`/@${search.username}`);
-                      setIsSearchOpen(false);
-                    }}
-                  >
-                            <div className="flex items-center gap-2 flex-1">
-                              <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
-                                {search.avatar ? (
-                                  <img
-                                    src={search.avatar}
-                                    alt={search.username}
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <span className="text-xs font-medium">
-                                    {search.username[0].toUpperCase()}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-sm truncate">{search.username}</p>
+                    <div className="space-y-2">
+                      {recentSearches.map((search) => (
+                        <div
+                          key={search.id}
+                          className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer group"
+                          onClick={() => {
+                            navigate(`/@${search.username}`);
+                            setIsSearchOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center gap-2 flex-1">
+                            <div className="h-8 w-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                              {search.avatar ? (
+                                <img
+                                  src={search.avatar}
+                                  alt={search.username}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-xs font-medium">
+                                  {search.username[0].toUpperCase()}
+                                </span>
+                              )}
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveRecent(search.id);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                            >
-                              <X className="h-4 w-4 text-muted-foreground" />
-                            </button>
-                  </div>
-                ))}
-                      </div>
-              </div>
+                            <p className="text-sm truncate">{search.username}</p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveRecent(search.id);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                          >
+                            <X className="h-4 w-4 text-muted-foreground" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
 
                   {/* Empty State */}
@@ -1523,7 +1522,7 @@ export default function Layout() {
                     </div>
                   )}
                 </div>
-          </div>
+              </div>
         </DialogContent>
       </Dialog>
         )}

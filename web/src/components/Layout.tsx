@@ -17,12 +17,10 @@ import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { EmojiPicker } from "frimousse";
 import {
-  BarChart3,
   Bell,
   Check,
   Compass,
   Home,
-  Menu,
   Play,
   PlusSquare,
   Search,
@@ -802,13 +800,6 @@ export default function Layout() {
                   variant="ghost"
                   className="w-full justify-center h-12 cursor-pointer"
                   style={{ cursor: "pointer" }}
-                >
-                  <BarChart3 className="h-6 w-6" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-center h-12 cursor-pointer"
-                  style={{ cursor: "pointer" }}
                   onClick={() => {
                     if (userData?.username) {
                       navigate(`/@${userData.username}`);
@@ -822,14 +813,12 @@ export default function Layout() {
                     <AvatarFallback>{getAvatarFallback()}</AvatarFallback>
                   </Avatar>
                 </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-center h-12 cursor-pointer"
-                  style={{ cursor: "pointer" }}
-                >
-                  <Menu className="h-6 w-6" />
-                </Button>
               </nav>
+              
+              {/* Mode Toggle at Bottom */}
+              <div className="w-full flex items-center justify-center mt-auto pb-4">
+                <ModeToggle />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1101,29 +1090,6 @@ export default function Layout() {
                   style={{ overflow: "hidden", whiteSpace: "nowrap" }}
                 >
                   Create
-                </motion.span>
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 h-12 text-base cursor-pointer"
-                style={{ cursor: "pointer" }}
-              >
-                <BarChart3 className="h-6 w-6" />
-                <motion.span
-                  initial={false}
-                  animate={{
-                    opacity: isSearchOpen || isNotificationsOpen ? 0 : 1,
-                    width: isSearchOpen || isNotificationsOpen ? 0 : "auto",
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 35,
-                    mass: 0.6,
-                  }}
-                  style={{ overflow: "hidden", whiteSpace: "nowrap" }}
-                >
-                  Dashboard
                 </motion.span>
               </Button>
               <Button

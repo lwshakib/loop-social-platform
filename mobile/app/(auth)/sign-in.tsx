@@ -39,7 +39,12 @@ export default function SignIn() {
         return;
       }
 
-      const response = await fetch(`${serverUrl}/auth/sign-in`, {
+      const fullUrl = `${serverUrl}/auth/sign-in`;
+      console.log("🔗 Sign-in request URL:", fullUrl);
+      console.log("📝 Request body:", { email, password: "***" });
+      console.log("🌐 Server URL from env:", serverUrl);
+
+      const response = await fetch(fullUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,7 +96,21 @@ export default function SignIn() {
       }
     } catch (error) {
       console.error("Error signing in:", error);
-      setError("An error occurred. Please try again.");
+      console.error("Error details:", {
+        message: error instanceof Error ? error.message : String(error),
+        name: error instanceof Error ? error.name : typeof error,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      
+      // Provide more helpful error message
+      const errorMessage =
+        error instanceof TypeError && error.message === "Network request failed"
+          ? "Network request failed. Common causes:\n• Server URL might be incorrect\n• On Android emulator, use 10.0.2.2 instead of localhost\n• On physical device, use your computer's IP address\n• Make sure the server is running and accessible"
+          : error instanceof Error
+          ? error.message
+          : "An error occurred. Please try again.";
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

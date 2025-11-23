@@ -17,7 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Video, ResizeMode } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { useUserStore } from "../../../store/userStore";
 
 type Post = {
@@ -111,8 +111,37 @@ export default function ReelsScreen() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [mutedVideos, setMutedVideos] = useState<Set<string>>(new Set());
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const videoRefs = useRef<Map<string, Video>>(new Map());
   const flatListRef = useRef<FlatList>(null);
+
+  // Video Player Component
+  const VideoPlayer = ({
+    videoUrl,
+    isMuted,
+    shouldPlay,
+  }: {
+    videoUrl: string;
+    isMuted: boolean;
+    shouldPlay: boolean;
+  }) => {
+    const player = useVideoPlayer({ uri: videoUrl }, (player) => {
+      player.loop = true;
+      player.muted = isMuted;
+    });
+
+    useEffect(() => {
+      player.muted = isMuted;
+    }, [isMuted, player]);
+
+    useEffect(() => {
+      if (shouldPlay) {
+        player.play();
+      } else {
+        player.pause();
+      }
+    }, [shouldPlay, player]);
+
+    return <VideoView player={player} style={styles.video} contentFit="cover" />;
+  };
 
   // Fetch videos
   const fetchVideos = useCallback(async () => {
@@ -173,22 +202,6 @@ export default function ReelsScreen() {
       if (viewableItems.length > 0) {
         const visibleItem = viewableItems[0];
         setCurrentVideoIndex(visibleItem.index || 0);
-
-        // Play visible video
-        const videoId = visibleItem.item?.id;
-        if (videoId) {
-          const video = videoRefs.current.get(videoId);
-          if (video) {
-            video.playAsync();
-          }
-
-          // Pause other videos
-          videoRefs.current.forEach((v, id) => {
-            if (id !== videoId) {
-              v.pauseAsync();
-            }
-          });
-        }
       }
     }
   ).current;
@@ -496,21 +509,10 @@ export default function ReelsScreen() {
 
     return (
       <View style={[styles.videoContainer, { height: screenHeight }]}>
-        <Video
-          ref={(ref) => {
-            if (ref) {
-              videoRefs.current.set(item.id, ref);
-            } else {
-              videoRefs.current.delete(item.id);
-            }
-          }}
-          source={{ uri: item.url }}
-          style={styles.video}
-          resizeMode={ResizeMode.COVER}
-          isLooping
+        <VideoPlayer
+          videoUrl={item.url}
           isMuted={isMuted}
           shouldPlay={index === currentVideoIndex}
-          useNativeControls={false}
         />
 
         {/* Mute/Unmute Button - Top Right */}

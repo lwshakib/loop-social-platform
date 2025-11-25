@@ -37,7 +37,8 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 const setCookie = (name: string, value: string, days: number) => {
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Lax; Secure`;
+  const secureFlag = window.location.protocol === "https:" ? " Secure;" : "";
+  document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Lax;${secureFlag}`;
 };
 
 export default function SignInPage() {

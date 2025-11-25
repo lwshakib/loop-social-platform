@@ -1,5 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -9,12 +9,12 @@ import {
   Dimensions,
   FlatList,
   Modal,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserStore } from "../../../store/userStore";
@@ -87,10 +87,37 @@ const getServerUrl = (): string => {
   return process.env.EXPO_PUBLIC_SERVER_URL || "";
 };
 
+const formatTimeAgo = (dateString: string): string => {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return `${diffInSeconds}s`;
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d`;
+  if (diffInSeconds < 31536000)
+    return `${Math.floor(diffInSeconds / 2592000)}mo`;
+  return `${Math.floor(diffInSeconds / 31536000)}y`;
+};
+
+const formatCount = (count: number): string => {
+  if (count >= 1000000) {
+    return `${(count / 1000000).toFixed(1)}M`;
+  }
+  if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}K`;
+  }
+  return count.toString();
+};
+
 export default function ProfileScreen() {
   const router = useRouter();
   const currentUser = useUserStore((state) => state.userData);
   const { setUserData: setStoreUserData, getAvatarUrl } = useUserStore();
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
+  const iconColor = isDarkMode ? "#FFFFFF" : "#000000";
 
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -105,11 +132,11 @@ export default function ProfileScreen() {
     bio: "",
   });
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowing] = useState(false);
+  const screenWidth = Dimensions.get("window").width;
+  const reelItemSize = (screenWidth - 6) / 3;
 
   // Check if this is the current user's profile
   const isOwnProfile = currentUser?.username === userData?.username;
@@ -165,10 +192,10 @@ export default function ProfileScreen() {
         activeTab === "reels"
           ? "reels"
           : activeTab === "liked"
-          ? "liked"
-          : activeTab === "saved"
-          ? "saved"
-          : "posts";
+            ? "liked"
+            : activeTab === "saved"
+              ? "saved"
+              : "posts";
 
       const headers: HeadersInit = {
         "Content-Type": "application/json",
@@ -302,7 +329,9 @@ export default function ProfileScreen() {
       });
       setPosts((prev) =>
         prev.map((post) =>
-          post.id === postId ? { ...post, likesCount: post.likesCount + 1 } : post
+          post.id === postId
+            ? { ...post, likesCount: post.likesCount + 1 }
+            : post
         )
       );
     }
@@ -422,60 +451,262 @@ export default function ProfileScreen() {
     }
   };
 
-  const renderPostItem = ({ item }: { item: Post }) => {
-    const screenWidth = Dimensions.get("window").width;
-    const itemSize = (screenWidth - 2) / 3;
+  const renderEmptyMessage = () => {
+    switch (activeTab) {
+      case "reels":
+        return "No reels yet";
+      case "liked":
+        return "No liked posts yet";
+      case "saved":
+        return "No saved posts yet";
+      default:
+        return "No posts yet";
+    }
+  };
+
+  const renderReelTile = ({ item }: { item: Post }) => (
+    <TouchableOpacity
+      className="bg-black rounded-xl overflow-hidden m-0.5"
+      style={{ width: reelItemSize, height: reelItemSize }}
+      activeOpacity={0.85}
+      onPress={() => router.push(`/reel/${item.id}` as const)}
+    >
+      {item.url ? (
+        <Image
+          source={{ uri: item.url }}
+          style={{ width: "100%", height: "100%" }}
+          contentFit="cover"
+        />
+      ) : (
+        <View className="flex-1 items-center justify-center bg-gray-900">
+          <Ionicons name="play" size={28} color="#FFFFFF" />
+        </View>
+      )}
+      <View className="absolute inset-0 bg-black/20" />
+      <View className="absolute bottom-1 left-1 flex-row items-center">
+        <Ionicons name="play" size={12} color="#FFFFFF" />
+        <Text className="text-white text-xs font-semibold ml-1">
+          {formatCount((item as any).viewsCount || item.likesCount || 0)}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderPostsContent = () => {
+    if (isLoadingPosts) {
+      return (
+        <View className="py-12 items-center bg-white dark:bg-black">
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text className="mt-3 text-base text-gray-500 dark:text-gray-400">
+            Loading posts...
+          </Text>
+        </View>
+      );
+    }
+
+    if (posts.length === 0) {
+      return (
+        <View className="py-12 items-center bg-white dark:bg-black">
+          <Text className="text-base text-gray-500 dark:text-gray-400">
+            {renderEmptyMessage()}
+          </Text>
+        </View>
+      );
+    }
+
+    if (activeTab === "reels") {
+      return (
+        <FlatList
+          data={posts}
+          renderItem={renderReelTile}
+          keyExtractor={(item) => item.id}
+          numColumns={3}
+          scrollEnabled={false}
+          contentContainerStyle={{ padding: 1 }}
+        />
+      );
+    }
 
     return (
-      <TouchableOpacity
-        className="m-0.5 bg-gray-200 dark:bg-gray-800 overflow-hidden"
-        style={{ width: itemSize, height: itemSize }}
-        onPress={() => {
-          setSelectedPost(item);
-          setIsPostModalOpen(true);
-        }}
-      >
-        {item.url ? (
-          item.type === "video" ? (
-            <View className="w-full h-full relative">
-              <Image
-                source={{ uri: item.url }}
-                className="w-full h-full"
-                contentFit="cover"
-              />
-              <View className="absolute inset-0 justify-center items-center bg-black/20">
-                <Ionicons name="play" size={20} color="#FFFFFF" />
+      <View>
+        {posts.map((post) => {
+          const avatarUrl =
+            post.user.profileImage && post.user.profileImage.trim() !== ""
+              ? post.user.profileImage
+              : `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user.username || "user"}`;
+          const isLiked = likedPosts.has(post.id);
+          const isSaved = savedPosts.has(post.id);
+          const displayName =
+            post.user.firstName && post.user.surName
+              ? `${post.user.firstName} ${post.user.surName}`
+              : post.user.username || "Unknown User";
+
+          return (
+            <View
+              key={post.id}
+              className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black"
+            >
+              <View className="flex-row px-4 pt-3 pb-2">
+                <View className="mr-3">
+                  <View className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800">
+                    <Image
+                      source={{ uri: avatarUrl }}
+                      style={{ width: 48, height: 48 }}
+                      contentFit="cover"
+                    />
+                  </View>
+                </View>
+
+                <View className="flex-1">
+                  <View className="flex-row items-center flex-wrap">
+                    <Text className="text-base font-semibold text-black dark:text-white">
+                      {displayName}
+                    </Text>
+                    {(post.user as any).isVerified && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={16}
+                        color="#007AFF"
+                        style={{ marginLeft: 4 }}
+                      />
+                    )}
+                    <Text className="text-sm text-gray-500 dark:text-gray-400 ml-1">
+                      @{post.user.username}
+                    </Text>
+                    <Text className="text-sm text-gray-500 dark:text-gray-400 mx-1">
+                      ·
+                    </Text>
+                    <Text className="text-sm text-gray-500 dark:text-gray-400">
+                      {formatTimeAgo(post.createdAt)}
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity className="ml-2">
+                  <Ionicons
+                    name="ellipsis-horizontal"
+                    size={20}
+                    color="#8E8E93"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <View className="px-4 pb-2" style={{ paddingLeft: 64 }}>
+                {post.caption && (
+                  <Text className="text-base text-black dark:text-white leading-6 mb-2">
+                    {post.caption}
+                  </Text>
+                )}
+                {post.url && post.type === "image" && (
+                  <View className="rounded-2xl overflow-hidden my-2">
+                    <Image
+                      source={{ uri: post.url }}
+                      style={{ width: "100%", aspectRatio: 1 }}
+                      contentFit="cover"
+                    />
+                  </View>
+                )}
+              </View>
+
+              <View
+                className="flex-row items-center justify-between px-4 pb-3"
+                style={{ paddingLeft: 64 }}
+              >
+                <TouchableOpacity className="flex-row items-center">
+                  <Ionicons
+                    name="chatbubble-outline"
+                    size={20}
+                    color="#8E8E93"
+                  />
+                  {post.commentsCount > 0 && (
+                    <Text className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                      {formatCount(post.commentsCount)}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity className="flex-row items-center">
+                  <Ionicons
+                    name="repeat-outline"
+                    size={20}
+                    color="#8E8E93"
+                  />
+                  {((post as any).repostsCount || 0) > 0 && (
+                    <Text className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                      {formatCount((post as any).repostsCount)}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="flex-row items-center"
+                  onPress={() => handleLike(post.id)}
+                >
+                  <Ionicons
+                    name={isLiked ? "heart" : "heart-outline"}
+                    size={20}
+                    color={isLiked ? "#E91E63" : "#8E8E93"}
+                  />
+                  {post.likesCount > 0 && (
+                    <Text
+                      className={`text-sm ml-2 ${
+                        isLiked
+                          ? "text-pink-600 dark:text-pink-400"
+                          : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    >
+                      {formatCount(post.likesCount)}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity className="flex-row items-center">
+                  <Ionicons
+                    name="stats-chart-outline"
+                    size={20}
+                    color="#8E8E93"
+                  />
+                  {((post as any).viewsCount || 0) > 0 && (
+                    <Text className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                      {formatCount((post as any).viewsCount)}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => handleSave(post.id)}
+                  className="ml-2"
+                >
+                  <Ionicons
+                    name={isSaved ? "bookmark" : "bookmark-outline"}
+                    size={20}
+                    color={isSaved ? "#007AFF" : "#8E8E93"}
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity className="ml-2">
+                  <Ionicons
+                    name="share-outline"
+                    size={20}
+                    color="#8E8E93"
+                  />
+                </TouchableOpacity>
               </View>
             </View>
-          ) : (
-            <Image
-              source={{ uri: item.url }}
-              className="w-full h-full"
-              contentFit="cover"
-            />
-          )
-        ) : (
-          <View className="w-full h-full justify-center items-center p-2">
-            <Text className="text-xs text-black dark:text-white text-center" numberOfLines={3}>
-              {item.caption || "Post"}
-            </Text>
-          </View>
-        )}
-        {item.type === "video" && (
-          <View className="absolute top-2 right-2">
-            <Ionicons name="play-circle" size={16} color="#FFFFFF" />
-          </View>
-        )}
-      </TouchableOpacity>
+          );
+        })}
+      </View>
     );
   };
 
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
+      <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={[]}>
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#007AFF" />
-          <Text className="mt-3 text-base text-gray-500 dark:text-gray-400">Loading profile...</Text>
+          <Text className="mt-3 text-base text-gray-500 dark:text-gray-400">
+            Loading profile...
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -483,9 +714,11 @@ export default function ProfileScreen() {
 
   if (!userData) {
     return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
+      <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={[]}>
         <View className="flex-1 justify-center items-center">
-          <Text className="text-base text-gray-500 dark:text-gray-400">User not found</Text>
+          <Text className="text-base text-gray-500 dark:text-gray-400">
+            User not found
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -497,10 +730,13 @@ export default function ProfileScreen() {
     userData.coverImage || "https://picsum.photos/800/300?random=profile";
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={[]}>
+      <ScrollView
+        className="flex-1 bg-white dark:bg-black"
+        showsVerticalScrollIndicator={false}
+      >
         {/* Cover Image */}
-        <View className="w-full h-[200px] bg-gray-200 dark:bg-gray-800">
+        <View className="w-full h-[200px] bg-gray-200 dark:bg-gray-900">
           <Image
             source={{ uri: coverImageUrl }}
             className="w-full h-full"
@@ -509,9 +745,9 @@ export default function ProfileScreen() {
         </View>
 
         {/* Profile Info */}
-        <View className="px-4 pb-4 border-b border-gray-200 dark:border-gray-800">
+        <View className="px-4 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
           <View className="flex-row justify-between items-end -mt-[60px] mb-4">
-            <View className="w-[120px] h-[120px] rounded-full border-4 border-white dark:border-gray-900 overflow-hidden bg-gray-200 dark:bg-gray-800">
+            <View className="w-[120px] h-[120px] rounded-full border-4 border-white dark:border-black overflow-hidden bg-gray-200 dark:bg-gray-800">
               <Image
                 source={{ uri: avatarUrl }}
                 className="w-full h-full"
@@ -525,22 +761,34 @@ export default function ProfileScreen() {
                   onPress={handleEditProfileClick}
                 >
                   <Ionicons name="create-outline" size={18} color="#007AFF" />
-                  <Text className="text-sm font-semibold text-blue-500">Edit Profile</Text>
+                  <Text className="text-sm font-semibold text-blue-500">
+                    Edit Profile
+                  </Text>
                 </TouchableOpacity>
               ) : (
                 <>
                   <TouchableOpacity className="p-2 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <Ionicons name="chatbubble-outline" size={18} color="#000000" />
+                    <Ionicons
+                      name="chatbubble-outline"
+                      size={18}
+                      color={iconColor}
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity
                     className={`px-4 py-2 rounded-lg ${isFollowing ? "bg-transparent border border-gray-200 dark:border-gray-700" : "bg-blue-500"}`}
                   >
-                    <Text className={`text-sm font-semibold ${isFollowing ? "text-black dark:text-white" : "text-white"}`}>
+                    <Text
+                      className={`text-sm font-semibold ${isFollowing ? "text-black dark:text-white" : "text-white"}`}
+                    >
                       {isFollowing ? "Following" : "Follow"}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity className="p-2 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <Ionicons name="ellipsis-horizontal" size={18} color="#000000" />
+                    <Ionicons
+                      name="ellipsis-horizontal"
+                      size={18}
+                      color={iconColor}
+                    />
                   </TouchableOpacity>
                 </>
               )}
@@ -548,9 +796,17 @@ export default function ProfileScreen() {
           </View>
 
           <View className="mb-4">
-            <Text className="text-2xl font-bold text-black dark:text-white mb-1">{displayName}</Text>
-            <Text className="text-base text-gray-500 dark:text-gray-400 mb-2">@{userData.username}</Text>
-            {userData.bio && <Text className="text-sm text-black dark:text-white mb-2 leading-5">{userData.bio}</Text>}
+            <Text className="text-2xl font-bold text-black dark:text-white mb-1">
+              {displayName}
+            </Text>
+            <Text className="text-base text-gray-500 dark:text-gray-400 mb-2">
+              @{userData.username}
+            </Text>
+            {userData.bio && (
+              <Text className="text-sm text-black dark:text-white mb-2 leading-5">
+                {userData.bio}
+              </Text>
+            )}
             <View className="flex-row items-center gap-1">
               <Ionicons name="calendar-outline" size={14} color="#8E8E93" />
               <Text className="text-sm text-gray-500 dark:text-gray-400">
@@ -564,13 +820,17 @@ export default function ProfileScreen() {
               <Text className="text-lg font-semibold text-black dark:text-white mb-0.5">
                 {userData.following.toLocaleString()}
               </Text>
-              <Text className="text-sm text-gray-500 dark:text-gray-400">Following</Text>
+              <Text className="text-sm text-gray-500 dark:text-gray-400">
+                Following
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity className="items-start">
               <Text className="text-lg font-semibold text-black dark:text-white mb-0.5">
                 {userData.followers.toLocaleString()}
               </Text>
-              <Text className="text-sm text-gray-500 dark:text-gray-400">Followers</Text>
+              <Text className="text-sm text-gray-500 dark:text-gray-400">
+                Followers
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="items-start"
@@ -579,7 +839,9 @@ export default function ProfileScreen() {
               <Text className="text-lg font-semibold text-black dark:text-white mb-0.5">
                 {userData.postsCount.toLocaleString()}
               </Text>
-              <Text className="text-sm text-gray-500 dark:text-gray-400">Posts</Text>
+              <Text className="text-sm text-gray-500 dark:text-gray-400">
+                Posts
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -629,30 +891,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Posts Grid */}
-        {isLoadingPosts ? (
-          <View className="py-12 items-center">
-            <ActivityIndicator size="large" color="#007AFF" />
-            <Text className="mt-3 text-base text-gray-500 dark:text-gray-400">Loading posts...</Text>
-          </View>
-        ) : posts.length === 0 ? (
-          <View className="py-12 items-center">
-            <Text className="text-base text-gray-500 dark:text-gray-400">
-              {activeTab === "posts" && "No posts yet"}
-              {activeTab === "reels" && "No reels yet"}
-              {activeTab === "liked" && "No liked posts yet"}
-              {activeTab === "saved" && "No saved posts yet"}
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={posts}
-            renderItem={renderPostItem}
-            keyExtractor={(item) => item.id}
-            numColumns={3}
-            scrollEnabled={false}
-            contentContainerStyle={{ padding: 0.5 }}
-          />
-        )}
+        {renderPostsContent()}
       </ScrollView>
 
       {/* Edit Profile Modal */}
@@ -662,24 +901,32 @@ export default function ProfileScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsEditModalOpen(false)}
       >
-        <SafeAreaView className="flex-1 bg-white dark:bg-gray-900">
+        <SafeAreaView className="flex-1 bg-white dark:bg-black">
           <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-800">
             <TouchableOpacity onPress={() => setIsEditModalOpen(false)}>
-              <Text className="text-base text-gray-500 dark:text-gray-400">Cancel</Text>
+              <Text className="text-base text-gray-500 dark:text-gray-400">
+                Cancel
+              </Text>
             </TouchableOpacity>
-            <Text className="text-lg font-semibold text-black dark:text-white">Edit Profile</Text>
+            <Text className="text-lg font-semibold text-black dark:text-white">
+              Edit Profile
+            </Text>
             <TouchableOpacity
               onPress={handleUpdateProfile}
               disabled={isUploading}
             >
-              <Text className={`text-base font-semibold ${isUploading ? "opacity-50 text-blue-500" : "text-blue-500"}`}>
+              <Text
+                className={`text-base font-semibold ${isUploading ? "opacity-50 text-blue-500" : "text-blue-500"}`}
+              >
                 {isUploading ? "Saving..." : "Save"}
               </Text>
             </TouchableOpacity>
           </View>
-          <ScrollView className="flex-1 p-4">
+          <ScrollView className="flex-1 p-4 bg-white dark:bg-black">
             <View className="mb-5">
-              <Text className="text-sm font-semibold text-black dark:text-white mb-2">First Name</Text>
+              <Text className="text-sm font-semibold text-black dark:text-white mb-2">
+                First Name
+              </Text>
               <TextInput
                 className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-base text-black dark:text-white bg-white dark:bg-gray-800"
                 value={editFormData.firstName}
@@ -691,7 +938,9 @@ export default function ProfileScreen() {
               />
             </View>
             <View className="mb-5">
-              <Text className="text-sm font-semibold text-black dark:text-white mb-2">Surname</Text>
+              <Text className="text-sm font-semibold text-black dark:text-white mb-2">
+                Surname
+              </Text>
               <TextInput
                 className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-base text-black dark:text-white bg-white dark:bg-gray-800"
                 value={editFormData.surName}
@@ -703,7 +952,9 @@ export default function ProfileScreen() {
               />
             </View>
             <View className="mb-5">
-              <Text className="text-sm font-semibold text-black dark:text-white mb-2">Username</Text>
+              <Text className="text-sm font-semibold text-black dark:text-white mb-2">
+                Username
+              </Text>
               <TextInput
                 className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-base text-black dark:text-white bg-white dark:bg-gray-800"
                 value={editFormData.username}
@@ -715,7 +966,9 @@ export default function ProfileScreen() {
               />
             </View>
             <View className="mb-5">
-              <Text className="text-sm font-semibold text-black dark:text-white mb-2">Bio</Text>
+              <Text className="text-sm font-semibold text-black dark:text-white mb-2">
+                Bio
+              </Text>
               <TextInput
                 className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 text-base text-black dark:text-white bg-white dark:bg-gray-800 h-[100px]"
                 value={editFormData.bio}
@@ -736,77 +989,6 @@ export default function ProfileScreen() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
-
-      {/* Post Detail Modal */}
-      <Modal
-        visible={isPostModalOpen}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setIsPostModalOpen(false)}
-      >
-        <View className="flex-1 bg-black/90 justify-center items-center">
-          <Pressable
-            className="absolute inset-0"
-            onPress={() => setIsPostModalOpen(false)}
-          />
-          {selectedPost && (
-            <View className="w-[90%] max-h-[80%] bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
-              <TouchableOpacity
-                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/50 justify-center items-center"
-                onPress={() => setIsPostModalOpen(false)}
-              >
-                <Ionicons name="close" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-              {selectedPost.url && (
-                <Image
-                  source={{ uri: selectedPost.url }}
-                  className="w-full h-[400px] bg-black"
-                  contentFit="contain"
-                />
-              )}
-              <View className="flex-row p-4 gap-4 border-b border-gray-200 dark:border-gray-800">
-                <TouchableOpacity
-                  className="flex-row items-center gap-2"
-                  onPress={() => handleLike(selectedPost.id)}
-                >
-                  <Ionicons
-                    name={likedPosts.has(selectedPost.id) ? "heart" : "heart-outline"}
-                    size={24}
-                    color={likedPosts.has(selectedPost.id) ? "#EF4444" : "#000000"}
-                  />
-                  <Text className="text-base font-semibold text-black dark:text-white">
-                    {selectedPost.likesCount}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity className="flex-row items-center gap-2">
-                  <Ionicons name="chatbubble-outline" size={24} color="#000000" />
-                  <Text className="text-base font-semibold text-black dark:text-white">
-                    {selectedPost.commentsCount}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="flex-row items-center gap-2"
-                  onPress={() => handleSave(selectedPost.id)}
-                >
-                  <Ionicons
-                    name={savedPosts.has(selectedPost.id) ? "bookmark" : "bookmark-outline"}
-                    size={24}
-                    color={savedPosts.has(selectedPost.id) ? "#FBBF24" : "#000000"}
-                  />
-                </TouchableOpacity>
-              </View>
-              {selectedPost.caption && (
-                <View className="p-4">
-                  <Text className="text-sm text-black dark:text-white leading-5">
-                    {selectedPost.caption}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
-

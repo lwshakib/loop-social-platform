@@ -1,5 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ResizeMode, Video } from "expo-av";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -9,14 +10,12 @@ import {
   Dimensions,
   FlatList,
   Modal,
-  Pressable,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { VideoView, useVideoPlayer } from "expo-video";
 import { useUserStore } from "../../../store/userStore";
 
 type Post = {
@@ -108,39 +107,8 @@ export default function ReelsScreen() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [mutedVideos, setMutedVideos] = useState<Set<string>>(new Set());
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [playingId, setPlayingId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
-
-  // Video Player Component
-  const VideoPlayer = ({
-    videoUrl,
-    isMuted,
-    shouldPlay,
-  }: {
-    videoUrl: string;
-    isMuted: boolean;
-    shouldPlay: boolean;
-  }) => {
-    const player = useVideoPlayer({ uri: videoUrl }, (player) => {
-      player.loop = true;
-      player.muted = isMuted;
-    });
-
-    useEffect(() => {
-      player.muted = isMuted;
-    }, [isMuted, player]);
-
-    useEffect(() => {
-      if (shouldPlay) {
-        player.play();
-      } else {
-        player.pause();
-      }
-    }, [shouldPlay, player]);
-
-    return <VideoView player={player} className="w-full h-full" contentFit="cover" />;
-  };
 
   // Fetch videos
   const fetchVideos = useCallback(async () => {
@@ -169,6 +137,11 @@ export default function ReelsScreen() {
           );
 
           setVideos(videoPosts);
+          if (videoPosts.length > 0) {
+            setPlayingId(videoPosts[0].id);
+          } else {
+            setPlayingId(null);
+          }
 
           // Initialize liked and saved posts
           const likedPostIds = videoPosts
@@ -194,20 +167,6 @@ export default function ReelsScreen() {
   useEffect(() => {
     fetchVideos();
   }, [fetchVideos]);
-
-  // Handle video viewability change
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: any[] }) => {
-      if (viewableItems.length > 0) {
-        const visibleItem = viewableItems[0];
-        setCurrentVideoIndex(visibleItem.index || 0);
-      }
-    }
-  ).current;
-
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 50,
-  }).current;
 
   const handleLike = async (postId: string) => {
     const accessToken = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
@@ -245,7 +204,9 @@ export default function ReelsScreen() {
       });
       setVideos((prev) =>
         prev.map((post) =>
-          post.id === postId ? { ...post, likesCount: post.likesCount + 1 } : post
+          post.id === postId
+            ? { ...post, likesCount: post.likesCount + 1 }
+            : post
         )
       );
     }
@@ -500,44 +461,53 @@ export default function ReelsScreen() {
     }
   };
 
-  const renderVideoItem = ({ item, index }: { item: Post; index: number }) => {
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: any[] }) => {
+      const firstVisible = viewableItems.find(
+        (it) => it.isViewable && it.item?.id
+      );
+      if (firstVisible?.item?.id) {
+        setPlayingId((prev) =>
+          prev === firstVisible.item.id ? prev : firstVisible.item.id
+        );
+      }
+    }
+  ).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 75,
+  }).current;
+
+  const renderVideoItem = ({ item }: { item: Post; index: number }) => {
     const screenHeight = Dimensions.get("window").height;
-    const isMuted = mutedVideos.has(item.id);
     const isLiked = likedPosts.has(item.id);
     const isSaved = savedPosts.has(item.id);
+    const isPlaying = playingId === item.id;
 
     return (
       <View className="w-full relative" style={{ height: screenHeight }}>
-        <VideoPlayer
-          videoUrl={item.url}
-          isMuted={isMuted}
-          shouldPlay={index === currentVideoIndex}
+        <Video
+          source={{ uri: item.url }}
+          style={{ width: "100%", height: "100%", backgroundColor: "black" }}
+          resizeMode={ResizeMode.CONTAIN}
+          shouldPlay={isPlaying}
+          isLooping
+          isMuted={false}
         />
 
-        {/* Mute/Unmute Button - Top Right */}
+        {/* Center Play Button (only when paused) */}
         <TouchableOpacity
-          className="absolute top-[50px] right-4 p-2 rounded-[20px] bg-black/50"
+          className="absolute inset-0 items-center justify-center"
+          activeOpacity={0.7}
           onPress={() => {
-            if (isMuted) {
-              setMutedVideos((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(item.id);
-                return newSet;
-              });
-            } else {
-              setMutedVideos((prev) => {
-                const newSet = new Set(prev);
-                newSet.add(item.id);
-                return newSet;
-              });
-            }
+            setPlayingId((prev) => (prev === item.id ? null : item.id));
           }}
         >
-          <Ionicons
-            name={isMuted ? "volume-mute" : "volume-high"}
-            size={24}
-            color="#FFFFFF"
-          />
+          {!isPlaying && (
+            <View className="w-14 h-14 rounded-full bg-black/50 items-center justify-center">
+              <Ionicons name="play" size={32} color="#FFFFFF" />
+            </View>
+          )}
         </TouchableOpacity>
 
         {/* Right Side Actions */}
@@ -551,7 +521,9 @@ export default function ReelsScreen() {
               size={32}
               color={isLiked ? "#EF4444" : "#FFFFFF"}
             />
-            <Text className="text-white text-xs font-semibold">{formatNumber(item.likesCount)}</Text>
+            <Text className="text-white text-xs font-semibold">
+              {formatNumber(item.likesCount)}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -614,7 +586,10 @@ export default function ReelsScreen() {
                   </Text>
                 </TouchableOpacity>
                 {item.caption && (
-                  <Text className="text-white text-sm leading-[18px]" numberOfLines={2}>
+                  <Text
+                    className="text-white text-sm leading-[18px]"
+                    numberOfLines={2}
+                  >
                     {item.caption}
                   </Text>
                 )}
@@ -649,11 +624,11 @@ export default function ReelsScreen() {
         snapToInterval={Dimensions.get("window").height}
         snapToAlignment="start"
         decelerationRate="fast"
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
         initialNumToRender={3}
         maxToRenderPerBatch={3}
         windowSize={5}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
       />
 
       {/* Comments Modal */}
@@ -663,9 +638,14 @@ export default function ReelsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setIsCommentsModalOpen(false)}
       >
-        <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
+        <SafeAreaView
+          className="flex-1 bg-white dark:bg-gray-900"
+          edges={["top"]}
+        >
           <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-            <Text className="text-lg font-semibold text-black dark:text-white">Comments</Text>
+            <Text className="text-lg font-semibold text-black dark:text-white">
+              Comments
+            </Text>
             <TouchableOpacity onPress={() => setIsCommentsModalOpen(false)}>
               <Ionicons name="close" size={24} color="#000000" />
             </TouchableOpacity>
@@ -706,7 +686,9 @@ export default function ReelsScreen() {
                         {formatTimeAgo(item.createdAt)}
                       </Text>
                     </View>
-                    <Text className="text-sm text-black dark:text-white leading-5 mb-2">{item.comment}</Text>
+                    <Text className="text-sm text-black dark:text-white leading-5 mb-2">
+                      {item.comment}
+                    </Text>
                     <TouchableOpacity
                       className="mt-1"
                       onPress={() => {
@@ -716,7 +698,9 @@ export default function ReelsScreen() {
                         }
                       }}
                     >
-                      <Text className="text-xs text-gray-500 dark:text-gray-400">Reply</Text>
+                      <Text className="text-xs text-gray-500 dark:text-gray-400">
+                        Reply
+                      </Text>
                     </TouchableOpacity>
                     {replyingTo === item.id && (
                       <View className="mt-2 flex-row gap-2 items-end">
@@ -726,18 +710,23 @@ export default function ReelsScreen() {
                           placeholderTextColor="#8E8E93"
                           value={replyText[item.id] || ""}
                           onChangeText={(text) =>
-                            setReplyText((prev) => ({ ...prev, [item.id]: text }))
+                            setReplyText((prev) => ({
+                              ...prev,
+                              [item.id]: text,
+                            }))
                           }
                           multiline
                         />
                         <TouchableOpacity
-                          className={`px-4 py-2 rounded-lg ${(!replyText[item.id]?.trim() || isSubmittingComment) ? "opacity-50 bg-gray-300 dark:bg-gray-700" : "bg-blue-500"}`}
+                          className={`px-4 py-2 rounded-lg ${!replyText[item.id]?.trim() || isSubmittingComment ? "opacity-50 bg-gray-300 dark:bg-gray-700" : "bg-blue-500"}`}
                           onPress={() => handleSubmitComment(item.id)}
                           disabled={
                             !replyText[item.id]?.trim() || isSubmittingComment
                           }
                         >
-                          <Text className="text-white text-sm font-semibold">Send</Text>
+                          <Text className="text-white text-sm font-semibold">
+                            Send
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     )}
@@ -759,7 +748,7 @@ export default function ReelsScreen() {
               multiline
             />
             <TouchableOpacity
-              className={`px-4 py-2 rounded-lg ${(!newComment.trim() || isSubmittingComment) ? "opacity-50 bg-gray-300 dark:bg-gray-700" : "bg-blue-500"}`}
+              className={`px-4 py-2 rounded-lg ${!newComment.trim() || isSubmittingComment ? "opacity-50 bg-gray-300 dark:bg-gray-700" : "bg-blue-500"}`}
               onPress={() => handleSubmitComment()}
               disabled={!newComment.trim() || isSubmittingComment}
             >
@@ -773,4 +762,3 @@ export default function ReelsScreen() {
     </SafeAreaView>
   );
 }
-

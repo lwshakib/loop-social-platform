@@ -283,7 +283,10 @@ export const validateAccessToken = asyncHandler(
 
 export const refreshAccessToken = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const refreshToken = req.cookies.refreshToken;
+    // Try to get refresh token from Authorization header first, then from cookies
+    const refreshToken =
+      req.headers.authorization?.replace("Bearer ", "") ||
+      req.cookies.refreshToken;
 
     if (!refreshToken) {
       throw new ApiError(401, "Unauthorized");

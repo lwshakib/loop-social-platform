@@ -234,6 +234,70 @@ export const getPosts = asyncHandler(
 );
 
 /**
+ * Get a single post by ID
+ * GET /api/posts/:postId
+ * Requires authentication
+ */
+export const getPostById = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = (req as any).user;
+    if (!user) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const { postId } = req.params;
+
+    if (!postId || !mongoose.Types.ObjectId.isValid(postId)) {
+      throw new ApiError(400, "Invalid post ID");
+    }
+
+    const post = await Post.findById(postId).populate(
+      "userId",
+      "firstName surName username profileImage"
+    );
+
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+
+    const [likesCount, commentsCount, isLiked, isSaved] = await Promise.all([
+      Like.countDocuments({ postId }),
+      Comment.countDocuments({ postId }),
+      Like.exists({ userId: user._id, postId }),
+      Saved.exists({ userId: user._id, postId }),
+    ]);
+
+    const transformedPost = {
+      id: post._id.toString(),
+      userId: (post.userId as any)?._id?.toString() || post.userId?.toString(),
+      user:
+        typeof post.userId === "object"
+          ? {
+              id: (post.userId as any)?._id?.toString() || "",
+              firstName: (post.userId as any)?.firstName || "",
+              surName: (post.userId as any)?.surName || "",
+              username: (post.userId as any)?.username || "unknown",
+              profileImage: (post.userId as any)?.profileImage || "",
+            }
+          : undefined,
+      caption: post.caption || "",
+      url: post.url || "",
+      type: post.type,
+      likesCount,
+      commentsCount,
+      viewsCount: (post as any).viewsCount || 0,
+      createdAt: post.createdAt,
+      isLiked: Boolean(isLiked),
+      isSaved: Boolean(isSaved),
+    };
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, { post: transformedPost }, "Post fetched successfully"));
+  }
+);
+
+/**
  * Like a post
  * POST /api/posts/:postId/like
  * Requires authentication

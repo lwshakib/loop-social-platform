@@ -29,7 +29,8 @@ function getCookie(name: string): string | null {
 function setCookie(name: string, value: string, days: number) {
   const expires = new Date();
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-  document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Lax; Secure`;
+  const secureFlag = window.location.protocol === "https:" ? " Secure;" : "";
+  document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Lax;${secureFlag}`;
 }
 
 // Helper to get server URL from environment variables
@@ -44,7 +45,7 @@ export function ProtectedRoute({ children }: { children: React.ReactElement }) {
 
   useEffect(() => {
     const validateAndRefreshToken = async () => {
-  const accessToken = getCookie("accessToken");
+      const accessToken = getCookie("accessToken");
       const refreshToken = getCookie("refreshToken");
 
       // If no accessToken and no refreshToken, redirect to sign-in
@@ -100,16 +101,19 @@ export function ProtectedRoute({ children }: { children: React.ReactElement }) {
             if (result.data?.accessToken) {
               // Save new access token (15 minutes expiry)
               setCookie("accessToken", result.data.accessToken, 0.01);
-              
+
               // Fetch user data after token refresh
               try {
-                const validateResponse = await fetch(`${serverUrl}/auth/validate-token`, {
-                  method: "GET",
-                  headers: {
-                    Authorization: `Bearer ${result.data.accessToken}`,
-                  },
-                  credentials: "include",
-                });
+                const validateResponse = await fetch(
+                  `${serverUrl}/auth/validate-token`,
+                  {
+                    method: "GET",
+                    headers: {
+                      Authorization: `Bearer ${result.data.accessToken}`,
+                    },
+                    credentials: "include",
+                  }
+                );
                 if (validateResponse.ok) {
                   const validateResult = await validateResponse.json();
                   if (validateResult.data) {
@@ -119,7 +123,7 @@ export function ProtectedRoute({ children }: { children: React.ReactElement }) {
               } catch (error) {
                 console.error("Error fetching user data after refresh:", error);
               }
-              
+
               setIsAuthenticated(true);
               setIsLoading(false);
               return;
@@ -262,16 +266,16 @@ export function AuthRoute({ children }: { children: React.ReactElement }) {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
                 <Layout />
-            </ProtectedRoute>
-          }
+              </ProtectedRoute>
+            }
           >
             <Route index element={<HomePage />} />
             <Route path="explore" element={<ExplorePage />} />
@@ -306,9 +310,9 @@ createRoot(document.getElementById("root")!).render(
               </ProtectedRoute>
             }
           />
-      </Routes>
-    </BrowserRouter>
-    <Toaster />
+        </Routes>
+      </BrowserRouter>
+      <Toaster />
     </ThemeProvider>
   </StrictMode>
 );

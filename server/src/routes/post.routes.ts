@@ -1,19 +1,20 @@
 import express from "express";
+import { z } from "zod";
 import {
+  createComment,
   createPost,
+  getCommentReplies,
+  getPostById,
+  getPostComments,
   getPosts,
   likePost,
-  unlikePost,
-  getPostComments,
-  createComment,
-  getCommentReplies,
   savePost,
+  unlikePost,
   unsavePost,
 } from "../controllers/post.controllers.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { createPostSchema } from "../validators/post.validators.js";
-import { z } from "zod";
 
 const router = express.Router();
 
@@ -25,6 +26,9 @@ router.post("/", validate(createPostSchema), createPost);
 
 // Get all posts
 router.get("/", getPosts);
+
+// Get single post
+router.get("/:postId", getPostById);
 
 // Like a post
 router.post("/:postId/like", likePost);
@@ -57,4 +61,3 @@ router.post(
 router.get("/:postId/comments/:commentId/replies", getCommentReplies);
 
 export default router;
-

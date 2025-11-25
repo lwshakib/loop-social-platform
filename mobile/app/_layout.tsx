@@ -7,7 +7,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(home)" />
-        <Stack.Screen name="notifications" options={{ animation: "fade_from_bottom" }} />
+        <Stack.Screen
+          name="notifications"
+          options={{ animation: "fade_from_bottom" }}
+        />
       </Stack>
     </SafeAreaProvider>
   );

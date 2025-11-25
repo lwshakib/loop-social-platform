@@ -9,6 +9,7 @@ import {
   Animated,
   LayoutAnimation,
   Platform,
+  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -16,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../../hooks/useAuth";
 import { useUserStore } from "../../../store/userStore";
 
 type StoryGroup = {
@@ -73,11 +75,13 @@ const getServerUrl = (): string => {
 
 const Home = () => {
   const { userData } = useUserStore();
+  const { checkAuthStatus } = useAuth();
   const navigation = useNavigation();
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
 
@@ -88,7 +92,10 @@ const Home = () => {
 
   // Enable LayoutAnimation on Android (only once)
   useEffect(() => {
-    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    if (
+      Platform.OS === "android" &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
       UIManager.setLayoutAnimationEnabledExperimental(true);
     }
   }, []);
@@ -343,7 +350,7 @@ const Home = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Like API error:", response.status, errorData);
-        
+
         // Revert on error
         setLikedPosts(likedPosts);
         setPosts((prevPosts) =>
@@ -351,15 +358,17 @@ const Home = () => {
             post.id === postId
               ? {
                   ...post,
-                  likesCount: isLiked ? post.likesCount + 1 : post.likesCount - 1,
+                  likesCount: isLiked
+                    ? post.likesCount + 1
+                    : post.likesCount - 1,
                 }
               : post
           )
         );
-        
+
         Alert.alert(
-          "Error", 
-          errorData.message || `Failed to ${isLiked ? 'unlike' : 'like'} post`
+          "Error",
+          errorData.message || `Failed to ${isLiked ? "unlike" : "like"} post`
         );
       }
     } catch (error) {
@@ -411,13 +420,13 @@ const Home = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Save API error:", response.status, errorData);
-        
+
         // Revert on error
         setSavedPosts(savedPosts);
-        
+
         Alert.alert(
           "Error",
-          errorData.message || `Failed to ${isSaved ? 'unsave' : 'save'} post`
+          errorData.message || `Failed to ${isSaved ? "unsave" : "save"} post`
         );
       }
     } catch (error) {
@@ -440,6 +449,19 @@ const Home = () => {
       return `${Math.floor(diffInSeconds / 2592000)}mo`;
     return `${Math.floor(diffInSeconds / 31536000)}y`;
   };
+
+  const handleRefresh = useCallback(async () => {
+    try {
+      setIsRefreshing(true);
+      // Ensure access token is valid or refreshed using saved refresh token
+      await checkAuthStatus();
+      await Promise.all([fetchStories(), fetchPosts()]);
+    } catch (error) {
+      console.error("Error refreshing feed:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [checkAuthStatus, fetchStories, fetchPosts]);
 
   useEffect(() => {
     if (userData) {
@@ -567,6 +589,13 @@ const Home = () => {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#007AFF"
+          />
+        }
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           {
@@ -574,10 +603,10 @@ const Home = () => {
             listener: (event: any) => {
               const currentScrollY = event.nativeEvent.contentOffset.y;
               const delta = currentScrollY - lastScrollY.current;
-              
+
               // Only trigger if scroll delta is significant (prevents bounce/deceleration triggers)
               const SCROLL_THRESHOLD = 5;
-              
+
               if (delta > SCROLL_THRESHOLD && currentScrollY > 50) {
                 // Scrolling down significantly
                 if (!isScrollingDown) {
@@ -621,7 +650,7 @@ const Home = () => {
                   // Header remains visible; no navigation.setOptions call
                 }
               }
-              
+
               lastScrollY.current = currentScrollY;
             },
           }

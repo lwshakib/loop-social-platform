@@ -1,8 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -143,7 +143,9 @@ export default function SearchScreen() {
       const newSearch: RecentSearch = {
         id: Date.now(),
         username: userResult.username,
-        fullName: `${userResult.firstName || ""} ${userResult.surName || ""}`.trim() || userResult.username,
+        fullName:
+          `${userResult.firstName || ""} ${userResult.surName || ""}`.trim() ||
+          userResult.username,
         avatar: userResult.profileImage || "",
         isVerified: userResult.isVerified || false,
         followers: userResult.followers || 0,
@@ -182,10 +184,16 @@ export default function SearchScreen() {
         className="flex-row items-center py-3 gap-3"
         onPress={() => handleUserClick(item.username)}
       >
-        <Image source={{ uri: avatarUrl }} className="w-12 h-12 rounded-full" contentFit="cover" />
+        <Image
+          source={{ uri: avatarUrl }}
+          className="w-12 h-12 rounded-full"
+          contentFit="cover"
+        />
         <View className="flex-1">
           <View className="flex-row items-center gap-1.5 mb-1">
-            <Text className="text-base font-semibold text-black dark:text-white">{item.username}</Text>
+            <Text className="text-base font-semibold text-black dark:text-white">
+              {item.username}
+            </Text>
             {item.isVerified && (
               <Ionicons name="checkmark-circle" size={16} color="#007AFF" />
             )}
@@ -216,16 +224,24 @@ export default function SearchScreen() {
         className="flex-row items-center py-3 gap-3"
         onPress={() => handleUserClick(item.username)}
       >
-        <Image source={{ uri: avatarUrl }} className="w-12 h-12 rounded-full" contentFit="cover" />
+        <Image
+          source={{ uri: avatarUrl }}
+          className="w-12 h-12 rounded-full"
+          contentFit="cover"
+        />
         <View className="flex-1">
           <View className="flex-row items-center gap-1.5 mb-1">
-            <Text className="text-base font-semibold text-black dark:text-white">{item.username}</Text>
+            <Text className="text-base font-semibold text-black dark:text-white">
+              {item.username}
+            </Text>
             {item.isVerified && (
               <Ionicons name="checkmark-circle" size={16} color="#007AFF" />
             )}
           </View>
           {item.fullName && (
-            <Text className="text-sm text-gray-500 dark:text-gray-400 mb-0.5">{item.fullName}</Text>
+            <Text className="text-sm text-gray-500 dark:text-gray-400 mb-0.5">
+              {item.fullName}
+            </Text>
           )}
           {item.followers > 0 && (
             <Text className="text-xs text-gray-500 dark:text-gray-400">
@@ -244,7 +260,7 @@ export default function SearchScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={[]}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={["top"]}>
       {/* Search Header */}
       <View className="px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
         <Text className="text-2xl font-bold text-black dark:text-white">
@@ -253,24 +269,28 @@ export default function SearchScreen() {
       </View>
 
       {/* Search Input */}
-      <View className="flex-row items-center mx-4 my-3 px-3 py-2.5 bg-gray-100 dark:bg-gray-900 rounded-[12px] border border-gray-200 dark:border-gray-800">
-        <Ionicons name="search" size={20} color="#8E8E93" className="mr-2" />
-        <TextInput
-          className="flex-1 text-base text-black dark:text-white"
-          placeholder="Search"
-          placeholderTextColor="#8E8E93"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          autoFocus
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity
-            onPress={() => setSearchQuery("")}
-            className="ml-2"
-          >
-            <Ionicons name="close-circle" size={20} color="#8E8E93" />
-          </TouchableOpacity>
-        )}
+      <View className="px-4 py-2 bg-white dark:bg-black">
+        <View className="flex-row items-center px-4 py-3 bg-gray-50 dark:bg-gray-800/50 rounded-full border border-gray-200 dark:border-gray-700">
+          <Ionicons name="search" size={20} color="#8E8E93" />
+          <TextInput
+            className="flex-1 ml-2 text-base text-black dark:text-white"
+            placeholder="Search users..."
+            placeholderTextColor="#8E8E93"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoFocus
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              className="ml-2 w-6 h-6 items-center justify-center"
+              activeOpacity={0.6}
+            >
+              <Ionicons name="close-circle" size={20} color="#8E8E93" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Search Results or Recent Searches */}
@@ -327,4 +347,3 @@ export default function SearchScreen() {
     </SafeAreaView>
   );
 }
-

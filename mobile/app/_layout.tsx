@@ -5,7 +5,10 @@ import "../global.css";
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(home)" />
+        <Stack.Screen name="notifications" options={{ animation: "fade_from_bottom" }} />
+      </Stack>
     </SafeAreaProvider>
   );
 }

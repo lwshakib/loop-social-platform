@@ -244,14 +244,16 @@ export default function SearchScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={[]}>
       {/* Search Header */}
-      <View className="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-        <Text className="text-2xl font-bold text-black dark:text-white">Search</Text>
+      <View className="px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
+        <Text className="text-2xl font-bold text-black dark:text-white">
+          Search
+        </Text>
       </View>
 
       {/* Search Input */}
-      <View className="flex-row items-center mx-4 my-3 px-3 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-[10px]">
+      <View className="flex-row items-center mx-4 my-3 px-3 py-2.5 bg-gray-100 dark:bg-gray-900 rounded-[12px] border border-gray-200 dark:border-gray-800">
         <Ionicons name="search" size={20} color="#8E8E93" className="mr-2" />
         <TextInput
           className="flex-1 text-base text-black dark:text-white"
@@ -274,9 +276,11 @@ export default function SearchScreen() {
       {/* Search Results or Recent Searches */}
       {searchQuery ? (
         isSearching ? (
-          <View className="flex-1 justify-center items-center py-12">
+          <View className="flex-1 justify-center items-center py-12 bg-white dark:bg-black">
             <ActivityIndicator size="large" color="#007AFF" />
-            <Text className="mt-3 text-base text-gray-500 dark:text-gray-400">Searching...</Text>
+            <Text className="mt-3 text-base text-gray-500 dark:text-gray-400">
+              Searching...
+            </Text>
           </View>
         ) : searchResults.length > 0 ? (
           <FlatList
@@ -284,18 +288,25 @@ export default function SearchScreen() {
             renderItem={renderSearchResult}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: 16 }}
+            className="bg-white dark:bg-black"
           />
         ) : (
-          <View className="flex-1 justify-center items-center py-12">
-            <Text className="text-base text-gray-500 dark:text-gray-400">No results found</Text>
+          <View className="flex-1 justify-center items-center py-12 bg-white dark:bg-black">
+            <Text className="text-base text-gray-500 dark:text-gray-400">
+              No results found
+            </Text>
           </View>
         )
       ) : recentSearches.length > 0 ? (
-        <View className="flex-1">
+        <View className="flex-1 bg-white dark:bg-black">
           <View className="flex-row justify-between items-center px-4 py-3">
-            <Text className="text-base font-semibold text-black dark:text-white">Recent</Text>
+            <Text className="text-base font-semibold text-black dark:text-white">
+              Recent
+            </Text>
             <TouchableOpacity onPress={handleClearRecent}>
-              <Text className="text-sm text-blue-500 dark:text-blue-400 font-semibold">Clear all</Text>
+              <Text className="text-sm text-blue-500 dark:text-blue-400 font-semibold">
+                Clear all
+              </Text>
             </TouchableOpacity>
           </View>
           <FlatList
@@ -303,11 +314,14 @@ export default function SearchScreen() {
             renderItem={renderRecentSearch}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={{ paddingHorizontal: 16 }}
+            className="bg-white dark:bg-black"
           />
         </View>
       ) : (
-        <View className="flex-1 justify-center items-center py-12">
-          <Text className="text-base text-gray-500 dark:text-gray-400">No recent searches</Text>
+        <View className="flex-1 justify-center items-center py-12 bg-white dark:bg-black">
+          <Text className="text-base text-gray-500 dark:text-gray-400">
+            No recent searches
+          </Text>
         </View>
       )}
     </SafeAreaView>

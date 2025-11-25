@@ -82,8 +82,8 @@ export default function SignInPage() {
           // Set cookie expiration based on rememberMe
           // Access token: 15 minutes (0.01 days) or 30 days if rememberMe
           // Refresh token: 7 days or 30 days if rememberMe
-          const accessTokenExpiry = data.rememberMe ? 30 : 0.01; // 15 minutes = 0.01 days
-          const refreshTokenExpiry = data.rememberMe ? 30 : 7;
+          const accessTokenExpiry =  0.01; // 15 minutes = 0.01 days
+          const refreshTokenExpiry = 7;
 
           // Save tokens to cookies
           setCookie("accessToken", result.data.accessToken, accessTokenExpiry);
@@ -115,6 +115,7 @@ export default function SignInPage() {
           description: errorMessage,
         });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       const errorMessage = "An error occurred. Please try again.";
       form.setError("root", {

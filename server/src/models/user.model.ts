@@ -110,11 +110,13 @@ userSchema.methods.comparePassword = async function (password: string) {
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign({ id: this._id }, envs.ACCESS_TOKEN_SECRET, {
     expiresIn: "15m",
+    algorithm: 'HS256'
   });
 };
 userSchema.methods.generateRefreshToken = function () {
   return jwt.sign({ id: this._id }, envs.REFRESH_TOKEN_SECRET, {
     expiresIn: "7d",
+    algorithm: 'HS256'
   });
 };
 

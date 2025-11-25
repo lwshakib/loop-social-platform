@@ -9,6 +9,7 @@ import {
   Dimensions,
   FlatList,
   Modal,
+  Image as RNImage,
   ScrollView,
   Text,
   TextInput,
@@ -111,10 +112,33 @@ const formatCount = (count: number): string => {
   return count.toString();
 };
 
+const buildDicebearAvatar = (seed?: string): string => {
+  const safeSeed = encodeURIComponent(seed?.trim() || "user");
+  return `https://api.dicebear.com/7.x/avataaars/png?seed=${safeSeed}`;
+};
+
+const resolveMediaUrl = (path?: string | null): string | null => {
+  if (!path || path.trim() === "") {
+    return null;
+  }
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  const serverUrl = getServerUrl();
+  if (!serverUrl) {
+    return null;
+  }
+  const normalizedServer = serverUrl.endsWith("/")
+    ? serverUrl.slice(0, -1)
+    : serverUrl;
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${normalizedServer}/${normalizedPath}`;
+};
+
 export default function ProfileScreen() {
   const router = useRouter();
   const currentUser = useUserStore((state) => state.userData);
-  const { setUserData: setStoreUserData, getAvatarUrl } = useUserStore();
+  const { setUserData: setStoreUserData } = useUserStore();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
   const iconColor = isDarkMode ? "#FFFFFF" : "#000000";
@@ -134,6 +158,9 @@ export default function ProfileScreen() {
   const [isUploading, setIsUploading] = useState(false);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
+  const [imageAspectRatios, setImageAspectRatios] = useState<
+    Record<string, number>
+  >({});
   const [isFollowing] = useState(false);
   const screenWidth = Dimensions.get("window").width;
   const reelItemSize = (screenWidth - 6) / 3;
@@ -234,6 +261,30 @@ export default function ProfileScreen() {
       setIsLoadingPosts(false);
     }
   }, [currentUser?.username, activeTab]);
+
+  useEffect(() => {
+    posts.forEach((post) => {
+      if (post.type === "image" && post.url && !imageAspectRatios[post.id]) {
+        RNImage.getSize(
+          post.url,
+          (width, height) => {
+            if (width > 0 && height > 0) {
+              setImageAspectRatios((prev) => {
+                if (prev[post.id]) return prev;
+                return { ...prev, [post.id]: width / height };
+              });
+            }
+          },
+          () => {
+            setImageAspectRatios((prev) => {
+              if (prev[post.id]) return prev;
+              return { ...prev, [post.id]: 1 };
+            });
+          }
+        );
+      }
+    });
+  }, [posts, imageAspectRatios]);
 
   useEffect(() => {
     fetchUserData();
@@ -531,9 +582,8 @@ export default function ProfileScreen() {
       <View>
         {posts.map((post) => {
           const avatarUrl =
-            post.user.profileImage && post.user.profileImage.trim() !== ""
-              ? post.user.profileImage
-              : `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user.username || "user"}`;
+            resolveMediaUrl(post.user.profileImage) ||
+            buildDicebearAvatar(post.user.username);
           const isLiked = likedPosts.has(post.id);
           const isSaved = savedPosts.has(post.id);
           const displayName =
@@ -601,8 +651,11 @@ export default function ProfileScreen() {
                   <View className="rounded-2xl overflow-hidden my-2">
                     <Image
                       source={{ uri: post.url }}
-                      style={{ width: "100%", aspectRatio: 1 }}
-                      contentFit="cover"
+                      style={{
+                        width: "100%",
+                        aspectRatio: imageAspectRatios[post.id] || 1,
+                      }}
+                      contentFit="contain"
                     />
                   </View>
                 )}
@@ -626,11 +679,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity className="flex-row items-center">
-                  <Ionicons
-                    name="repeat-outline"
-                    size={20}
-                    color="#8E8E93"
-                  />
+                  <Ionicons name="repeat-outline" size={20} color="#8E8E93" />
                   {((post as any).repostsCount || 0) > 0 && (
                     <Text className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                       {formatCount((post as any).repostsCount)}
@@ -685,11 +734,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity className="ml-2">
-                  <Ionicons
-                    name="share-outline"
-                    size={20}
-                    color="#8E8E93"
-                  />
+                  <Ionicons name="share-outline" size={20} color="#8E8E93" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -725,9 +770,12 @@ export default function ProfileScreen() {
   }
 
   const displayName = `${userData.firstName} ${userData.surName}`;
-  const avatarUrl = userData.profileImage || getAvatarUrl();
+  const avatarUrl =
+    resolveMediaUrl(userData.profileImage) ||
+    buildDicebearAvatar(userData.username);
   const coverImageUrl =
-    userData.coverImage || "https://picsum.photos/800/300?random=profile";
+    resolveMediaUrl(userData.coverImage) ||
+    "https://picsum.photos/800/300?random=profile";
 
   return (
     <SafeAreaView className="flex-1 bg-white dark:bg-black" edges={[]}>
@@ -739,7 +787,7 @@ export default function ProfileScreen() {
         <View className="w-full h-[200px] bg-gray-200 dark:bg-gray-900">
           <Image
             source={{ uri: coverImageUrl }}
-            className="w-full h-full"
+            style={{ width: "100%", height: "100%" }}
             contentFit="cover"
           />
         </View>
@@ -750,7 +798,7 @@ export default function ProfileScreen() {
             <View className="w-[120px] h-[120px] rounded-full border-4 border-white dark:border-black overflow-hidden bg-gray-200 dark:bg-gray-800">
               <Image
                 source={{ uri: avatarUrl }}
-                className="w-full h-full"
+                style={{ width: "100%", height: "100%" }}
                 contentFit="cover"
               />
             </View>

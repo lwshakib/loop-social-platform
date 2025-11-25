@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import { ResizeMode, Video } from "expo-av";
+import { Video } from "expo-video";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -511,7 +511,7 @@ export default function ReelsScreen() {
         <Video
           source={{ uri: item.url }}
           style={{ width: "100%", height: "100%", backgroundColor: "black" }}
-          resizeMode={ResizeMode.CONTAIN}
+          resizeMode="contain"
           shouldPlay={isPlaying}
           isLooping
           isMuted={false}

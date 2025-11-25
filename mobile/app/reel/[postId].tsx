@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ResizeMode, Video } from "expo-av";
+import { Video } from "expo-video";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -243,7 +243,7 @@ export default function SingleReelScreen() {
           <Video
             source={{ uri: post.url }}
             style={{ width: "100%", height: "100%" }}
-            resizeMode={ResizeMode.CONTAIN}
+            resizeMode="contain"
             shouldPlay={isPlaying}
             isLooping
             isMuted={false}

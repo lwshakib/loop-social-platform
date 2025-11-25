@@ -90,15 +90,21 @@ const Home = () => {
   const lastScrollY = useRef(0);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
 
-  // Enable LayoutAnimation on Android (only once)
+  const isFabricEnabled = Boolean(
+    typeof globalThis !== "undefined" &&
+      (globalThis as { nativeFabricUIManager?: object }).nativeFabricUIManager
+  );
+
+  // Enable LayoutAnimation on Android (only when Fabric is disabled)
   useEffect(() => {
     if (
       Platform.OS === "android" &&
+      !isFabricEnabled &&
       UIManager.setLayoutAnimationEnabledExperimental
     ) {
       UIManager.setLayoutAnimationEnabledExperimental(true);
     }
-  }, []);
+  }, [isFabricEnabled]);
 
   const fetchStories = useCallback(async () => {
     try {

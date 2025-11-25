@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { ResizeMode, Video } from "expo-av";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -108,7 +109,9 @@ export default function ReelsScreen() {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [isTabFocused, setIsTabFocused] = useState(true);
   const flatListRef = useRef<FlatList>(null);
+  const lastPlayingIdRef = useRef<string | null>(null);
 
   // Fetch videos
   const fetchVideos = useCallback(async () => {
@@ -167,6 +170,25 @@ export default function ReelsScreen() {
   useEffect(() => {
     fetchVideos();
   }, [fetchVideos]);
+
+  // Handle tab focus/blur to pause/play video
+  useFocusEffect(
+    useCallback(() => {
+      // Tab is focused - resume the last playing video
+      setIsTabFocused(true);
+      if (lastPlayingIdRef.current) {
+        setPlayingId(lastPlayingIdRef.current);
+      } else if (videos.length > 0) {
+        setPlayingId(videos[0].id);
+      }
+
+      return () => {
+        // Tab is blurred (user navigated away) - save current playing ID and pause
+        lastPlayingIdRef.current = playingId;
+        setIsTabFocused(false);
+      };
+    }, [playingId, videos])
+  );
 
   const handleLike = async (postId: string) => {
     const accessToken = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
@@ -482,7 +504,7 @@ export default function ReelsScreen() {
     const screenHeight = Dimensions.get("window").height;
     const isLiked = likedPosts.has(item.id);
     const isSaved = savedPosts.has(item.id);
-    const isPlaying = playingId === item.id;
+    const isPlaying = playingId === item.id && isTabFocused;
 
     return (
       <View className="w-full relative" style={{ height: screenHeight }}>

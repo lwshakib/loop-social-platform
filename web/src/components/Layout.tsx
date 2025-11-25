@@ -1,4 +1,5 @@
 import { ModeToggle } from "@/components/mode-toggle";
+import { SidebarLogo } from "@/components/sidebar-logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -1006,7 +1007,7 @@ export default function Layout() {
           >
             {/* Logo */}
             <motion.div
-              className="mb-8 flex items-center justify-center"
+              className="mb-8 flex items-center justify-start"
               initial={false}
               animate={{
                 scale: isSearchOpen || isNotificationsOpen ? 0.9 : 1,
@@ -1019,9 +1020,7 @@ export default function Layout() {
                 mass: 0.6,
               }}
             >
-              <h1 className="text-2xl font-bold bg-linear-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Loop
-              </h1>
+              <SidebarLogo />
             </motion.div>
 
             {/* Navigation Links */}

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ModeToggle } from "../components/mode-toggle";
+import { WindowControls } from "../components/WindowControls";
 import { UserData, getAvatarFallback, getAvatarUrl } from "../store/userStore";
 import { getAccessToken, getServerUrl } from "../utils/auth";
 
@@ -517,6 +518,11 @@ export default function HomePage({ onSignOut, userData }: HomePageProps) {
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
+      {/* Window Controls - Fixed at top */}
+      <div className="fixed top-4 right-4 z-50">
+        <WindowControls />
+      </div>
+
       {/* Sidebar */}
       <aside className="w-64 border-r flex flex-col p-4">
         {/* Logo */}

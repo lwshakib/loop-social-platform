@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ModeToggle } from "../components/mode-toggle";
+import { WindowControls } from "../components/WindowControls";
 import { Lock, Mail } from "lucide-react";
 import { signIn } from "../utils/auth";
 import { UserData } from "../store/userStore";
@@ -46,9 +47,14 @@ export default function SignInPage({ onSignIn, onNavigate }: SignInPageProps) {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-6">
-      {/* Mode Toggle - Top Right */}
-      <div className="absolute top-4 right-4">
+      {/* Mode Toggle - Top Left */}
+      <div className="absolute top-4 left-4">
         <ModeToggle />
+      </div>
+      
+      {/* Window Controls - Top Right */}
+      <div className="absolute top-4 right-4">
+        <WindowControls />
       </div>
       
       <div className="w-full max-w-md">

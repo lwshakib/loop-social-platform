@@ -1122,6 +1122,7 @@ export default function ProfilePage({
           onLoadReplies={handleLoadReplies}
           onLoadMoreReplies={handleLoadMoreReplies}
           onNewCommentChange={setNewComment}
+          onNavigateToProfile={(username) => onNavigate(`profile/${username}`)}
         />
       </div>
     </Layout>

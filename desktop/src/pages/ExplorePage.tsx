@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PostDetailDialog } from "@/components/PostDetailDialog";
 import { Input } from "@/components/ui/input";
 import VideoPlayer from "@/components/VideoPlayer";
-import { Bookmark, Heart, MessageCircle, Play, Reply } from "lucide-react";
+import { Bookmark, Heart, MessageCircle, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import Layout from "../components/Layout";
@@ -83,6 +83,25 @@ export default function ExplorePage({
   userData,
 }: ExplorePageProps) {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState<{ [commentId: string]: string }>(
+    {}
+  );
+  const [loadedReplies, setLoadedReplies] = useState<Set<string>>(new Set());
+  const [loadingReplies, setLoadingReplies] = useState<Set<string>>(new Set());
+  const [repliesHasMore, setRepliesHasMore] = useState<Record<string, boolean>>(
+    {}
+  );
+
   const handleReplyToggle = (commentId: string) => {
     setReplyingTo((prev) => (prev === commentId ? null : commentId));
     if (replyingTo !== commentId) {
@@ -102,34 +121,9 @@ export default function ExplorePage({
       setReplyingTo(null);
       setReplyText({});
       setNewComment("");
+      setRepliesHasMore({});
     }
   };
-  const [isLoading, setIsLoading] = useState(true);
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-  const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [isLoadingComments, setIsLoadingComments] = useState(false);
-  const [newComment, setNewComment] = useState("");
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState<{ [commentId: string]: string }>(
-    {}
-  );
-  const [loadedReplies, setLoadedReplies] = useState<Set<string>>(new Set());
-  const [loadingReplies, setLoadingReplies] = useState<Set<string>>(new Set());
-
-  // Track screen size for dialog dimensions
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsLargeScreen(window.innerWidth >= 1024);
-    };
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-    return () => window.removeEventListener("resize", checkScreenSize);
-  }, []);
 
 
   // Fetch posts
@@ -470,6 +464,12 @@ export default function ExplorePage({
           );
 
           setLoadedReplies((prev) => new Set(prev).add(commentId));
+          if (Object.prototype.hasOwnProperty.call(result.data, "hasMore")) {
+            setRepliesHasMore((prev) => ({
+              ...prev,
+              [commentId]: Boolean(result.data.hasMore),
+            }));
+          }
         }
       } else {
         const error = await response.json();

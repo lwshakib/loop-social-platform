@@ -248,9 +248,13 @@ When contributing to this project:
 4. Test your changes thoroughly
 5. Ensure ESLint passes without errors
 
+## 👤 Author
+
+**Shakib Khan** - [@lwshakib](https://github.com/lwshakib)
+
 ## 📄 License
 
-This project is part of the Loop Social Platform.
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
 
 ---
 

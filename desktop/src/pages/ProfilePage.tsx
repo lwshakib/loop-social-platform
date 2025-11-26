@@ -1,13 +1,7 @@
 import Layout from "@/components/Layout";
+import { PostDetailDialog } from "@/components/PostDetailDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -252,6 +246,28 @@ export default function ProfilePage({
     }
     return profile.username;
   }, [profile]);
+
+  const handleReplyToggle = (commentId: string) => {
+    setReplyingTo((prev) => (prev === commentId ? null : commentId));
+    if (replyingTo !== commentId) {
+      setReplyText((prev) => ({ ...prev, [commentId]: "" }));
+    }
+  };
+
+  const handleReplyTextChange = (commentId: string, value: string) => {
+    setReplyText((prev) => ({ ...prev, [commentId]: value }));
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setIsPostDialogOpen(open);
+    if (!open) {
+      setSelectedPost(null);
+      setComments([]);
+      setReplyingTo(null);
+      setReplyText({});
+      setNewComment("");
+    }
+  };
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -1082,301 +1098,31 @@ export default function ProfilePage({
 
         <div className="mt-4">{renderPosts()}</div>
 
-        <Dialog
+        <PostDetailDialog
           open={isPostDialogOpen}
-          onOpenChange={(open) => {
-            setIsPostDialogOpen(open);
-            if (!open) {
-              setSelectedPost(null);
-              setComments([]);
-            }
-          }}
-        >
-          <DialogContent className="p-0 gap-0 overflow-hidden w-full max-w-[1200px] lg:max-w-[90vw] h-[95vh]">
-            <DialogHeader className="sr-only">
-              <DialogTitle>Post preview</DialogTitle>
-              <DialogDescription>
-                View your content the way others will see it
-              </DialogDescription>
-            </DialogHeader>
-            {selectedPost && (
-              <div className="flex flex-col lg:flex-row h-full">
-                <div className="w-full lg:w-1/2 bg-black flex items-center justify-center">
-                  {selectedPost.url ? (
-                    selectedPost.type === "video" ? (
-                      <video
-                        src={selectedPost.url}
-                        controls
-                        autoPlay
-                        className="w-full h-full object-contain max-h-[95vh]"
-                      />
-                    ) : (
-                      <img
-                        src={selectedPost.url}
-                        alt={selectedPost.caption || "post"}
-                        className="w-full h-full object-contain max-h-[95vh]"
-                      />
-                    )
-                  ) : (
-                    <div className="text-center text-white p-6">
-                      {selectedPost.caption || "Post"}
-                    </div>
-                  )}
-                </div>
-                <div className="w-full lg:w-1/2 flex flex-col border-l bg-background">
-                  <div className="p-4 border-b flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage
-                        src={selectedPost.user?.profileImage || avatarImage}
-                      />
-                      <AvatarFallback>
-                        {selectedPost.user?.username?.[0]?.toUpperCase() ||
-                          displayName[0]?.toUpperCase() ||
-                          "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm">
-                        {selectedPost.user?.username || profile?.username}
-                      </p>
-                      {selectedPost.createdAt && (
-                        <p className="text-xs text-muted-foreground">
-                          {formatTimeAgo(selectedPost.createdAt)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {selectedPost.caption && (
-                    <div className="px-4 py-3 border-b text-sm">
-                      {selectedPost.caption}
-                    </div>
-                  )}
-
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {isLoadingComments ? (
-                      <div className="flex justify-center py-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      </div>
-                    ) : comments.length === 0 ? (
-                      <p className="text-center text-sm text-muted-foreground py-8">
-                        No comments yet. Be the first to comment!
-                      </p>
-                    ) : (
-                      comments.map((comment) => {
-                        if (!comment.user) {
-                          return null;
-                        }
-                        return (
-                          <div key={comment.id} className="space-y-2">
-                            <div className="flex gap-3">
-                              <Avatar className="h-8 w-8 cursor-pointer">
-                                <AvatarImage
-                                  src={comment.user.profileImage}
-                                  alt={comment.user.username}
-                                />
-                                <AvatarFallback>
-                                  {comment.user.username?.[0]?.toUpperCase() ||
-                                    "U"}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-sm">
-                                    {comment.user.username}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {formatTimeAgo(comment.createdAt)}
-                                  </span>
-                                </div>
-                                <p className="text-sm">{comment.comment}</p>
-                                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                                  <button
-                                    className="hover:text-primary flex items-center gap-1"
-                                    onClick={() =>
-                                      setReplyingTo(
-                                        replyingTo === comment.id
-                                          ? null
-                                          : comment.id
-                                      )
-                                    }
-                                  >
-                                    <Reply className="h-3 w-3" />
-                                    Reply
-                                  </button>
-                                  {(comment.replyCount || 0) >
-                                    (comment.replies?.length || 0) && (
-                                    <button
-                                      className="hover:text-primary"
-                                      onClick={() =>
-                                        handleLoadReplies(comment.id)
-                                      }
-                                      disabled={loadingReplies.has(comment.id)}
-                                    >
-                                      {loadingReplies.has(comment.id)
-                                        ? "Loading..."
-                                        : `View replies (${Math.max(
-                                            (comment.replyCount || 0) -
-                                              (comment.replies?.length || 0),
-                                            0
-                                          )})`}
-                                    </button>
-                                  )}
-                                </div>
-
-                                {replyingTo === comment.id && (
-                                  <div className="mt-2 flex gap-2">
-                                    <Input
-                                      placeholder={`Reply to @${comment.user.username}`}
-                                      value={replyText[comment.id] || ""}
-                                      onChange={(e) =>
-                                        setReplyText((prev) => ({
-                                          ...prev,
-                                          [comment.id]: e.target.value,
-                                        }))
-                                      }
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter" && !e.shiftKey) {
-                                          e.preventDefault();
-                                          handleSubmitComment(comment.id);
-                                        }
-                                      }}
-                                      className="text-sm"
-                                      autoFocus
-                                    />
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => setReplyingTo(null)}
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                )}
-
-                                {comment.replies &&
-                                  comment.replies.length > 0 && (
-                                    <div className="mt-3 pl-4 border-l space-y-3">
-                                      {comment.replies.map((reply) => {
-                                        if (!reply.user) return null;
-                                        return (
-                                          <div
-                                            key={reply.id}
-                                            className="flex gap-3"
-                                          >
-                                            <Avatar className="h-6 w-6">
-                                              <AvatarImage
-                                                src={reply.user.profileImage}
-                                              />
-                                              <AvatarFallback>
-                                                {reply.user.username?.[0]?.toUpperCase() ||
-                                                  "U"}
-                                              </AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex-1">
-                                              <div className="flex items-center gap-2">
-                                                <span className="font-semibold text-xs">
-                                                  {reply.user.username}
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                  {formatTimeAgo(
-                                                    reply.createdAt
-                                                  )}
-                                                </span>
-                                              </div>
-                                              <p className="text-sm">
-                                                {reply.comment}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
-                                      {repliesHasMore[comment.id] && (
-                                        <button
-                                          className="text-xs text-muted-foreground hover:text-primary"
-                                          onClick={() =>
-                                            handleLoadMoreReplies(comment.id)
-                                          }
-                                          disabled={loadingReplies.has(
-                                            comment.id
-                                          )}
-                                        >
-                                          {loadingReplies.has(comment.id)
-                                            ? "Loading..."
-                                            : "View more replies"}
-                                        </button>
-                                      )}
-                                    </div>
-                                  )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  <div className="p-4 border-t space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() => handleLike(selectedPost.id)}
-                          className="hover:scale-110 transition-transform"
-                        >
-                          <Heart
-                            className={`h-6 w-6 ${
-                              likedPosts.has(selectedPost.id) ||
-                              selectedPost.isLiked
-                                ? "fill-red-500 text-red-500"
-                                : ""
-                            }`}
-                          />
-                        </button>
-                        <MessageCircle className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <button
-                        onClick={() => handleSave(selectedPost.id)}
-                        className="hover:scale-110 transition-transform"
-                      >
-                        <Bookmark
-                          className={`h-6 w-6 ${
-                            savedPosts.has(selectedPost.id) ||
-                            selectedPost.isSaved
-                              ? "fill-primary text-primary"
-                              : ""
-                          }`}
-                        />
-                      </button>
-                    </div>
-                    <p className="text-sm font-semibold">
-                      {formatNumber(selectedPost.likesCount)} likes
-                    </p>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Add a comment..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSubmitComment();
-                          }
-                        }}
-                        disabled={isSubmittingComment}
-                      />
-                      <Button
-                        onClick={() => handleSubmitComment()}
-                        disabled={!newComment.trim() || isSubmittingComment}
-                      >
-                        {isSubmittingComment ? "Posting..." : "Post"}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+          onOpenChange={handleDialogOpenChange}
+          post={selectedPost}
+          likedPosts={likedPosts}
+          savedPosts={savedPosts}
+          comments={comments}
+          isLoadingComments={isLoadingComments}
+          loadingReplies={loadingReplies}
+          repliesHasMore={repliesHasMore}
+          replyingTo={replyingTo}
+          replyText={replyText}
+          newComment={newComment}
+          isSubmittingComment={isSubmittingComment}
+          formatTimeAgo={formatTimeAgo}
+          formatNumber={formatNumber}
+          onLike={handleLike}
+          onSave={handleSave}
+          onSubmitComment={handleSubmitComment}
+          onReplyToggle={handleReplyToggle}
+          onReplyTextChange={handleReplyTextChange}
+          onLoadReplies={handleLoadReplies}
+          onLoadMoreReplies={handleLoadMoreReplies}
+          onNewCommentChange={setNewComment}
+        />
       </div>
     </Layout>
   );

@@ -1,12 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { PostDetailDialog } from "@/components/PostDetailDialog";
 import { Input } from "@/components/ui/input";
 import VideoPlayer from "@/components/VideoPlayer";
 import { Bookmark, Heart, MessageCircle, Play, Reply } from "lucide-react";
@@ -30,6 +24,13 @@ const formatTimeAgo = (date: string): string => {
   if (diffInSeconds < 31536000)
     return `${Math.floor(diffInSeconds / 2592000)}mo`;
   return `${Math.floor(diffInSeconds / 31536000)}y`;
+};
+
+const formatNumber = (value?: number) => {
+  if (!value) return "0";
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toString();
 };
 
 type Post = {
@@ -82,13 +83,33 @@ export default function ExplorePage({
   userData,
 }: ExplorePageProps) {
   const [posts, setPosts] = useState<Post[]>([]);
+  const handleReplyToggle = (commentId: string) => {
+    setReplyingTo((prev) => (prev === commentId ? null : commentId));
+    if (replyingTo !== commentId) {
+      setReplyText((prev) => ({ ...prev, [commentId]: "" }));
+    }
+  };
+
+  const handleReplyTextChange = (commentId: string, value: string) => {
+    setReplyText((prev) => ({ ...prev, [commentId]: value }));
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setIsPostDialogOpen(open);
+    if (!open) {
+      setSelectedPost(null);
+      setComments([]);
+      setReplyingTo(null);
+      setReplyText({});
+      setNewComment("");
+    }
+  };
   const [isLoading, setIsLoading] = useState(true);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
-  const [mediaAspectRatio, setMediaAspectRatio] = useState<number | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -110,28 +131,6 @@ export default function ExplorePage({
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Calculate media aspect ratio when post is selected
-  useEffect(() => {
-    if (selectedPost?.url) {
-      if (selectedPost.type === "video") {
-        const video = document.createElement("video");
-        video.src = selectedPost.url;
-        video.onloadedmetadata = () => {
-          const aspectRatio = video.videoWidth / video.videoHeight;
-          setMediaAspectRatio(aspectRatio);
-        };
-      } else {
-        const img = new Image();
-        img.src = selectedPost.url;
-        img.onload = () => {
-          const aspectRatio = img.width / img.height;
-          setMediaAspectRatio(aspectRatio);
-        };
-      }
-    } else {
-      setMediaAspectRatio(null);
-    }
-  }, [selectedPost]);
 
   // Fetch posts
   useEffect(() => {
@@ -798,389 +797,55 @@ export default function ExplorePage({
         </div>
 
         {/* Post Detail Dialog - Similar to ProfilePage */}
-        <Dialog
+        <PostDetailDialog
           open={isPostDialogOpen}
-          onOpenChange={(open) => {
-            setIsPostDialogOpen(open);
-            if (!open) {
-              if (selectedPost?.type === "video") {
-                const videoElement = document.querySelector(
-                  `[data-video-id="${selectedPost.id}"] video`
-                ) as HTMLVideoElement;
-                if (videoElement) {
-                  videoElement.pause();
-                }
-              }
-              setSelectedPost(null);
-              setMediaAspectRatio(null);
-              setLoadedReplies(new Set());
-              setReplyingTo(null);
-              setReplyText({});
-            }
-          }}
-        >
-          <DialogContent
-            className="p-0 gap-0 overflow-hidden z-80"
-            overlayClassName="z-75"
-            showCloseButton={false}
-            style={(() => {
-              const baseWidth = isLargeScreen ? 70 : 95;
-              const baseHeight = isLargeScreen ? 70 : 95;
-
-              if (mediaAspectRatio && selectedPost?.url) {
-                const maxWidth = (window.innerWidth * baseWidth) / 100;
-                const maxHeight = (window.innerHeight * baseHeight) / 100;
-
-                let width = maxWidth;
-                let height = maxHeight;
-
-                if (mediaAspectRatio > 1) {
-                  height = Math.min(maxHeight, maxWidth / mediaAspectRatio);
-                  width = height * mediaAspectRatio;
-                  width = width + width * 0.6;
-                } else if (mediaAspectRatio < 1) {
-                  width = Math.min(maxWidth, maxHeight * mediaAspectRatio);
-                  height = width / mediaAspectRatio;
-                  width = width + width * 0.6;
-                } else {
-                  const size = Math.min(maxWidth, maxHeight);
-                  width = size + size * 0.6;
-                  height = size;
-                }
-
-                return {
-                  width: `${Math.min(width, window.innerWidth * 0.95)}px`,
-                  height: `${Math.min(height, window.innerHeight * 0.95)}px`,
-                  maxWidth: "none",
-                  maxHeight: "95vh",
-                } as React.CSSProperties;
-              }
-
-              return {
-                width: isLargeScreen ? "70vw" : "95vw",
-                height: isLargeScreen ? "70vh" : "95vh",
-                maxWidth: "none",
-                maxHeight: "95vh",
-              } as React.CSSProperties;
-            })()}
-          >
-            <DialogHeader className="sr-only">
-              <DialogTitle>Post Details</DialogTitle>
-              <DialogDescription>
-                View post details, comments, and interactions
-              </DialogDescription>
-            </DialogHeader>
-            {selectedPost && (
-              <div className="flex flex-col md:flex-row h-full overflow-hidden">
-                {/* Media Section */}
-                <div className="relative w-full md:w-2/5 bg-black flex items-center justify-center overflow-hidden h-full max-h-full p-0 m-0">
-                  {selectedPost.url ? (
-                    selectedPost.type === "video" ? (
-                      <VideoPlayer
-                        src={selectedPost.url}
-                        videoId={selectedPost.id}
-                        containerClassName="w-full h-full"
-                        className="w-full h-full"
-                        aspectRatio="9/16"
-                      />
-                    ) : (
-                      <img
-                        src={selectedPost.url}
-                        alt="Post content"
-                        className="w-full h-full object-contain"
-                      />
-                    )
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted">
-                      <p className="text-center text-muted-foreground p-4">
-                        {selectedPost.caption}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Details Section */}
-                <div className="w-full md:w-3/5 flex flex-col h-full bg-background border-l">
-                  {/* Header */}
-                  <div className="p-4 border-b flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        className="h-8 w-8 cursor-pointer"
-                        onClick={() =>
-                          onNavigate(`profile/${selectedPost.user.username}`)
-                        }
-                      >
-                        <AvatarImage src={selectedPost.user.profileImage} />
-                        <AvatarFallback>
-                          {selectedPost.user.username[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div
-                          className="font-semibold text-sm cursor-pointer hover:underline"
-                          onClick={() =>
-                            onNavigate(`profile/${selectedPost.user.username}`)
-                          }
-                        >
-                          {selectedPost.user.username}
-                        </div>
-                      </div>
-                    </div>
-                    <DialogTitle className="hidden">Post</DialogTitle>
-                  </div>
-
-                  {/* Comments Area */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {selectedPost.caption && (
-                      <div className="flex gap-3">
-                        <Avatar
-                          className="h-8 w-8 shrink-0 cursor-pointer"
-                          onClick={() =>
-                            onNavigate(`profile/${selectedPost.user.username}`)
-                          }
-                        >
-                          <AvatarImage src={selectedPost.user.profileImage} />
-                          <AvatarFallback>
-                            {selectedPost.user.username[0].toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 space-y-1">
-                          <div className="text-sm">
-                            <span
-                              className="font-semibold mr-2 cursor-pointer hover:underline"
-                              onClick={() =>
-                                onNavigate(
-                                  `profile/${selectedPost.user.username}`
-                                )
-                              }
-                            >
-                              {selectedPost.user.username}
-                            </span>
-                            {selectedPost.caption}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {formatTimeAgo(selectedPost.createdAt)}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {isLoadingComments ? (
-                      <div className="flex justify-center py-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                      </div>
-                    ) : (
-                      comments.map((comment) => (
-                        <div key={comment.id} className="flex gap-3">
-                          <Avatar
-                            className="h-8 w-8 shrink-0 cursor-pointer"
-                            onClick={() =>
-                              comment.user?.username &&
-                              onNavigate(`profile/${comment.user.username}`)
-                            }
-                          >
-                            <AvatarImage src={comment.user?.profileImage} />
-                            <AvatarFallback>
-                              {comment.user?.username?.[0]?.toUpperCase() ||
-                                "U"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 space-y-1">
-                            <div className="text-sm">
-                              <span
-                                className="font-semibold mr-2 cursor-pointer hover:underline"
-                                onClick={() =>
-                                  comment.user?.username &&
-                                  onNavigate(`profile/${comment.user.username}`)
-                                }
-                              >
-                                {comment.user?.username || "User"}
-                              </span>
-                              {comment.comment}
-                            </div>
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <span>{formatTimeAgo(comment.createdAt)}</span>
-                              <button
-                                className="font-semibold hover:text-foreground"
-                                onClick={() => setReplyingTo(comment.id)}
-                              >
-                                Reply
-                              </button>
-                            </div>
-
-                            {/* Replies */}
-                            {comment.replies && comment.replies.length > 0 && (
-                              <div className="mt-2 space-y-3 pl-4 border-l-2">
-                                {comment.replies.map((reply) => (
-                                  <div key={reply.id} className="flex gap-3">
-                                    <Avatar
-                                      className="h-6 w-6 shrink-0 cursor-pointer"
-                                      onClick={() =>
-                                        reply.user?.username &&
-                                        onNavigate(
-                                          `profile/${reply.user.username}`
-                                        )
-                                      }
-                                    >
-                                      <AvatarImage
-                                        src={reply.user?.profileImage}
-                                      />
-                                      <AvatarFallback>
-                                        {reply.user?.username?.[0]?.toUpperCase() ||
-                                          "U"}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1 space-y-1">
-                                      <div className="text-sm">
-                                        <span
-                                          className="font-semibold mr-2 cursor-pointer hover:underline"
-                                          onClick={() =>
-                                            reply.user?.username &&
-                                            onNavigate(
-                                              `profile/${reply.user.username}`
-                                            )
-                                          }
-                                        >
-                                          {reply.user?.username || "User"}
-                                        </span>
-                                        {reply.comment}
-                                      </div>
-                                      <div className="text-xs text-muted-foreground">
-                                        {formatTimeAgo(reply.createdAt)}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* View Replies Button */}
-                            {(comment.replyCount || 0) >
-                              (comment.replies?.length || 0) && (
-                              <button
-                                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 mt-2"
-                                onClick={() =>
-                                  handleLoadMoreReplies(comment.id)
-                                }
-                                disabled={loadingReplies.has(comment.id)}
-                              >
-                                <div className="h-px w-6 bg-muted-foreground/50"></div>
-                                {loadingReplies.has(comment.id)
-                                  ? "Loading..."
-                                  : `View replies (${
-                                      (comment.replyCount || 0) -
-                                      (comment.replies?.length || 0)
-                                    })`}
-                              </button>
-                            )}
-
-                            {/* Reply Input */}
-                            {replyingTo === comment.id && (
-                              <div className="flex gap-2 mt-2 items-center">
-                                <Input
-                                  placeholder={`Reply to @${comment.user?.username}...`}
-                                  value={replyText[comment.id] || ""}
-                                  onChange={(e) =>
-                                    setReplyText((prev) => ({
-                                      ...prev,
-                                      [comment.id]: e.target.value,
-                                    }))
-                                  }
-                                  className="h-8 text-sm"
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !e.shiftKey) {
-                                      e.preventDefault();
-                                      handleSubmitComment(comment.id);
-                                    }
-                                  }}
-                                  autoFocus
-                                />
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => setReplyingTo(null)}
-                                >
-                                  Cancel
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="p-4 border-t bg-background">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() => handleLike(selectedPost.id)}
-                          className="hover:scale-110 transition-transform"
-                        >
-                          <Heart
-                            className={`h-6 w-6 ${
-                              likedPosts.has(selectedPost.id)
-                                ? "fill-red-500 text-red-500"
-                                : ""
-                            }`}
-                          />
-                        </button>
-                        <button className="hover:scale-110 transition-transform">
-                          <MessageCircle className="h-6 w-6" />
-                        </button>
-                        <button className="hover:scale-110 transition-transform">
-                          <Reply className="h-6 w-6" />
-                        </button>
-                      </div>
-                      <button
-                        onClick={() => handleSave(selectedPost.id)}
-                        className="hover:scale-110 transition-transform"
-                      >
-                        <Bookmark
-                          className={`h-6 w-6 ${
-                            savedPosts.has(selectedPost.id)
-                              ? "fill-primary text-primary"
-                              : ""
-                          }`}
-                        />
-                      </button>
-                    </div>
-                    <div className="font-semibold text-sm mb-2">
-                      {selectedPost.likesCount} likes
-                    </div>
-                    <div className="text-xs text-muted-foreground uppercase">
-                      {formatTimeAgo(selectedPost.createdAt)}
-                    </div>
-
-                    {/* Add Comment */}
-                    <div className="mt-4 flex gap-2">
-                      <Input
-                        placeholder="Add a comment..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        className="flex-1"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSubmitComment();
-                          }
-                        }}
-                      />
-                      <Button
-                        size="sm"
-                        disabled={!newComment.trim() || isSubmittingComment}
-                        onClick={() => handleSubmitComment()}
-                      >
-                        Post
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+          onOpenChange={handleDialogOpenChange}
+          post={selectedPost}
+          likedPosts={likedPosts}
+          savedPosts={savedPosts}
+          comments={comments}
+          isLoadingComments={isLoadingComments}
+          loadingReplies={loadingReplies}
+          repliesHasMore={repliesHasMore}
+          replyingTo={replyingTo}
+          replyText={replyText}
+          newComment={newComment}
+          isSubmittingComment={isSubmittingComment}
+          formatTimeAgo={formatTimeAgo}
+          formatNumber={formatNumber}
+          onLike={handleLike}
+          onSave={handleSave}
+          onSubmitComment={handleSubmitComment}
+          onReplyToggle={handleReplyToggle}
+          onReplyTextChange={handleReplyTextChange}
+          onLoadReplies={handleLoadReplies}
+          onLoadMoreReplies={handleLoadMoreReplies}
+          onNewCommentChange={setNewComment}
+          onNavigateToProfile={(username) => onNavigate(`profile/${username}`)}
+          renderMedia={(post) => (
+            post.url ? (
+              post.type === "video" ? (
+                <VideoPlayer
+                  src={post.url}
+                  videoId={post.id}
+                  containerClassName="w-full h-full"
+                  className="w-full h-full"
+                  aspectRatio="9/16"
+                />
+              ) : (
+                <img
+                  src={post.url}
+                  alt={post.caption || "Post"}
+                  className="w-full h-full object-contain"
+                />
+              )
+            ) : (
+              <div className="text-center text-white p-6">
+                {post.caption || "Post"}
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+            )
+          )}
+        />
       </div>
     </Layout>
   );

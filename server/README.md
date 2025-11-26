@@ -5,6 +5,7 @@ A robust Node.js/Express backend server for the Loop social media platform, buil
 ## 🚀 Features
 
 - **Authentication & Authorization**
+
   - JWT-based authentication (Access & Refresh tokens)
   - User registration and login
   - Email OTP verification
@@ -12,6 +13,7 @@ A robust Node.js/Express backend server for the Loop social media platform, buil
   - Protected routes with middleware
 
 - **Social Media Features**
+
   - Posts (create, read, like, comment, save)
   - Stories (create and manage)
   - User profiles with follow/unfollow
@@ -39,18 +41,21 @@ A robust Node.js/Express backend server for the Loop social media platform, buil
 ## 🛠️ Installation
 
 1. **Clone the repository** (if not already done)
+
    ```bash
    git clone <repository-url>
    cd loop-social-platform/server
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Create environment file**
    Create a `.env` file in the `server` directory with the following variables:
+
    ```env
    # Node Environment
    NODE_ENV=development
@@ -85,12 +90,15 @@ A robust Node.js/Express backend server for the Loop social media platform, buil
 ## 🏃 Running the Server
 
 ### Development Mode
+
 ```bash
 npm run dev
 ```
+
 This will watch for TypeScript changes and automatically restart the server.
 
 ### Production Mode
+
 ```bash
 npm run build
 npm start
@@ -168,9 +176,11 @@ server/
 ## 🔌 API Endpoints
 
 ### Health Check
+
 - `GET /api/health` - Server health check
 
 ### Authentication
+
 - `POST /api/auth/sign-up` - User registration
 - `POST /api/auth/sign-in` - User login
 - `POST /api/auth/send-otp-email` - Send OTP email
@@ -178,6 +188,7 @@ server/
 - `GET /api/auth/validate-token` - Validate access token
 
 ### Users
+
 - `GET /api/users` - Get user profiles
 - `GET /api/users/:userId` - Get specific user profile
 - `PUT /api/users/:userId` - Update user profile
@@ -185,6 +196,7 @@ server/
 - `DELETE /api/users/:userId/follow` - Unfollow a user
 
 ### Posts
+
 - `GET /api/posts` - Get all posts
 - `POST /api/posts` - Create a new post
 - `POST /api/posts/:postId/like` - Like a post
@@ -196,16 +208,19 @@ server/
 - `GET /api/posts/:postId/comments/:commentId/replies` - Get comment replies
 
 ### Stories
+
 - `GET /api/stories` - Get all stories
 - `POST /api/stories` - Create a story
 - `GET /api/stories/:storyId` - Get specific story
 - `DELETE /api/stories/:storyId` - Delete a story
 
 ### Notifications
+
 - `GET /api/notifications` - Get user notifications
 - `PUT /api/notifications/:notificationId/read` - Mark notification as read
 
 ### Cloudinary
+
 - `POST /api/cloudinary/upload` - Upload image to Cloudinary
 
 > **Note:** Most endpoints require authentication. Include the JWT token in the Authorization header or as a cookie.
@@ -218,12 +233,14 @@ The API uses JWT (JSON Web Tokens) for authentication:
 2. **Refresh Token**: Long-lived (7 days), used to refresh access tokens
 
 Tokens are sent via:
+
 - HTTP-only cookies (recommended)
 - Authorization header: `Bearer <token>`
 
 ## 🗄️ Database
 
 The application uses MongoDB with the following collections:
+
 - `users` - User accounts and profiles
 - `posts` - Social media posts
 - `comments` - Post comments
@@ -241,6 +258,7 @@ Database name: `loop-social-platform`
 The application uses two logging systems:
 
 1. **Winston**: Application-level logging (info, error, etc.)
+
    - Logs are stored in the `logs/` directory
    - Separate files for different log levels
 
@@ -266,6 +284,7 @@ Ensure all environment variables from the `.env` file are set in your deployment
 ### TypeScript Compilation
 
 The project uses TypeScript with strict type checking:
+
 - Source files: `src/`
 - Compiled output: `dist/`
 - Watch mode: `npm run dev`
@@ -279,6 +298,7 @@ The project uses TypeScript with strict type checking:
 ## 📦 Dependencies
 
 ### Core Dependencies
+
 - `express` - Web framework
 - `mongoose` - MongoDB ODM
 - `jsonwebtoken` - JWT authentication
@@ -293,6 +313,7 @@ The project uses TypeScript with strict type checking:
 - `dotenv` - Environment variables
 
 ### Development Dependencies
+
 - `typescript` - TypeScript compiler
 - `tsc-watch` - TypeScript watch mode
 - `@types/*` - TypeScript type definitions
@@ -300,19 +321,21 @@ The project uses TypeScript with strict type checking:
 ## 🔧 Configuration
 
 ### CORS
+
 Currently configured for `http://localhost:5173` (Vite default). Update in `src/app.ts` for production.
 
 ### Email Service
+
 - Development: MailHog (localhost:1025)
 - Production: Gmail SMTP
 
 ## 📄 License
 
-ISC
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
 
 ## 👤 Author
 
-Shakib Khan
+**Shakib Khan** - [@lwshakib](https://github.com/lwshakib)
 
 ## 🤝 Contributing
 
@@ -328,4 +351,3 @@ For issues and questions, please open an issue in the repository.
 ---
 
 **Note**: Make sure to keep your `.env` file secure and never commit it to version control. The `.gitignore` file is configured to exclude environment files.
-

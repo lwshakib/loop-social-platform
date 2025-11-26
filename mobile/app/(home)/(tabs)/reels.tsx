@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import { Video } from "expo-video";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,6 +15,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserStore } from "../../../store/userStore";
@@ -97,6 +98,8 @@ const formatTimeAgo = (date: string): string => {
 export default function ReelsScreen() {
   const router = useRouter();
   const { getAvatarUrl } = useUserStore();
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
   const [videos, setVideos] = useState<Post[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
@@ -500,21 +503,35 @@ export default function ReelsScreen() {
     itemVisiblePercentThreshold: 75,
   }).current;
 
-  const renderVideoItem = ({ item }: { item: Post; index: number }) => {
+  // Video Item Component with proper player management
+  const VideoItem = ({ item }: { item: Post }) => {
     const screenHeight = Dimensions.get("window").height;
     const isLiked = likedPosts.has(item.id);
     const isSaved = savedPosts.has(item.id);
     const isPlaying = playingId === item.id && isTabFocused;
 
+    // Create video player instance for this video
+    const player = useVideoPlayer(item.url, (player) => {
+      player.loop = true;
+      player.muted = false;
+    });
+
+    // Control playback based on isPlaying state
+    useEffect(() => {
+      if (isPlaying) {
+        player.play();
+      } else {
+        player.pause();
+      }
+    }, [isPlaying, player]);
+
     return (
       <View className="w-full relative" style={{ height: screenHeight }}>
-        <Video
-          source={{ uri: item.url }}
+        <VideoView
+          player={player}
           style={{ width: "100%", height: "100%", backgroundColor: "black" }}
-          resizeMode="contain"
-          shouldPlay={isPlaying}
-          isLooping
-          isMuted={false}
+          contentFit="contain"
+          nativeControls={false}
         />
 
         {/* Center Play Button (only when paused) */}
@@ -623,9 +640,16 @@ export default function ReelsScreen() {
     );
   };
 
+  const renderVideoItem = ({ item }: { item: Post }) => {
+    return <VideoItem item={item} />;
+  };
+
   if (videos.length === 0) {
     return (
-      <SafeAreaView className="flex-1 bg-black" edges={["top"]}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: "#000" }}
+        edges={["top"]}
+      >
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#007AFF" />
           <Text className="text-base text-white mt-3">Loading videos...</Text>
@@ -635,7 +659,7 @@ export default function ReelsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-black" edges={[]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#000" }} edges={[]}>
       <FlatList
         ref={flatListRef}
         data={videos}
@@ -661,7 +685,10 @@ export default function ReelsScreen() {
         onRequestClose={() => setIsCommentsModalOpen(false)}
       >
         <SafeAreaView
-          className="flex-1 bg-white dark:bg-gray-900"
+          style={{
+            flex: 1,
+            backgroundColor: isDarkMode ? "#111827" : "#FFFFFF",
+          }}
           edges={["top"]}
         >
           <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-200 dark:border-gray-800">

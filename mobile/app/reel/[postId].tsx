@@ -1,15 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Video } from "expo-video";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserStore } from "../../store/userStore";
@@ -59,6 +59,53 @@ const formatTimeAgo = (dateString: string) => {
   if (diffInSeconds < 31536000)
     return `${Math.floor(diffInSeconds / 2592000)}mo ago`;
   return `${Math.floor(diffInSeconds / 31536000)}y ago`;
+};
+
+// Video Player Component with proper player management
+const VideoPlayerComponent = ({
+  videoUrl,
+  isPlaying,
+  onTogglePlay,
+}: {
+  videoUrl: string;
+  isPlaying: boolean;
+  onTogglePlay: () => void;
+}) => {
+  const player = useVideoPlayer(videoUrl, (player) => {
+    player.loop = true;
+    player.muted = false;
+  });
+
+  useEffect(() => {
+    if (isPlaying) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [isPlaying, player]);
+
+  return (
+    <View className="flex-1 bg-black">
+      <VideoView
+        player={player}
+        style={{ width: "100%", height: "100%" }}
+        contentFit="contain"
+        nativeControls={false}
+      />
+
+      <TouchableOpacity
+        className="absolute inset-0 items-center justify-center"
+        activeOpacity={0.7}
+        onPress={onTogglePlay}
+      >
+        {!isPlaying && (
+          <View className="w-16 h-16 rounded-full bg-black/50 items-center justify-center">
+            <Ionicons name="play" size={36} color="#FFFFFF" />
+          </View>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
 };
 
 export default function SingleReelScreen() {
@@ -239,103 +286,86 @@ export default function SingleReelScreen() {
       </View>
 
       <View className="flex-1">
-        <View className="flex-1 bg-black">
-          <Video
-            source={{ uri: post.url }}
-            style={{ width: "100%", height: "100%" }}
-            resizeMode="contain"
-            shouldPlay={isPlaying}
-            isLooping
-            isMuted={false}
-          />
+        <VideoPlayerComponent
+          videoUrl={post.url}
+          isPlaying={isPlaying}
+          onTogglePlay={() => setIsPlaying((prev) => !prev)}
+        />
 
+        <View className="absolute bottom-6 right-4 gap-5">
           <TouchableOpacity
-            className="absolute inset-0 items-center justify-center"
-            activeOpacity={0.7}
-            onPress={() => setIsPlaying((prev) => !prev)}
+            className="items-center gap-1"
+            onPress={handleLikeToggle}
           >
-            {!isPlaying && (
-              <View className="w-16 h-16 rounded-full bg-black/50 items-center justify-center">
-                <Ionicons name="play" size={36} color="#FFFFFF" />
-              </View>
-            )}
+            <Ionicons
+              name={isLiked ? "heart" : "heart-outline"}
+              size={30}
+              color={isLiked ? "#EF4444" : "#FFFFFF"}
+            />
+            <Text className="text-white text-xs font-semibold">
+              {formatCount(post.likesCount)}
+            </Text>
           </TouchableOpacity>
 
-          <View className="absolute bottom-6 right-4 gap-5">
-            <TouchableOpacity
-              className="items-center gap-1"
-              onPress={handleLikeToggle}
-            >
-              <Ionicons
-                name={isLiked ? "heart" : "heart-outline"}
-                size={30}
-                color={isLiked ? "#EF4444" : "#FFFFFF"}
-              />
-              <Text className="text-white text-xs font-semibold">
-                {formatCount(post.likesCount)}
-              </Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            className="items-center gap-1"
+            onPress={handleSaveToggle}
+          >
+            <Ionicons
+              name={isSaved ? "bookmark" : "bookmark-outline"}
+              size={30}
+              color={isSaved ? "#FBBF24" : "#FFFFFF"}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-            <TouchableOpacity
-              className="items-center gap-1"
-              onPress={handleSaveToggle}
-            >
-              <Ionicons
-                name={isSaved ? "bookmark" : "bookmark-outline"}
-                size={30}
-                color={isSaved ? "#FBBF24" : "#FFFFFF"}
-              />
-            </TouchableOpacity>
+      <View className="px-4 py-4 bg-black">
+        <View className="flex-row items-center gap-3 mb-3">
+          <Image
+            source={{
+              uri:
+                post.user?.profileImage ||
+                getAvatarUrl() ||
+                `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user?.username || "user"}`,
+            }}
+            className="w-12 h-12 rounded-full"
+            contentFit="cover"
+          />
+          <View className="flex-1">
+            <Text className="text-white font-semibold">{displayName}</Text>
+            <Text className="text-gray-400 text-sm">
+              @{post.user?.username || "unknown"} ·{" "}
+              {formatTimeAgo(post.createdAt)}
+            </Text>
           </View>
+          <TouchableOpacity className="px-4 py-2 rounded-full bg-white/10">
+            <Text className="text-white text-sm font-semibold">Follow</Text>
+          </TouchableOpacity>
         </View>
 
-        <View className="px-4 py-4 bg-black">
-          <View className="flex-row items-center gap-3 mb-3">
-            <Image
-              source={{
-                uri:
-                  post.user?.profileImage ||
-                  getAvatarUrl() ||
-                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user?.username || "user"}`,
-              }}
-              className="w-12 h-12 rounded-full"
-              contentFit="cover"
-            />
-            <View className="flex-1">
-              <Text className="text-white font-semibold">{displayName}</Text>
-              <Text className="text-gray-400 text-sm">
-                @{post.user?.username || "unknown"} ·{" "}
-                {formatTimeAgo(post.createdAt)}
-              </Text>
-            </View>
-            <TouchableOpacity className="px-4 py-2 rounded-full bg-white/10">
-              <Text className="text-white text-sm font-semibold">Follow</Text>
-            </TouchableOpacity>
-          </View>
+        {post.caption && (
+          <Text className="text-white text-base leading-6 mb-4">
+            {post.caption}
+          </Text>
+        )}
 
-          {post.caption && (
-            <Text className="text-white text-base leading-6 mb-4">
-              {post.caption}
+        <View className="flex-row gap-6">
+          <View>
+            <Text className="text-white text-lg font-semibold">
+              {formatCount(post.viewsCount || 0)}
             </Text>
-          )}
-
-          <View className="flex-row gap-6">
-            <View>
-              <Text className="text-white text-lg font-semibold">
-                {formatCount(post.viewsCount || 0)}
-              </Text>
-              <Text className="text-gray-400 text-xs uppercase tracking-wide">
-                Views
-              </Text>
-            </View>
-            <View>
-              <Text className="text-white text-lg font-semibold">
-                {formatCount(post.commentsCount)}
-              </Text>
-              <Text className="text-gray-400 text-xs uppercase tracking-wide">
-                Comments
-              </Text>
-            </View>
+            <Text className="text-gray-400 text-xs uppercase tracking-wide">
+              Views
+            </Text>
+          </View>
+          <View>
+            <Text className="text-white text-lg font-semibold">
+              {formatCount(post.commentsCount)}
+            </Text>
+            <Text className="text-gray-400 text-xs uppercase tracking-wide">
+              Comments
+            </Text>
           </View>
         </View>
       </View>

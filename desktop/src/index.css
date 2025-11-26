@@ -119,6 +119,10 @@
   }
 }
 
+::-webkit-scrollbar {
+  display: none;
+}
+
 .slider-thumb {
   -webkit-appearance: none;
   appearance: none;

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { ThemeProvider } from "./components/theme-provider";
+import ExplorePage from "./pages/ExplorePage";
 import HomePage from "./pages/HomePage";
+import ReelsPage from "./pages/ReelsPage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import { UserData } from "./store/userStore";
 import { checkAuthStatus, signOut } from "./utils/auth";
 
-type Page = "signin" | "signup" | "home";
+type Page = "signin" | "signup" | "home" | "explore" | "reels";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>("signin");
@@ -66,27 +68,23 @@ function App() {
       );
     }
 
-    // If authenticated, always show home
-    if (isAuthenticated) {
-      return (
-        <HomePage
-          onNavigate={handleNavigate}
-          onSignOut={handleSignOut}
-          userData={userData}
-        />
-      );
+    // If not authenticated, show auth pages
+    if (!isAuthenticated) {
+      switch (currentPage) {
+        case "signup":
+          return (
+            <SignUpPage onNavigate={handleNavigate} onSignIn={handleSignIn} />
+          );
+        case "signin":
+        default:
+          return (
+            <SignInPage onSignIn={handleSignIn} onNavigate={handleNavigate} />
+          );
+      }
     }
 
-    // Otherwise show the requested page
+    // For authenticated users, show the main app with tab navigation
     switch (currentPage) {
-      case "signin":
-        return (
-          <SignInPage onSignIn={handleSignIn} onNavigate={handleNavigate} />
-        );
-      case "signup":
-        return (
-          <SignUpPage onNavigate={handleNavigate} onSignIn={handleSignIn} />
-        );
       case "home":
         return (
           <HomePage
@@ -95,9 +93,29 @@ function App() {
             userData={userData}
           />
         );
+      case "explore":
+        return (
+          <ExplorePage
+            onNavigate={handleNavigate}
+            onSignOut={handleSignOut}
+            userData={userData}
+          />
+        );
+      case "reels":
+        return (
+          <ReelsPage
+            onNavigate={handleNavigate}
+            onSignOut={handleSignOut}
+            userData={userData}
+          />
+        );
       default:
         return (
-          <SignInPage onSignIn={handleSignIn} onNavigate={handleNavigate} />
+          <HomePage
+            onNavigate={handleNavigate}
+            onSignOut={handleSignOut}
+            userData={userData}
+          />
         );
     }
   };

@@ -44,14 +44,14 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
       sandbox: true,
-      contextIsolation: true,
-      preload: path.join(__dirname, "preload.mjs"),
+      contextIsolation: true
     },
   });
 
   // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {
     win?.webContents.send("main-process-message", new Date().toLocaleString());
+    win?.webContents.openDevTools()
     win?.show();
     win?.focus();
   });

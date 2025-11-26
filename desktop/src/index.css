@@ -119,6 +119,66 @@
   }
 }
 
+.slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 0;
+  cursor: pointer;
+}
+
+.slider-thumb:active::-webkit-slider-thumb {
+  width: 0;
+  height: 0;
+}
+
+.slider-thumb::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  cursor: pointer;
+  border: none;
+}
+
+.slider-thumb:active::-moz-range-thumb {
+  width: 0;
+  height: 0;
+}
+
+.slider-thumb::-ms-thumb {
+  width: 0;
+  height: 0;
+  cursor: pointer;
+  border: none;
+}
+
+.slider-thumb:active::-ms-thumb {
+  width: 0;
+  height: 0;
+}
+
+.slider-thumb::-webkit-slider-track {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.slider-thumb::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.slider-thumb::-ms-track {
+  height: 6px;
+  border-radius: 3px;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+
 .drag-css {
   -webkit-app-region: drag;
 }

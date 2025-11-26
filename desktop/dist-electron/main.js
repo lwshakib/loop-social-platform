@@ -26,12 +26,12 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname$1, "preload.mjs"),
       sandbox: true,
-      contextIsolation: true,
-      preload: path.join(__dirname$1, "preload.mjs")
+      contextIsolation: true
     }
   });
   win.webContents.on("did-finish-load", () => {
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+    win == null ? void 0 : win.webContents.openDevTools();
     win == null ? void 0 : win.show();
     win == null ? void 0 : win.focus();
   });

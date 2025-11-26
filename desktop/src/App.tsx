@@ -3,13 +3,21 @@ import { ThemeProvider } from "./components/theme-provider";
 import ExplorePage from "./pages/ExplorePage";
 import HomePage from "./pages/HomePage";
 import MessagesPage from "./pages/MessagesPage";
+import ProfilePage from "./pages/ProfilePage";
 import ReelsPage from "./pages/ReelsPage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import { UserData } from "./store/userStore";
 import { checkAuthStatus, signOut } from "./utils/auth";
 
-type Page = "signin" | "signup" | "home" | "explore" | "reels" | "messages";
+type Page =
+  | "signin"
+  | "signup"
+  | "home"
+  | "explore"
+  | "reels"
+  | "messages"
+  | "profile";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>("signin");
@@ -113,6 +121,14 @@ function App() {
       case "messages":
         return (
           <MessagesPage
+            onNavigate={handleNavigate}
+            onSignOut={handleSignOut}
+            userData={userData}
+          />
+        );
+      case "profile":
+        return (
+          <ProfilePage
             onNavigate={handleNavigate}
             onSignOut={handleSignOut}
             userData={userData}

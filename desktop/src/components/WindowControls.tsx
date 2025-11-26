@@ -2,21 +2,15 @@ import { Minus, Square, X } from "lucide-react";
 
 export function WindowControls() {
   const handleMinimize = () => {
-    if (window.electronAPI?.minimize) {
-      window.electronAPI.minimize();
-    }
+    window.ipcRenderer.send("window-minimize");
   };
 
   const handleMaximize = () => {
-    if (window.electronAPI?.maximize) {
-      window.electronAPI.maximize();
-    }
+    window.ipcRenderer.send("window-maximize");
   };
 
   const handleClose = () => {
-    if (window.electronAPI?.close) {
-      window.electronAPI.close();
-    }
+    window.ipcRenderer.send("window-close");
   };
 
   return (

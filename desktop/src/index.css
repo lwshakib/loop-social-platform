@@ -118,3 +118,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+.drag-css {
+  -webkit-app-region: drag;
+}
+
+.no-drag-css {
+  -webkit-app-region: no-drag;
+}

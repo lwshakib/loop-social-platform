@@ -24,10 +24,3 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
   // You can expose other APTs you need here.
   // ...
 });
-
-// Expose window control APIs
-contextBridge.exposeInMainWorld("electronAPI", {
-  minimize: () => ipcRenderer.send("window-minimize"),
-  maximize: () => ipcRenderer.send("window-maximize"),
-  close: () => ipcRenderer.send("window-close"),
-});

@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Bell,
   Bookmark,
@@ -519,14 +520,20 @@ export default function HomePage({ onSignOut, userData }: HomePageProps) {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Window Controls - Fixed at top */}
-      <div className="fixed top-4 right-4 z-50">
+      <div
+        className="fixed top-4 right-4 z-50"
+        style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+      >
         <WindowControls />
       </div>
 
       {/* Sidebar */}
-      <aside className="w-64 border-r flex flex-col p-4">
+      <aside
+        className="w-64 border-r flex flex-col p-4"
+        style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+      >
         {/* Logo */}
-        <div className="mb-8">
+        <div className="mb-8 drag-css">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             Loop
           </h1>
@@ -608,7 +615,10 @@ export default function HomePage({ onSignOut, userData }: HomePageProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <ScrollArea
+        className="flex-1 h-full"
+        style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+      >
         <div className="max-w-4xl mx-auto p-6">
           {/* Stories Section */}
           <div className="bg-card border rounded-lg p-4 mb-6 relative">
@@ -850,10 +860,13 @@ export default function HomePage({ onSignOut, userData }: HomePageProps) {
             )}
           </div>
         </div>
-      </main>
+      </ScrollArea>
 
       {/* Right Sidebar - Suggestions */}
-      <aside className="w-80 border-l p-4 overflow-y-auto">
+      <aside
+        className="w-80 border-l p-4 overflow-y-auto mt-16"
+        style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+      >
         <div className="bg-card border rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-sm text-muted-foreground">

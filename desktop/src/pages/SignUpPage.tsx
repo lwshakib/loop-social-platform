@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ModeToggle } from "../components/mode-toggle";
 import { WindowControls } from "../components/WindowControls";
+import { DragRegion } from "../components/DragRegion";
 import { Lock, Mail, User } from "lucide-react";
 import { signUp } from "../utils/auth";
 import { UserData } from "../store/userStore";
@@ -115,13 +116,16 @@ export default function SignUpPage({ onNavigate, onSignIn }: SignUpPageProps) {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-6 overflow-y-auto">
+      {/* Drag Region for window dragging */}
+      <DragRegion />
+      
       {/* Mode Toggle - Top Left */}
-      <div className="absolute top-4 left-4">
+      <div className="absolute top-4 left-4 z-50" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
         <ModeToggle />
       </div>
       
       {/* Window Controls - Top Right */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-50" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
         <WindowControls />
       </div>
       

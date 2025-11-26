@@ -42,11 +42,9 @@ function createWindow() {
     backgroundColor: "#000000",
     show: false,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      webviewTag: true,
-      webSecurity: true,
-      zoomFactor: 1.0,
+      preload: path.join(__dirname, "preload.mjs"),
+      sandbox: true,
+      contextIsolation: true,
       preload: path.join(__dirname, "preload.mjs"),
     },
   });

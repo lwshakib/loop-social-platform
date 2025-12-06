@@ -31,7 +31,7 @@ export async function getOrCreateUser() {
         email: email,
         username: username,
         imageUrl: imageUrl,
-        name
+        name,
       })
       .returning();
 

@@ -19,6 +19,9 @@ import { SidebarLogo } from "./sidebar-logo";
 export function LeftSidebar() {
   const pathname = usePathname();
   const isHomeActive = pathname === "/";
+  const isSearchActive = pathname === "/search";
+  const isExploreActive = pathname === "/explore";
+  const isReelsActive = pathname === "/reels";
 
   return (
     <aside className="hidden lg:flex w-72 flex-col border-r border-border bg-background">
@@ -30,10 +33,10 @@ export function LeftSidebar() {
 
         {/* Navigation Section */}
         <nav className="flex-1 px-3 space-y-1">
-          <NavItem icon={HomeIcon} label="Home" isActive={isHomeActive} />
-          <NavItem icon={Search} label="Search" />
-          <NavItem icon={Compass} label="Explore" />
-          <NavItem icon={Play} label="Reels" />
+          <NavItem icon={HomeIcon} label="Home" href="/" isActive={isHomeActive} />
+          <NavItem icon={Search} label="Search" href="/search" isActive={isSearchActive} />
+          <NavItem icon={Compass} label="Explore" href="/explore" isActive={isExploreActive} />
+          <NavItem icon={Play} label="Reels" href="/reels" isActive={isReelsActive} />
           <NavItem icon={Send} label="Messages" />
           <NavItem icon={Bell} label="Notifications" badge={3} />
           <NavItem icon={PlusSquare} label="Create" />

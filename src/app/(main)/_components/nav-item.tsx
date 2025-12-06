@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ type NavItemProps = {
   avatar?: ReactNode;
   className?: string;
   isActive?: boolean;
+  href?: string;
 };
 
 export function NavItem({
@@ -21,16 +23,10 @@ export function NavItem({
   avatar,
   className,
   isActive = false,
+  href,
 }: NavItemProps) {
-  return (
-    <Button
-      variant="ghost"
-      className={cn(
-        "w-full justify-start gap-3 h-12 text-base font-medium",
-        isActive && "bg-accent font-semibold",
-        className
-      )}
-    >
+  const content = (
+    <>
       {avatar ? (
         avatar
       ) : Icon ? (
@@ -44,6 +40,35 @@ export function NavItem({
         </div>
       ) : null}
       <span>{label}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Button
+        variant="ghost"
+        className={cn(
+          "w-full justify-start gap-3 h-12 text-base font-medium",
+          isActive && "bg-accent font-semibold",
+          className
+        )}
+        asChild
+      >
+        <Link href={href}>{content}</Link>
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      className={cn(
+        "w-full justify-start gap-3 h-12 text-base font-medium",
+        isActive && "bg-accent font-semibold",
+        className
+      )}
+    >
+      {content}
     </Button>
   );
 }

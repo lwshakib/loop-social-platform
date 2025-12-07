@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,13 +96,22 @@ const formatDate = (date: string): string => {
   return `${months[d.getMonth()]} ${d.getFullYear()}`;
 };
 
+// Valid tabs constant
+const validTabs: TabType[] = ["posts", "reels", "liked", "saved"];
+
 export default function ProfilePage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const currentUser = useSocialStore((state) => state.user);
   const username = params?.username as string;
 
-  const [activeTab, setActiveTab] = useState<TabType>("posts");
+  // Get initial tab from URL or default to "posts"
+  const tabFromUrl = searchParams.get("tab") as TabType | null;
+  const initialTab =
+    tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : "posts";
+
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
   const [isFollowing, setIsFollowing] = useState(false);
@@ -120,14 +129,40 @@ export default function ProfilePage() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
 
-  // Remove @ symbol if present in username
-  const cleanUsername = username?.startsWith("@")
-    ? username.slice(1)
-    : username || "";
+  // Use username as-is (don't clean it)
+  const cleanUsername = username || "";
 
   // Check if this is the current user's profile
   const isOwnProfile =
     currentUser?.username.toLowerCase() === cleanUsername.toLowerCase();
+
+  // Update URL when tab changes
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    const url = new URL(window.location.href);
+    if (tab === "posts") {
+      // Remove tab param for posts (default)
+      url.searchParams.delete("tab");
+    } else {
+      url.searchParams.set("tab", tab);
+    }
+    router.push(url.pathname + url.search, { scroll: false });
+  };
+
+  // Sync tab with URL on mount and when URL changes
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab") as TabType | null;
+    if (
+      tabFromUrl &&
+      validTabs.includes(tabFromUrl) &&
+      tabFromUrl !== activeTab
+    ) {
+      setActiveTab(tabFromUrl);
+    } else if (!tabFromUrl && activeTab !== "posts") {
+      setActiveTab("posts");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Fetch user data
   useEffect(() => {
@@ -136,28 +171,24 @@ export default function ProfilePage() {
 
       try {
         setIsLoading(true);
-        // TODO: Replace with actual API call
-        // For now, use mock data
-        const mockUserData: UserData = {
-          id: "1",
-          username: cleanUsername,
-          name: "User Name",
-          email: "user@example.com",
-          bio: "This is a bio",
-          imageUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${cleanUsername}`,
-          dateOfBirth: "",
-          gender: "",
-          isVerified: false,
-          createdAt: new Date().toISOString(),
-          postsCount: 0,
-          followers: 0,
-          following: 0,
-          isFollowing: false,
-        };
-        setUserData(mockUserData);
-        setIsFollowing(mockUserData.isFollowing || false);
+        const response = await fetch(`/api/users/${cleanUsername}`);
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setUserData(null);
+            return;
+          }
+          throw new Error("Failed to fetch user data");
+        }
+
+        const result = await response.json();
+        if (result.data) {
+          setUserData(result.data);
+          setIsFollowing(result.data.isFollowing || false);
+        }
       } catch (error) {
         console.error("Error fetching user data:", error);
+        setUserData(null);
       } finally {
         setIsLoading(false);
       }
@@ -360,7 +391,7 @@ export default function ProfilePage() {
           </button>
           <button
             className="hover:underline shrink-0"
-            onClick={() => setActiveTab("posts")}
+            onClick={() => handleTabChange("posts")}
           >
             <span className="font-semibold text-foreground">
               {userData.postsCount.toLocaleString()}
@@ -373,7 +404,7 @@ export default function ProfilePage() {
       {/* Tabs */}
       <div className="flex border-b">
         <button
-          onClick={() => setActiveTab("posts")}
+          onClick={() => handleTabChange("posts")}
           className={`flex-1 py-2 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm transition-colors ${
             activeTab === "posts"
               ? "border-b-2 border-primary text-foreground"
@@ -383,7 +414,7 @@ export default function ProfilePage() {
           <Grid3x3 className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
         <button
-          onClick={() => setActiveTab("reels")}
+          onClick={() => handleTabChange("reels")}
           className={`flex-1 py-2 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm transition-colors ${
             activeTab === "reels"
               ? "border-b-2 border-primary text-foreground"
@@ -393,7 +424,7 @@ export default function ProfilePage() {
           <Play className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
         <button
-          onClick={() => setActiveTab("liked")}
+          onClick={() => handleTabChange("liked")}
           className={`flex-1 py-2 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm transition-colors ${
             activeTab === "liked"
               ? "border-b-2 border-primary text-foreground"
@@ -403,7 +434,7 @@ export default function ProfilePage() {
           <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
         <button
-          onClick={() => setActiveTab("saved")}
+          onClick={() => handleTabChange("saved")}
           className={`flex-1 py-2 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm transition-colors ${
             activeTab === "saved"
               ? "border-b-2 border-primary text-foreground"

@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PostDialog } from "../_components/post-dialog";
+import VideoPlayer from "../_components/video-player";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -824,11 +825,16 @@ export default function ProfilePage() {
             <div className="relative w-full md:w-3/5 bg-black flex items-center justify-center overflow-hidden min-h-[400px] md:min-h-0 md:h-full">
               {selectedPost.imageUrl ? (
                 selectedPost.type === "reel" ? (
-                  <video
+                  <VideoPlayer
                     src={selectedPost.imageUrl}
-                    className="w-full h-full object-contain max-h-[95vh]"
-                    controls
-                    autoPlay
+                    videoId={selectedPost.id}
+                    className="w-full h-full max-h-[95vh]"
+                    containerClassName="w-full h-full max-h-[95vh]"
+                    autoPlay={true}
+                    loop={true}
+                    initialMuted={true}
+                    showControls={true}
+                    aspectRatio="9/16"
                   />
                 ) : (
                   <img

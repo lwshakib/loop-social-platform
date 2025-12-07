@@ -14,7 +14,7 @@ import {
   getPostComments,
   createComment,
 } from "@/lib/post-actions";
-import { Bookmark, Heart, MessageCircle, ArrowLeft } from "lucide-react";
+import { Bookmark, Heart, MessageCircle, ArrowLeft, Play } from "lucide-react";
 import Link from "next/link";
 
 type Post = {
@@ -83,6 +83,8 @@ export default function PostPage() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [morePosts, setMorePosts] = useState<Post[]>([]);
+  const [isLoadingMorePosts, setIsLoadingMorePosts] = useState(false);
 
   // Fetch post data
   useEffect(() => {
@@ -137,6 +139,40 @@ export default function PostPage() {
 
     fetchComments();
   }, [postId, post?.id]);
+
+  // Fetch more posts from the same user
+  useEffect(() => {
+    const fetchMorePosts = async () => {
+      if (!post?.user?.username) return;
+
+      try {
+        setIsLoadingMorePosts(true);
+        const response = await fetch(
+          `/api/users/${post.user.username}/posts?type=posts`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch more posts");
+        }
+
+        const result = await response.json();
+        if (result.data) {
+          // Filter out the current post and limit to 6 posts
+          const filteredPosts = result.data
+            .filter((p: Post) => p.id !== postId)
+            .slice(0, 6);
+          setMorePosts(filteredPosts);
+        }
+      } catch (error) {
+        console.error("Error fetching more posts:", error);
+        setMorePosts([]);
+      } finally {
+        setIsLoadingMorePosts(false);
+      }
+    };
+
+    fetchMorePosts();
+  }, [post?.user?.username, postId]);
 
   // Handle like/unlike with optimistic updates
   const handleLike = async (postId: string, isLiked: boolean) => {
@@ -567,6 +603,72 @@ export default function PostPage() {
           )}
         </div>
       </div>
+
+      {/* More Posts from Same User */}
+      {morePosts.length > 0 && (
+        <div className="max-w-6xl mx-auto px-4 py-8 border-t">
+          <h2 className="text-lg font-semibold mb-4">
+            More from {post.user.username}
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            {morePosts.map((morePost) => (
+              <Link
+                key={morePost.id}
+                href={`/p/${morePost.id}`}
+                className="group relative aspect-square bg-muted overflow-hidden cursor-pointer hover:opacity-90 transition-opacity rounded-lg"
+              >
+                {morePost.imageUrl ? (
+                  morePost.type === "reel" ? (
+                    <div className="relative w-full h-full">
+                      <video
+                        src={morePost.imageUrl}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <Play className="h-8 w-8 text-white opacity-80" />
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={morePost.imageUrl}
+                      alt="Post"
+                      className="w-full h-full object-cover"
+                    />
+                  )
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-muted">
+                    <div className="text-center p-4">
+                      <p className="text-xs text-muted-foreground line-clamp-3">
+                        {morePost.content || "Post"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Overlay on hover */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <div className="flex items-center gap-4 text-white">
+                    <div className="flex items-center gap-1.5">
+                      <Heart className="h-4 w-4 fill-current" />
+                      <span className="text-sm font-semibold">
+                        {morePost.likesCount || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <MessageCircle className="h-4 w-4 fill-current" />
+                      <span className="text-sm font-semibold">
+                        {morePost.commentsCount || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

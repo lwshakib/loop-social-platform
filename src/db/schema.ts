@@ -3,6 +3,7 @@ import {
   AnyPgColumn,
   boolean,
   date,
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -10,6 +11,12 @@ import {
   varchar,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+
+// --------------------
+// Enums
+// --------------------
+
+export const postTypeEnum = pgEnum("post_type", ["text", "image", "reel"]);
 
 // --------------------
 // Tables
@@ -36,8 +43,8 @@ export const postsTable = pgTable("posts", {
     .references(() => usersTable.id, { onDelete: "cascade" })
     .notNull(),
   content: text().notNull(),
-  imageUrl: varchar({ length: 255 }).notNull().default(""),
-  type: varchar({ length: 255 }).notNull().default("text"),
+  url: varchar({ length: 255 }).notNull().default(""),
+  type: postTypeEnum("type").notNull().default("text"),
   createdAt: timestamp().notNull().defaultNow(),
   updatedAt: timestamp().notNull().defaultNow(),
 });
@@ -148,7 +155,6 @@ export const storiesTable = pgTable("stories", {
   createdAt: timestamp().notNull().defaultNow(),
 });
 
-
 export const searchHistoryTable = pgTable("search_history", {
   id: uuid().primaryKey().defaultRandom(),
   userId: uuid()
@@ -157,8 +163,6 @@ export const searchHistoryTable = pgTable("search_history", {
   searchTerm: varchar({ length: 255 }).notNull(),
   createdAt: timestamp().notNull().defaultNow(),
 });
-
-
 
 // --------------------
 // Relations
@@ -279,7 +283,6 @@ export const storyRelations = relations(storiesTable, ({ one }) => ({
     references: [usersTable.id],
   }),
 }));
-
 
 export const searchHistoryRelations = relations(
   searchHistoryTable,

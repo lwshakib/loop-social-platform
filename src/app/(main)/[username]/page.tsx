@@ -12,10 +12,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PostDialog } from "../_components/post-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSocialStore } from "@/context";
+import {
+  toggleLike,
+  toggleUnlike,
+  toggleBookmark,
+  toggleUnbookmark,
+  getPostComments,
+  createComment,
+} from "@/lib/post-actions";
 import {
   Bookmark,
   Calendar,
@@ -35,7 +44,7 @@ type Post = {
   userId: string;
   content: string;
   imageUrl: string;
-  type: "text" | "image" | "video";
+  type: "text" | "image" | "reel";
   likesCount: number;
   commentsCount: number;
   createdAt: string;
@@ -58,6 +67,23 @@ type UserData = {
   followers: number;
   following: number;
   isFollowing?: boolean;
+};
+
+type Comment = {
+  id: string;
+  userId: string;
+  postId: string;
+  content: string;
+  parentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    username: string;
+    name: string;
+    imageUrl: string;
+  };
+  replies?: Comment[];
 };
 
 // Helper function to format time ago
@@ -128,6 +154,12 @@ export default function ProfilePage() {
   });
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [commentContent, setCommentContent] = useState("");
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState("");
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   // Use username as-is (don't clean it)
   const cleanUsername = username || "";
@@ -204,12 +236,30 @@ export default function ProfilePage() {
 
       try {
         setIsLoadingPosts(true);
-        // TODO: Replace with actual API call
-        // For now, use mock data
-        const mockPosts: Post[] = [];
-        setPosts(mockPosts);
+        const response = await fetch(
+          `/api/users/${cleanUsername}/posts?type=${activeTab}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch posts");
+        }
+
+        const result = await response.json();
+        if (result.data) {
+          setPosts(result.data);
+          // Initialize liked and saved posts sets
+          const likedPostIds = result.data
+            .filter((post: Post) => post.isLiked)
+            .map((post: Post) => post.id);
+          setLikedPosts(new Set(likedPostIds));
+          const savedPostIds = result.data
+            .filter((post: Post) => post.isSaved)
+            .map((post: Post) => post.id);
+          setSavedPosts(new Set(savedPostIds));
+        }
       } catch (error) {
         console.error("Error fetching posts:", error);
+        setPosts([]);
       } finally {
         setIsLoadingPosts(false);
       }
@@ -253,6 +303,235 @@ export default function ProfilePage() {
           }
         : null
     );
+  };
+
+  // Handle like/unlike with optimistic updates
+  const handleLike = async (postId: string, isLiked: boolean) => {
+    if (!currentUser) return;
+
+    // Store previous state for rollback
+    const previousSelectedPost = selectedPost;
+    const previousPosts = posts;
+
+    // Optimistically update UI immediately
+    if (isLiked) {
+      setSelectedPost((prev) =>
+        prev
+          ? {
+              ...prev,
+              isLiked: false,
+              likesCount: Math.max(0, prev.likesCount - 1),
+            }
+          : null
+      );
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                isLiked: false,
+                likesCount: Math.max(0, post.likesCount - 1),
+              }
+            : post
+        )
+      );
+    } else {
+      setSelectedPost((prev) =>
+        prev
+          ? {
+              ...prev,
+              isLiked: true,
+              likesCount: prev.likesCount + 1,
+            }
+          : null
+      );
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                isLiked: true,
+                likesCount: post.likesCount + 1,
+              }
+            : post
+        )
+      );
+    }
+
+    // Make API call in background
+    try {
+      if (isLiked) {
+        await toggleUnlike(postId);
+      } else {
+        await toggleLike(postId);
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      // Revert on error
+      setSelectedPost(previousSelectedPost);
+      setPosts(previousPosts);
+    }
+  };
+
+  // Handle bookmark/unbookmark with optimistic updates
+  const handleBookmark = async (postId: string, isSaved: boolean) => {
+    if (!currentUser) return;
+
+    // Store previous state for rollback
+    const previousSelectedPost = selectedPost;
+    const previousPosts = posts;
+
+    // Optimistically update UI immediately
+    if (isSaved) {
+      setSelectedPost((prev) => (prev ? { ...prev, isSaved: false } : null));
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, isSaved: false } : post
+        )
+      );
+    } else {
+      setSelectedPost((prev) => (prev ? { ...prev, isSaved: true } : null));
+      setPosts((prev) =>
+        prev.map((post) =>
+          post.id === postId ? { ...post, isSaved: true } : post
+        )
+      );
+    }
+
+    // Make API call in background
+    try {
+      if (isSaved) {
+        await toggleUnbookmark(postId);
+      } else {
+        await toggleBookmark(postId);
+      }
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+      // Revert on error
+      setSelectedPost(previousSelectedPost);
+      setPosts(previousPosts);
+    }
+  };
+
+  // Fetch comments when post dialog opens
+  useEffect(() => {
+    const fetchComments = async () => {
+      if (!isPostDialogOpen || !selectedPost) return;
+
+      try {
+        setIsLoadingComments(true);
+        const result = await getPostComments(selectedPost.id);
+        if (result.data) {
+          setComments(result.data);
+        }
+      } catch (error) {
+        console.error("Error fetching comments:", error);
+        setComments([]);
+      } finally {
+        setIsLoadingComments(false);
+      }
+    };
+
+    fetchComments();
+  }, [isPostDialogOpen, selectedPost?.id]);
+
+  // Reset comment state when dialog closes
+  useEffect(() => {
+    if (!isPostDialogOpen) {
+      setCommentContent("");
+      setReplyingTo(null);
+      setReplyContent("");
+      setComments([]);
+    }
+  }, [isPostDialogOpen]);
+
+  // Handle comment submission
+  const handleSubmitComment = async () => {
+    if (!selectedPost || !commentContent.trim() || isSubmittingComment) return;
+
+    try {
+      setIsSubmittingComment(true);
+      const result = await createComment(
+        selectedPost.id,
+        commentContent.trim()
+      );
+      if (result.data) {
+        setComments((prev) => [result.data, ...prev]);
+        setCommentContent("");
+        setSelectedPost((prev) =>
+          prev
+            ? {
+                ...prev,
+                commentsCount: prev.commentsCount + 1,
+              }
+            : null
+        );
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === selectedPost.id
+              ? {
+                  ...post,
+                  commentsCount: post.commentsCount + 1,
+                }
+              : post
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error creating comment:", error);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  // Handle reply submission
+  const handleSubmitReply = async (parentId: string) => {
+    if (!selectedPost || !replyContent.trim() || isSubmittingComment) return;
+
+    try {
+      setIsSubmittingComment(true);
+      const result = await createComment(
+        selectedPost.id,
+        replyContent.trim(),
+        parentId
+      );
+      if (result.data) {
+        setComments((prev) =>
+          prev.map((comment) =>
+            comment.id === parentId
+              ? {
+                  ...comment,
+                  replies: [...(comment.replies || []), result.data],
+                }
+              : comment
+          )
+        );
+        setReplyingTo(null);
+        setReplyContent("");
+        setSelectedPost((prev) =>
+          prev
+            ? {
+                ...prev,
+                commentsCount: prev.commentsCount + 1,
+              }
+            : null
+        );
+        setPosts((prev) =>
+          prev.map((post) =>
+            post.id === selectedPost.id
+              ? {
+                  ...post,
+                  commentsCount: post.commentsCount + 1,
+                }
+              : post
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error creating reply:", error);
+    } finally {
+      setIsSubmittingComment(false);
+    }
   };
 
   // Show loading state
@@ -361,7 +640,7 @@ export default function ProfilePage() {
             {userData.name}
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground truncate">
-            @{userData.username}
+            {userData.username}
           </p>
         </div>
 
@@ -475,7 +754,7 @@ export default function ProfilePage() {
                 }}
               >
                 {post.imageUrl ? (
-                  post.type === "video" ? (
+                  post.type === "reel" ? (
                     <div className="relative w-full h-full">
                       <video
                         src={post.imageUrl}
@@ -528,97 +807,282 @@ export default function ProfilePage() {
       </div>
 
       {/* Post Detail Dialog */}
-      <Dialog open={isPostDialogOpen} onOpenChange={setIsPostDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
-          {selectedPost && (
-            <div className="flex flex-col md:flex-row h-full">
-              {/* Media Section */}
-              <div className="relative w-full md:w-1/2 bg-black flex items-center justify-center overflow-hidden aspect-square md:aspect-auto">
-                {selectedPost.imageUrl ? (
-                  selectedPost.type === "video" ? (
-                    <video
-                      src={selectedPost.imageUrl}
-                      className="w-full h-full object-contain"
-                      controls
-                    />
-                  ) : (
-                    <img
-                      src={selectedPost.imageUrl}
-                      alt="Post"
-                      className="w-full h-full object-contain"
-                    />
-                  )
+      <PostDialog
+        open={isPostDialogOpen}
+        onOpenChange={setIsPostDialogOpen}
+        className="p-0"
+      >
+        {selectedPost && (
+          <div className="flex flex-col md:flex-row h-full max-h-[95vh]">
+            {/* Media Section */}
+            <div className="relative w-full md:w-3/5 bg-black flex items-center justify-center overflow-hidden min-h-[400px] md:min-h-0 md:h-full">
+              {selectedPost.imageUrl ? (
+                selectedPost.type === "reel" ? (
+                  <video
+                    src={selectedPost.imageUrl}
+                    className="w-full h-full object-contain max-h-[95vh]"
+                    controls
+                    autoPlay
+                  />
                 ) : (
-                  <div className="text-center p-8 text-white">
-                    <p className="text-sm">{selectedPost.content || "Post"}</p>
+                  <img
+                    src={selectedPost.imageUrl}
+                    alt="Post"
+                    className="w-full h-full object-contain max-h-[95vh]"
+                  />
+                )
+              ) : (
+                <div className="text-center p-8 text-white">
+                  <p className="text-sm">{selectedPost.content || "Post"}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Content Section */}
+            <div className="w-full md:w-2/5 flex flex-col h-full max-h-[95vh] overflow-y-auto">
+              <div className="p-4 border-b">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={avatarUrl} />
+                    <AvatarFallback>
+                      {userData.name[0]?.toUpperCase() ||
+                        userData.username[0].toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">{userData.username}</p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedPost.content && (
+                <div className="p-4 border-b">
+                  <p className="text-sm whitespace-pre-wrap">
+                    {selectedPost.content}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatTimeAgo(selectedPost.createdAt)}
+                  </p>
+                </div>
+              )}
+
+              <div className="p-4 border-b">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() =>
+                        handleLike(
+                          selectedPost.id,
+                          selectedPost.isLiked || false
+                        )
+                      }
+                      className={`flex items-center gap-2 transition-colors ${
+                        selectedPost.isLiked
+                          ? "text-red-500"
+                          : "text-foreground hover:text-red-500"
+                      }`}
+                    >
+                      <Heart
+                        className={`h-6 w-6 ${
+                          selectedPost.isLiked ? "fill-current" : ""
+                        }`}
+                      />
+                      <span className="text-sm font-semibold">
+                        {selectedPost.likesCount || 0}
+                      </span>
+                    </button>
+                    <button className="flex items-center gap-2 text-foreground">
+                      <MessageCircle className="h-6 w-6" />
+                      <span className="text-sm font-semibold">
+                        {selectedPost.commentsCount || 0}
+                      </span>
+                    </button>
+                  </div>
+                  <button
+                    onClick={() =>
+                      handleBookmark(
+                        selectedPost.id,
+                        selectedPost.isSaved || false
+                      )
+                    }
+                    className={`transition-colors ${
+                      selectedPost.isSaved
+                        ? "text-yellow-500"
+                        : "text-foreground hover:text-yellow-500"
+                    }`}
+                  >
+                    <Bookmark
+                      className={`h-6 w-6 ${
+                        selectedPost.isSaved ? "fill-current" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {/* Comments Section */}
+              <div className="flex-1 overflow-y-auto">
+                {isLoadingComments ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  </div>
+                ) : comments.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground text-sm">
+                    No comments yet. Be the first to comment!
+                  </div>
+                ) : (
+                  <div className="p-4 space-y-4">
+                    {comments.map((comment) => (
+                      <div key={comment.id} className="space-y-2">
+                        <div className="flex gap-3">
+                          <Avatar className="h-8 w-8 shrink-0">
+                            <AvatarImage src={comment.user.imageUrl} />
+                            <AvatarFallback>
+                              {comment.user.name[0]?.toUpperCase() ||
+                                comment.user.username[0].toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start gap-2">
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold">
+                                  {comment.user.username}
+                                </p>
+                                <p className="text-sm whitespace-pre-wrap">
+                                  {comment.content}
+                                </p>
+                                <div className="flex items-center gap-3 mt-1">
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatTimeAgo(comment.createdAt)}
+                                  </p>
+                                  {currentUser && (
+                                    <button
+                                      onClick={() => {
+                                        setReplyingTo(
+                                          replyingTo === comment.id
+                                            ? null
+                                            : comment.id
+                                        );
+                                        setReplyContent("");
+                                      }}
+                                      className="text-xs text-muted-foreground hover:text-foreground"
+                                    >
+                                      {replyingTo === comment.id
+                                        ? "Cancel"
+                                        : "Reply"}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Reply input */}
+                            {replyingTo === comment.id && (
+                              <div className="mt-2 ml-10 space-y-2">
+                                <div className="flex gap-2">
+                                  <Input
+                                    value={replyContent}
+                                    onChange={(e) =>
+                                      setReplyContent(e.target.value)
+                                    }
+                                    placeholder="Add a reply..."
+                                    className="text-sm"
+                                    onKeyDown={(e) => {
+                                      if (
+                                        e.key === "Enter" &&
+                                        !e.shiftKey &&
+                                        replyContent.trim()
+                                      ) {
+                                        e.preventDefault();
+                                        handleSubmitReply(comment.id);
+                                      }
+                                    }}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      handleSubmitReply(comment.id)
+                                    }
+                                    disabled={
+                                      !replyContent.trim() ||
+                                      isSubmittingComment
+                                    }
+                                  >
+                                    Reply
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Replies */}
+                            {comment.replies && comment.replies.length > 0 && (
+                              <div className="mt-3 ml-6 space-y-3 border-l-2 pl-4">
+                                {comment.replies.map((reply) => (
+                                  <div key={reply.id} className="flex gap-3">
+                                    <Avatar className="h-7 w-7 shrink-0">
+                                      <AvatarImage src={reply.user.imageUrl} />
+                                      <AvatarFallback>
+                                        {reply.user.name[0]?.toUpperCase() ||
+                                          reply.user.username[0].toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-semibold">
+                                        {reply.user.username}
+                                      </p>
+                                      <p className="text-sm whitespace-pre-wrap">
+                                        {reply.content}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        {formatTimeAgo(reply.createdAt)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
 
-              {/* Content Section */}
-              <div className="w-full md:w-1/2 flex flex-col h-full overflow-hidden">
-                <div className="p-4 border-b">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={avatarUrl} />
-                      <AvatarFallback>
-                        {userData.name[0]?.toUpperCase() ||
-                          userData.username[0].toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm">
-                        @{userData.username}
-                      </p>
-                    </div>
+              {/* Comment Input */}
+              {currentUser && (
+                <div className="p-4 border-t">
+                  <div className="flex gap-2">
+                    <Input
+                      value={commentContent}
+                      onChange={(e) => setCommentContent(e.target.value)}
+                      placeholder="Add a comment..."
+                      className="text-sm"
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Enter" &&
+                          !e.shiftKey &&
+                          commentContent.trim()
+                        ) {
+                          e.preventDefault();
+                          handleSubmitComment();
+                        }
+                      }}
+                    />
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setIsPostDialogOpen(false)}
-                      className="h-8 w-8"
+                      size="sm"
+                      onClick={handleSubmitComment}
+                      disabled={!commentContent.trim() || isSubmittingComment}
                     >
-                      <X className="h-4 w-4" />
+                      Post
                     </Button>
                   </div>
                 </div>
-
-                {selectedPost.content && (
-                  <div className="p-4 border-b">
-                    <p className="text-sm whitespace-pre-wrap">
-                      {selectedPost.content}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatTimeAgo(selectedPost.createdAt)}
-                    </p>
-                  </div>
-                )}
-
-                <div className="p-4 border-b">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <button className="flex items-center gap-2">
-                        <Heart className="h-6 w-6" />
-                        <span className="text-sm font-semibold">
-                          {selectedPost.likesCount || 0}
-                        </span>
-                      </button>
-                      <button className="flex items-center gap-2">
-                        <MessageCircle className="h-6 w-6" />
-                        <span className="text-sm font-semibold">
-                          {selectedPost.commentsCount || 0}
-                        </span>
-                      </button>
-                    </div>
-                    <button>
-                      <Bookmark className="h-6 w-6" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        )}
+      </PostDialog>
 
       {/* Edit Profile Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

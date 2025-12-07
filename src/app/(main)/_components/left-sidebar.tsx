@@ -38,6 +38,7 @@ export function LeftSidebar() {
   const isReelsActive = pathname === "/reels";
   const isMessagesActive = pathname === "/messages";
   const isNotificationsActive = pathname === "/notifications";
+  const isCreateActive = pathname === "/create";
   const isProfileActive = Boolean(
     user?.username && pathname === `/${user.username}`
   );
@@ -104,7 +105,7 @@ export function LeftSidebar() {
             badge={3}
             isActive={isNotificationsActive}
           />
-          <NavItem icon={PlusSquare} label="Create" />
+          <NavItem icon={PlusSquare} label="Create" href="/create" isActive={isCreateActive} />
           <NavItem
             label="Profile"
             href={`/${user?.username}`}

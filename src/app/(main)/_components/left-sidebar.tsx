@@ -8,22 +8,49 @@ import {
   Send,
   Bell,
   PlusSquare,
-  Sidebar,
+  Palette,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ModeToggle } from "@/components/mode-toggle";
 import { NavItem } from "./nav-item";
 import { SidebarLogo } from "./sidebar-logo";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 
 export function LeftSidebar() {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
   const isHomeActive = pathname === "/";
   const isSearchActive = pathname === "/search";
   const isExploreActive = pathname === "/explore";
   const isReelsActive = pathname === "/reels";
   const isMessagesActive = pathname === "/messages";
   const isNotificationsActive = pathname === "/notifications";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      setIsDarkMode(theme === "dark");
+    }
+  }, [theme, mounted]);
+
+  const handleDarkModeToggle = (checked: boolean) => {
+    setIsDarkMode(checked);
+    setTheme(checked ? "dark" : "light");
+  };
 
   return (
     <aside className="hidden lg:flex w-72 flex-col border-r border-border bg-background">
@@ -35,12 +62,43 @@ export function LeftSidebar() {
 
         {/* Navigation Section */}
         <nav className="flex-1 px-3 space-y-1">
-          <NavItem icon={HomeIcon} label="Home" href="/" isActive={isHomeActive} />
-          <NavItem icon={Search} label="Search" href="/search" isActive={isSearchActive} />
-          <NavItem icon={Compass} label="Explore" href="/explore" isActive={isExploreActive} />
-          <NavItem icon={Play} label="Reels" href="/reels" isActive={isReelsActive} />
-          <NavItem icon={Send} label="Messages" href="/messages" isActive={isMessagesActive} />
-          <NavItem icon={Bell} label="Notifications" href="/notifications" badge={3} isActive={isNotificationsActive} />
+          <NavItem
+            icon={HomeIcon}
+            label="Home"
+            href="/"
+            isActive={isHomeActive}
+          />
+          <NavItem
+            icon={Search}
+            label="Search"
+            href="/search"
+            isActive={isSearchActive}
+          />
+          <NavItem
+            icon={Compass}
+            label="Explore"
+            href="/explore"
+            isActive={isExploreActive}
+          />
+          <NavItem
+            icon={Play}
+            label="Reels"
+            href="/reels"
+            isActive={isReelsActive}
+          />
+          <NavItem
+            icon={Send}
+            label="Messages"
+            href="/messages"
+            isActive={isMessagesActive}
+          />
+          <NavItem
+            icon={Bell}
+            label="Notifications"
+            href="/notifications"
+            badge={3}
+            isActive={isNotificationsActive}
+          />
           <NavItem icon={PlusSquare} label="Create" />
           <NavItem
             label="Profile"
@@ -51,26 +109,50 @@ export function LeftSidebar() {
               </Avatar>
             }
           />
-        </nav>
 
-        {/* Bottom Section */}
-        <div className="p-4 border-t border-border space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold">Username</span>
-                <span className="text-xs text-muted-foreground">@username</span>
+          {/* Appearance NavItem with Popover */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 h-12 text-base font-medium"
+              >
+                <Palette className="h-5 w-5" />
+                <span>Appearance</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64" align="start">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Appearance</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Customize the appearance of the app
+                  </p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <label
+                      htmlFor="dark-mode"
+                      className="text-sm font-medium cursor-pointer"
+                    >
+                      Dark Mode
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      Toggle dark mode on or off
+                    </p>
+                  </div>
+                  {mounted && (
+                    <Switch
+                      id="dark-mode"
+                      checked={isDarkMode}
+                      onCheckedChange={handleDarkModeToggle}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-between pt-2">
-            <ModeToggle />
-          </div>
-        </div>
+            </PopoverContent>
+          </Popover>
+        </nav>
       </div>
     </aside>
   );

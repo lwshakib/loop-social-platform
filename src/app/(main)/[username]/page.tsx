@@ -607,29 +607,35 @@ export default function ProfilePage() {
               </Button>
             ) : (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
-                >
-                  <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
-                  <span className="hidden sm:inline">Message</span>
-                </Button>
-                <Button
-                  variant={isFollowing ? "outline" : "default"}
-                  size="sm"
-                  onClick={handleFollow}
-                  className="flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
-                >
-                  {isFollowing ? "Following" : "Follow"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="sm:flex-none h-8 sm:h-9 w-8 sm:w-9"
-                >
-                  <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </Button>
+                {currentUser && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
+                    <span className="hidden sm:inline">Message</span>
+                  </Button>
+                )}
+                {currentUser && (
+                  <Button
+                    variant={isFollowing ? "outline" : "default"}
+                    size="sm"
+                    onClick={handleFollow}
+                    className="flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
+                  >
+                    {isFollowing ? "Following" : "Follow"}
+                  </Button>
+                )}
+                {currentUser && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="sm:flex-none h-8 sm:h-9 w-8 sm:w-9"
+                  >
+                    <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  </Button>
+                )}
               </>
             )}
           </div>
@@ -839,89 +845,93 @@ export default function ProfilePage() {
             </div>
 
             {/* Content Section */}
-            <div className="w-full md:w-2/5 flex flex-col h-full max-h-[95vh] overflow-y-auto">
-              <div className="p-4 border-b">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={avatarUrl} />
-                    <AvatarFallback>
-                      {userData.name[0]?.toUpperCase() ||
-                        userData.username[0].toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm">{userData.username}</p>
+            <div className="w-full md:w-2/5 flex flex-col h-full max-h-[95vh]">
+              <div className="shrink-0">
+                <div className="p-4 border-b">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={avatarUrl} />
+                      <AvatarFallback>
+                        {userData.name[0]?.toUpperCase() ||
+                          userData.username[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">
+                        {userData.username}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {selectedPost.content && (
+                {selectedPost.content && (
+                  <div className="p-4 border-b">
+                    <p className="text-sm whitespace-pre-wrap">
+                      {selectedPost.content}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatTimeAgo(selectedPost.createdAt)}
+                    </p>
+                  </div>
+                )}
+
                 <div className="p-4 border-b">
-                  <p className="text-sm whitespace-pre-wrap">
-                    {selectedPost.content}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatTimeAgo(selectedPost.createdAt)}
-                  </p>
-                </div>
-              )}
-
-              <div className="p-4 border-b">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() =>
+                          handleLike(
+                            selectedPost.id,
+                            selectedPost.isLiked || false
+                          )
+                        }
+                        className={`flex items-center gap-2 transition-colors ${
+                          selectedPost.isLiked
+                            ? "text-red-500"
+                            : "text-foreground hover:text-red-500"
+                        }`}
+                      >
+                        <Heart
+                          className={`h-6 w-6 ${
+                            selectedPost.isLiked ? "fill-current" : ""
+                          }`}
+                        />
+                        <span className="text-sm font-semibold">
+                          {selectedPost.likesCount || 0}
+                        </span>
+                      </button>
+                      <button className="flex items-center gap-2 text-foreground">
+                        <MessageCircle className="h-6 w-6" />
+                        <span className="text-sm font-semibold">
+                          {selectedPost.commentsCount || 0}
+                        </span>
+                      </button>
+                    </div>
                     <button
                       onClick={() =>
-                        handleLike(
+                        handleBookmark(
                           selectedPost.id,
-                          selectedPost.isLiked || false
+                          selectedPost.isSaved || false
                         )
                       }
-                      className={`flex items-center gap-2 transition-colors ${
-                        selectedPost.isLiked
-                          ? "text-red-500"
-                          : "text-foreground hover:text-red-500"
+                      className={`transition-colors ${
+                        selectedPost.isSaved
+                          ? "text-yellow-500"
+                          : "text-foreground hover:text-yellow-500"
                       }`}
                     >
-                      <Heart
+                      <Bookmark
                         className={`h-6 w-6 ${
-                          selectedPost.isLiked ? "fill-current" : ""
+                          selectedPost.isSaved ? "fill-current" : ""
                         }`}
                       />
-                      <span className="text-sm font-semibold">
-                        {selectedPost.likesCount || 0}
-                      </span>
-                    </button>
-                    <button className="flex items-center gap-2 text-foreground">
-                      <MessageCircle className="h-6 w-6" />
-                      <span className="text-sm font-semibold">
-                        {selectedPost.commentsCount || 0}
-                      </span>
                     </button>
                   </div>
-                  <button
-                    onClick={() =>
-                      handleBookmark(
-                        selectedPost.id,
-                        selectedPost.isSaved || false
-                      )
-                    }
-                    className={`transition-colors ${
-                      selectedPost.isSaved
-                        ? "text-yellow-500"
-                        : "text-foreground hover:text-yellow-500"
-                    }`}
-                  >
-                    <Bookmark
-                      className={`h-6 w-6 ${
-                        selectedPost.isSaved ? "fill-current" : ""
-                      }`}
-                    />
-                  </button>
                 </div>
               </div>
 
               {/* Comments Section */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto min-h-0">
                 {isLoadingComments ? (
                   <div className="flex items-center justify-center p-8">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -1049,9 +1059,9 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* Comment Input */}
+              {/* Comment Input - Fixed at bottom */}
               {currentUser && (
-                <div className="p-4 border-t">
+                <div className="flex-shrink-0 p-4 border-t bg-background">
                   <div className="flex gap-2">
                     <Input
                       value={commentContent}

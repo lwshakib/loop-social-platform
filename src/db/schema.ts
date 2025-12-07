@@ -148,6 +148,18 @@ export const storiesTable = pgTable("stories", {
   createdAt: timestamp().notNull().defaultNow(),
 });
 
+
+export const searchHistoryTable = pgTable("search_history", {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: uuid()
+    .references(() => usersTable.id, { onDelete: "cascade" })
+    .notNull(),
+  searchTerm: varchar({ length: 255 }).notNull(),
+  createdAt: timestamp().notNull().defaultNow(),
+});
+
+
+
 // --------------------
 // Relations
 // --------------------
@@ -169,6 +181,7 @@ export const userRelations = relations(usersTable, ({ many }) => ({
   notificationActions: many(notificationsTable, { relationName: "actions" }),
 
   stories: many(storiesTable),
+  searchHistory: many(searchHistoryTable),
 }));
 
 export const postRelations = relations(postsTable, ({ many, one }) => ({
@@ -266,3 +279,14 @@ export const storyRelations = relations(storiesTable, ({ one }) => ({
     references: [usersTable.id],
   }),
 }));
+
+
+export const searchHistoryRelations = relations(
+  searchHistoryTable,
+  ({ one }) => ({
+    user: one(usersTable, {
+      fields: [searchHistoryTable.userId],
+      references: [usersTable.id],
+    }),
+  })
+);

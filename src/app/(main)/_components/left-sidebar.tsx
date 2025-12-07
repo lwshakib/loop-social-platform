@@ -23,12 +23,14 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { useSocialStore } from "@/context";
 
 export function LeftSidebar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const user = useSocialStore((state) => state.user);
 
   const isHomeActive = pathname === "/";
   const isSearchActive = pathname === "/search";
@@ -36,6 +38,9 @@ export function LeftSidebar() {
   const isReelsActive = pathname === "/reels";
   const isMessagesActive = pathname === "/messages";
   const isNotificationsActive = pathname === "/notifications";
+  const isProfileActive = Boolean(
+    user?.username && pathname === `/${user.username}`
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -102,9 +107,11 @@ export function LeftSidebar() {
           <NavItem icon={PlusSquare} label="Create" />
           <NavItem
             label="Profile"
+            href={`/${user?.username}`}
+            isActive={isProfileActive}
             avatar={
               <Avatar className="h-6 w-6">
-                <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
+                <AvatarImage src={user?.imageUrl || ""} />
                 <AvatarFallback className="text-xs">U</AvatarFallback>
               </Avatar>
             }

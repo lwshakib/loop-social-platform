@@ -43,3 +43,11 @@ export async function getOrCreateUser() {
     return null;
   }
 }
+
+export async function getUserByUsername(username: string) {
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.username, username));
+  return user;
+}

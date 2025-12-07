@@ -590,7 +590,7 @@ export default function ProfilePage() {
                 {userData.name}
               </h1>
               <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                @{userData.username}
+                {userData.username}
               </p>
             </div>
           </div>

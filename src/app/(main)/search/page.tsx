@@ -354,7 +354,7 @@ export default function SearchPage() {
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground truncate">
-                              @{user.username}
+                              {user.username}
                             </p>
                             {user.bio && (
                               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
@@ -412,7 +412,7 @@ export default function SearchPage() {
                                   href={`/${post.user.username}`}
                                   className="text-[15px] text-muted-foreground hover:underline cursor-pointer leading-5"
                                 >
-                                  @{post.user.username}
+                                  {post.user.username}
                                 </Link>
                                 <span className="text-[15px] text-muted-foreground leading-5">
                                   ·

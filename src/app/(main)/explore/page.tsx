@@ -67,7 +67,7 @@ export default function ExplorePage() {
                 <div className="flex-1">
                   <p className="font-semibold">{user.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    @{user.username}
+                    {user.username}
                   </p>
                 </div>
               </div>

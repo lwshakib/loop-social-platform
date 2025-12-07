@@ -719,7 +719,7 @@ export default function HomePage() {
                         </div>
                       </div>
                       <span className="text-[10px] sm:text-xs text-foreground truncate max-w-[60px] sm:max-w-[70px] text-center hover:underline">
-                        @{storyGroup.user.username || "unknown"}
+                        {storyGroup.user.username || "unknown"}
                       </span>
                     </div>
                   );
@@ -782,7 +782,7 @@ export default function HomePage() {
                               onClick={(e) => e.stopPropagation()}
                               className="text-[15px] text-muted-foreground hover:underline cursor-pointer leading-5"
                             >
-                              @{post.user.username}
+                              {post.user.username}
                             </Link>
                             <span className="text-[15px] text-muted-foreground leading-5">
                               ·
@@ -968,7 +968,7 @@ export default function HomePage() {
                             href={`/${userGroup.user?.username}`}
                             className="font-semibold text-xs md:text-sm truncate cursor-pointer hover:underline block"
                           >
-                            @{userGroup.user.username || "unknown"}
+                            {userGroup.user.username || "unknown"}
                           </Link>
                           <p className="text-[10px] md:text-xs text-muted-foreground truncate">
                             Suggested for you

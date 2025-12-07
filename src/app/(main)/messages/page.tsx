@@ -150,7 +150,7 @@ export default function MessagesPage() {
               <div>
                 <p className="font-semibold">{selectedConversation?.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  @{selectedConversation?.username}
+                  {selectedConversation?.username}
                 </p>
               </div>
             </div>

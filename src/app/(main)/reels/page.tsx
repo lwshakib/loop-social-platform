@@ -221,7 +221,7 @@ export default function ReelsPage() {
                           {reel.user.name}
                         </p>
                         <p className="text-xs text-white/70 truncate">
-                          @{reel.user.username}
+                          {reel.user.username}
                         </p>
                       </div>
                     </Link>

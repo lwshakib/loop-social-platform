@@ -705,7 +705,7 @@ export default function ReelsPage() {
                             href={`/${video.user.username}`}
                             className="font-semibold text-white text-xs sm:text-sm truncate cursor-pointer hover:underline"
                           >
-                            @{video.user.username || "unknown"}
+                            {video.user.username || "unknown"}
                           </Link>
                         </div>
                       </div>
@@ -803,7 +803,7 @@ export default function ReelsPage() {
                                       href={`/${comment.user.username}`}
                                       className="font-semibold text-sm cursor-pointer hover:underline"
                                     >
-                                      @{comment.user.username || "unknown"}
+                                      {comment.user.username || "unknown"}
                                     </Link>
                                     <span className="text-xs text-muted-foreground">
                                       {formatTimeAgo(comment.createdAt)}
@@ -844,7 +844,7 @@ export default function ReelsPage() {
                                   <div className="flex gap-2">
                                     <Input
                                       type="text"
-                                      placeholder={`Reply to @${
+                                      placeholder={`Reply to ${
                                         comment.user.username || "user"
                                       }...`}
                                       value={replyText[comment.id] || ""}

@@ -301,15 +301,15 @@ export default function PostPage() {
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user.username}`;
 
   return (
-    <div className="flex-1 overflow-hidden">
-      <div className="flex flex-col md:flex-row h-full max-h-screen">
+    <div className="flex-1 overflow-y-auto">
+      <div className="flex flex-col md:flex-row min-h-full md:min-h-[calc(100vh-4rem)] max-w-6xl mx-auto">
         {/* Media Section */}
-        <div className="relative w-full md:w-3/5 bg-black flex items-center justify-center overflow-hidden min-h-[400px] md:min-h-0 md:h-full">
+        <div className="relative w-full md:w-3/5 bg-black flex items-center justify-center overflow-hidden min-h-[400px] md:min-h-[600px] md:max-h-[calc(100vh-4rem)]">
           {post.imageUrl ? (
             post.type === "reel" ? (
               <video
                 src={post.imageUrl}
-                className="w-full h-full object-contain max-h-screen"
+                className="w-full h-full object-contain max-h-[calc(100vh-4rem)]"
                 controls
                 autoPlay
               />
@@ -317,7 +317,7 @@ export default function PostPage() {
               <img
                 src={post.imageUrl}
                 alt="Post"
-                className="w-full h-full object-contain max-h-screen"
+                className="w-full h-full object-contain max-h-[calc(100vh-4rem)]"
               />
             )
           ) : (
@@ -328,7 +328,7 @@ export default function PostPage() {
         </div>
 
         {/* Content Section */}
-        <div className="w-full md:w-2/5 flex flex-col h-full max-h-screen border-l">
+        <div className="w-full md:w-2/5 flex flex-col md:max-h-[calc(100vh-4rem)] border-l bg-background">
           <div className="flex-shrink-0">
             {/* Header with back button */}
             <div className="p-4 border-b flex items-center gap-3">
@@ -410,7 +410,7 @@ export default function PostPage() {
           </div>
 
           {/* Comments Section */}
-          <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="flex-1 overflow-y-auto min-h-0 md:max-h-[calc(100vh-4rem-300px)]">
             {isLoadingComments ? (
               <div className="flex items-center justify-center p-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -570,4 +570,3 @@ export default function PostPage() {
     </div>
   );
 }
-

@@ -167,6 +167,9 @@ export default function HomePage() {
   const [followingUserIds, setFollowingUserIds] = useState<Set<string>>(
     new Set()
   );
+  const [followingBusyIds, setFollowingBusyIds] = useState<Set<string>>(
+    new Set()
+  );
   const [suggestedUsers, setSuggestedUsers] = useState<StoryGroup[]>([]);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -642,6 +645,49 @@ export default function HomePage() {
     }
   };
 
+  const handleFollowSuggestion = async (
+    userId: string,
+    username?: string | null
+  ) => {
+    if (!currentUser || !username) return;
+
+    const isFollowing = followingUserIds.has(userId);
+    const prevSet = new Set(followingUserIds);
+
+    setFollowingBusyIds((prev) => {
+      const next = new Set(prev);
+      next.add(userId);
+      return next;
+    });
+
+    try {
+      const res = await fetch(`/api/users/${username}/follow`, {
+        method: isFollowing ? "DELETE" : "POST",
+      });
+      if (!res.ok) {
+        throw new Error("Failed to follow user");
+      }
+      setFollowingUserIds((prev) => {
+        const next = new Set(prev);
+        if (isFollowing) {
+          next.delete(userId);
+        } else {
+          next.add(userId);
+        }
+        return next;
+      });
+    } catch (error) {
+      console.error("Error following suggested user:", error);
+      setFollowingUserIds(prevSet);
+    } finally {
+      setFollowingBusyIds((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
+
   const getAvatarUrl = () => {
     return currentUser?.imageUrl || "";
   };
@@ -977,12 +1023,6 @@ export default function HomePage() {
                   ) {
                     return false;
                   }
-                  if (
-                    userGroup.userId &&
-                    followingUserIds.has(userGroup.userId)
-                  ) {
-                    return false;
-                  }
                   return userGroup.user !== null;
                 })
                 .slice(0, 5)
@@ -1023,12 +1063,18 @@ export default function HomePage() {
                         variant="ghost"
                         size="sm"
                         className="text-primary text-[10px] md:text-xs h-auto py-1 shrink-0"
+                        disabled={followingBusyIds.has(userGroup.userId)}
                         onClick={async (e) => {
                           e.stopPropagation();
-                          // TODO: Implement follow functionality
+                          await handleFollowSuggestion(
+                            userGroup.userId,
+                            userGroup.user?.username
+                          );
                         }}
                       >
-                        Follow
+                        {followingUserIds.has(userGroup.userId)
+                          ? "Following"
+                          : "Follow"}
                       </Button>
                     </div>
                   );

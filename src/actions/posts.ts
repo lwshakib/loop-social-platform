@@ -157,6 +157,44 @@ export async function getUserPosts(
     return [];
   }
 
+  if (!posts || posts.length === 0) {
+    return [];
+  }
+
+  const postIds = posts.map((p) => p.id);
+
+  // Aggregate fresh counts to avoid any alias/coercion issues
+  const likeCounts =
+    postIds.length > 0
+      ? await db
+          .select({
+            postId: likesTable.postId,
+            count: sql<number>`COUNT(*)::int`,
+          })
+          .from(likesTable)
+          .where(inArray(likesTable.postId, postIds))
+          .groupBy(likesTable.postId)
+      : [];
+
+  const commentCounts =
+    postIds.length > 0
+      ? await db
+          .select({
+            postId: commentsTable.postId,
+            count: sql<number>`COUNT(*)::int`,
+          })
+          .from(commentsTable)
+          .where(inArray(commentsTable.postId, postIds))
+          .groupBy(commentsTable.postId)
+      : [];
+
+  const likeCountMap = new Map<string, number>(
+    likeCounts.map((row) => [row.postId, Number(row.count ?? 0)])
+  );
+  const commentCountMap = new Map<string, number>(
+    commentCounts.map((row) => [row.postId, Number(row.count ?? 0)])
+  );
+
   // Check if current user has liked/saved each post
   if (currentUserId) {
     const [currentDbUser] = await db
@@ -201,6 +239,8 @@ export async function getUserPosts(
 
       return posts.map((post) => ({
         ...post,
+        likesCount: likeCountMap.get(post.id) ?? 0,
+        commentsCount: commentCountMap.get(post.id) ?? 0,
         isLiked: likedPostIds.has(post.id),
         isSaved: savedPostIds.has(post.id),
       }));
@@ -209,6 +249,8 @@ export async function getUserPosts(
 
   return posts.map((post) => ({
     ...post,
+    likesCount: likeCountMap.get(post.id) ?? 0,
+    commentsCount: commentCountMap.get(post.id) ?? 0,
     isLiked: false,
     isSaved: false,
   }));

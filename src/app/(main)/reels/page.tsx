@@ -36,7 +36,7 @@ type Reel = {
 const ReelsSkeleton = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
     {Array.from({ length: 8 }).map((_, idx) => (
-      <Skeleton key={idx} className="aspect-[9/16] w-full rounded-xl" />
+      <Skeleton key={idx} className="aspect-9/16 w-full rounded-xl" />
     ))}
   </div>
 );
@@ -202,7 +202,7 @@ export default function ReelsPage() {
               return (
                 <div
                   key={reel.id}
-                  className="group relative aspect-[9/16] rounded-lg overflow-hidden border border-border bg-card cursor-pointer hover:shadow-lg transition-shadow"
+                  className="group relative aspect-9/16 rounded-lg overflow-hidden border border-border bg-card cursor-pointer hover:shadow-lg transition-shadow"
                   onClick={() => router.push(`/reels/${reel.id}`)}
                 >
                   {/* Video Thumbnail */}
@@ -219,7 +219,7 @@ export default function ReelsPage() {
                   </div>
 
                   {/* Overlay Content */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     {/* User Info */}
                     <Link
                       href={`/${reel.user.username}`}

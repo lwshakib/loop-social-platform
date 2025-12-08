@@ -471,7 +471,7 @@ export default function SearchPage() {
 
                           {/* Post Content */}
                           <div
-                            className="text-[15px] mb-3 whitespace-pre-wrap break-words leading-[20px] cursor-pointer"
+                            className="text-[15px] mb-3 whitespace-pre-wrap wrap-break-word leading-5 cursor-pointer"
                             onClick={() => router.push(`/p/${post.id}`)}
                           >
                             {post.content}

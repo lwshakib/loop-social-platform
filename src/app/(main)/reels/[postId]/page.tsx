@@ -762,7 +762,7 @@ export default function ReelsPage() {
                   </AnimatePresence>
 
                   {/* Video Progress Slider - At the bottom */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-10 bg-gradient-to-t from-black/70 via-black/50 to-transparent">
+                  <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-10 bg-linear-to-t from-black/70 via-black/50 to-transparent">
                     <div className="flex items-center gap-3 text-white">
                       <span className="shrink-0 min-w-12 text-right text-xs sm:text-sm font-medium">
                         {formatTime(videoProgress[video.id] || 0)}

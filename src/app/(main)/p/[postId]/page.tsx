@@ -419,7 +419,7 @@ export default function PostPage() {
 
         {/* Content Section */}
         <div className="w-full md:w-2/5 flex flex-col md:max-h-[calc(100vh-4rem)] border-l bg-background">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             {/* Header with back button */}
             <div className="p-4 border-b flex items-center gap-3">
               <Button
@@ -625,7 +625,7 @@ export default function PostPage() {
 
           {/* Comment Input - Fixed at bottom */}
           {currentUser && (
-            <div className="flex-shrink-0 p-4 border-t bg-background">
+            <div className="shrink-0 p-4 border-t bg-background">
               <div className="flex gap-2">
                 <Input
                   value={commentContent}

@@ -320,13 +320,19 @@ export default function ProfilePage() {
 
         const result = await response.json();
         if (result.data) {
-          setPosts(result.data);
+          const normalizedPosts = result.data.map((post: Post) => ({
+            ...post,
+            likesCount: Number(post.likesCount ?? 0),
+            commentsCount: Number(post.commentsCount ?? 0),
+          }));
+
+          setPosts(normalizedPosts);
           // Initialize liked and saved posts sets
-          const likedPostIds = result.data
+          const likedPostIds = normalizedPosts
             .filter((post: Post) => post.isLiked)
             .map((post: Post) => post.id);
           setLikedPosts(new Set(likedPostIds));
-          const savedPostIds = result.data
+          const savedPostIds = normalizedPosts
             .filter((post: Post) => post.isSaved)
             .map((post: Post) => post.id);
           setSavedPosts(new Set(savedPostIds));

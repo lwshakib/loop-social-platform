@@ -1517,7 +1517,9 @@ export default function ProfilePage() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{follower.username}</p>
+                    <p className="font-semibold truncate">
+                      {follower.username}
+                    </p>
                     <p className="text-sm text-muted-foreground truncate">
                       {follower.name}
                     </p>
@@ -1562,7 +1564,9 @@ export default function ProfilePage() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{followed.username}</p>
+                    <p className="font-semibold truncate">
+                      {followed.username}
+                    </p>
                     <p className="text-sm text-muted-foreground truncate">
                       {followed.name}
                     </p>

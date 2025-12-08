@@ -131,145 +131,231 @@ export default function ReelsPage() {
   const [videoDuration, setVideoDuration] = useState<Record<string, number>>(
     {}
   );
+  const [isLoading, setIsLoading] = useState(true);
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const isUpdatingRef = useRef(false);
 
-  // Fetch all reels
+  // Fetch ALL videos initially (simpler with small dataset)
   useEffect(() => {
-    const fetchVideos = async () => {
+    const fetchAllVideos = async () => {
       try {
-        const response = await fetch("/api/reels");
+        setIsLoading(true);
 
+        // Fetch all reels at once
+        const response = await fetch("/api/reels");
         if (!response.ok) {
           throw new Error("Failed to fetch reels");
         }
 
         const result = await response.json();
-        if (result.data) {
+        if (result.data && result.data.length > 0) {
           setVideos(result.data);
+
+          // If current videoId is not in the list, navigate to first video
+          if (videoId && !result.data.some((v: Post) => v.id === videoId)) {
+            router.replace(`/reels/${result.data[0].id}`, { scroll: false });
+          }
         }
       } catch (error) {
         console.error("Error fetching videos:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchVideos();
-  }, []);
+    fetchAllVideos();
+  }, []); // Only run once on mount
 
-  // Handle URL parameter to scroll to specific video
+  // Set up Intersection Observer to detect which video is in view
   useEffect(() => {
-    if (videoId && videos.length > 0 && containerRef.current) {
-      const videoExists = videos.some((v) => v.id === videoId);
-
-      if (videoExists) {
-        setTimeout(() => {
-          const videoElement = document.getElementById(`video-${videoId}`);
-          if (videoElement) {
-            videoElement.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            });
-
-            setTimeout(() => {
-              const video = videoRefs.current.get(videoId);
-              if (video) {
-                video.play().catch((error) => {
-                  console.error("Error playing video:", error);
-                });
-              }
-            }, 500);
-          }
-        }, 100);
-      }
-    } else if (!videoId && videos.length > 0) {
-      // Navigate to first video if no videoId in URL
-      router.replace(`/reels/${videos[0].id}`, { scroll: false });
-    }
-  }, [videoId, videos, router]);
-
-  // Set up Intersection Observer to update URL when video is in view
-  useEffect(() => {
-    if (videos.length === 0) return;
+    if (videos.length === 0 || isLoading) return;
 
     // Clean up previous observer
     if (observerRef.current) {
       observerRef.current.disconnect();
     }
 
-    // Create new observer
+    // Create Intersection Observer
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
-            const videoId = entry.target.getAttribute("data-video-id");
-            if (
-              videoId &&
-              videoId !== window.location.pathname.split("/").pop()
-            ) {
-              router.replace(`/reels/${videoId}`, { scroll: false });
+        if (isUpdatingRef.current) return;
 
-              // Play the video
-              const video = videoRefs.current.get(videoId);
-              if (video) {
-                video.play().catch((error) => {
-                  console.error("Error playing video:", error);
+        // Find the entry with the highest intersection ratio
+        let bestEntry: IntersectionObserverEntry | null = null;
+        let maxRatio = 0;
+
+        entries.forEach((entry) => {
+          const entryVideoId = entry.target.getAttribute("data-video-id");
+
+          // Pause videos that are going out of view
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.3) {
+            if (entryVideoId) {
+              const video = videoRefs.current.get(entryVideoId);
+              if (video && !video.paused) {
+                video.pause();
+                setPlayingVideos((prev) => {
+                  const newSet = new Set(prev);
+                  newSet.delete(entryVideoId);
+                  return newSet;
                 });
               }
             }
           }
+
+          // Find the most visible video
+          if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
+            maxRatio = entry.intersectionRatio;
+            bestEntry = entry;
+          }
         });
+
+        if (bestEntry && maxRatio > 0.5) {
+          const newVideoId = bestEntry.target.getAttribute("data-video-id");
+          const currentVideoId = window.location.pathname.split("/").pop();
+
+          if (newVideoId && newVideoId !== currentVideoId) {
+            isUpdatingRef.current = true;
+
+            // Pause all videos first
+            videoRefs.current.forEach((video, id) => {
+              if (id !== newVideoId && !video.paused) {
+                video.pause();
+                setPlayingVideos((prev) => {
+                  const newSet = new Set(prev);
+                  newSet.delete(id);
+                  return newSet;
+                });
+              }
+            });
+
+            router.replace(`/reels/${newVideoId}`, { scroll: false });
+
+            setTimeout(() => {
+              isUpdatingRef.current = false;
+            }, 300);
+          }
+        }
       },
       {
-        threshold: [0.5],
-        rootMargin: "0px",
+        threshold: [0, 0.25, 0.5, 0.75, 1.0],
+        rootMargin: "-20% 0px -20% 0px", // Only trigger when video is in center 60% of viewport
       }
     );
 
     // Observe all video containers
-    videos.forEach((video) => {
-      const element = document.getElementById(`video-${video.id}`);
-      if (element && observerRef.current) {
-        observerRef.current.observe(element);
-      }
-    });
+    const timeoutId = setTimeout(() => {
+      videos.forEach((video) => {
+        const element = document.getElementById(`video-${video.id}`);
+        if (element && observerRef.current) {
+          observerRef.current.observe(element);
+        }
+      });
+    }, 300);
 
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
+      clearTimeout(timeoutId);
     };
-  }, [videos, router]);
+  }, [videos, router, isLoading]);
 
-  // Auto-play video when it comes into view
+  // Scroll to video when videoId changes
   useEffect(() => {
-    if (videoId) {
+    if (!videoId || isLoading || videos.length === 0) return;
+
+    // Check if the video exists in our current list
+    const videoExists = videos.some((v) => v.id === videoId);
+    if (!videoExists) return;
+
+    const timeoutId = setTimeout(() => {
+      const element = document.getElementById(`video-${videoId}`);
+      if (element && containerRef.current) {
+        const container = containerRef.current;
+        const elementTop = element.offsetTop;
+        const containerHeight = container.clientHeight;
+        const scrollPosition =
+          elementTop - containerHeight / 2 + element.clientHeight / 2;
+
+        // Only scroll if not already at the right position
+        const currentScroll = container.scrollTop;
+        const scrollDiff = Math.abs(currentScroll - scrollPosition);
+
+        if (scrollDiff > 50) {
+          isUpdatingRef.current = true;
+          container.scrollTo({
+            top: scrollPosition,
+            behavior: "smooth",
+          });
+
+          setTimeout(() => {
+            isUpdatingRef.current = false;
+          }, 500);
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [videoId, videos, isLoading]);
+
+  // Auto-play/pause videos based on videoId
+  useEffect(() => {
+    if (!videoId || isLoading || videos.length === 0) return;
+
+    const timeoutId = setTimeout(() => {
+      // Pause all videos first
+      videoRefs.current.forEach((videoElement, id) => {
+        if (id !== videoId) {
+          if (!videoElement.paused) {
+            videoElement.pause();
+          }
+          setPlayingVideos((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(id);
+            return newSet;
+          });
+        }
+      });
+
+      // Play current video
       const videoElement = videoRefs.current.get(videoId);
       if (videoElement) {
         videoElement.muted = mutedVideos.has(videoId);
-        videoElement.play().catch((error) => {
-          console.error("Error playing video:", error);
-        });
-        setPlayingVideos((prev) => {
-          const newSet = new Set(prev);
-          newSet.add(videoId);
-          return newSet;
-        });
-      }
-    }
 
-    // Pause other videos
-    videoRefs.current.forEach((videoElement, id) => {
-      if (id !== videoId) {
-        videoElement.pause();
-        setPlayingVideos((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(id);
-          return newSet;
-        });
+        const playVideo = () => {
+          if (videoElement.readyState >= 2) {
+            // Only reset if video hasn't been played yet
+            if (videoElement.currentTime > 1) {
+              videoElement.currentTime = 0;
+            }
+
+            if (videoElement.paused) {
+              videoElement.play().catch((error) => {
+                console.error("Error playing video:", error);
+              });
+              // State will be updated by onPlay event handler
+
+              // Pre-fetch next videos only when at 4th video of current batch
+              if (shouldPreFetch(videoId)) {
+                fetchRecommendations(videoId);
+              }
+            }
+          } else {
+            videoElement.addEventListener("loadeddata", playVideo, {
+              once: true,
+            });
+            videoElement.load();
+          }
+        };
+
+        playVideo();
       }
-    });
-  }, [videoId, mutedVideos]);
+    }, 200);
+
+    return () => clearTimeout(timeoutId);
+  }, [videoId, mutedVideos, isLoading, videos.length]);
 
   const handleLike = async (postId: string) => {
     if (!currentUser) return;
@@ -433,6 +519,17 @@ export default function ReelsPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground mt-4">Loading videos...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (videos.length === 0) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -444,32 +541,26 @@ export default function ReelsPage() {
   }
 
   const scrollToNext = () => {
-    if (containerRef.current) {
-      const currentIndex = videos.findIndex((v) => v.id === videoId);
-      const nextIndex = currentIndex < videos.length - 1 ? currentIndex + 1 : 0;
-      const nextVideo = videos[nextIndex];
-      if (nextVideo) {
-        router.replace(`/reels/${nextVideo.id}`, { scroll: false });
-        const element = document.getElementById(`video-${nextVideo.id}`);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }
+    if (videos.length === 0 || isUpdatingRef.current) return;
+
+    const currentIndex = videos.findIndex((v) => v.id === videoId);
+    const nextIndex = currentIndex < videos.length - 1 ? currentIndex + 1 : 0;
+    const nextVideo = videos[nextIndex];
+
+    if (nextVideo) {
+      router.replace(`/reels/${nextVideo.id}`, { scroll: false });
     }
   };
 
   const scrollToPrevious = () => {
-    if (containerRef.current) {
-      const currentIndex = videos.findIndex((v) => v.id === videoId);
-      const prevIndex = currentIndex > 0 ? currentIndex - 1 : videos.length - 1;
-      const prevVideo = videos[prevIndex];
-      if (prevVideo) {
-        router.replace(`/reels/${prevVideo.id}`, { scroll: false });
-        const element = document.getElementById(`video-${prevVideo.id}`);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }
+    if (videos.length === 0 || isUpdatingRef.current) return;
+
+    const currentIndex = videos.findIndex((v) => v.id === videoId);
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : videos.length - 1;
+    const prevVideo = videos[prevIndex];
+
+    if (prevVideo) {
+      router.replace(`/reels/${prevVideo.id}`, { scroll: false });
     }
   };
 
@@ -527,13 +618,12 @@ export default function ReelsPage() {
                     onClick={() => {
                       const videoElement = videoRefs.current.get(video.id);
                       if (videoElement) {
-                        const isPlaying = playingVideos.has(video.id);
-                        if (isPlaying) {
-                          videoElement.pause();
-                        } else {
+                        if (videoElement.paused) {
                           videoElement.play().catch((error) => {
                             console.error("Error playing video:", error);
                           });
+                        } else {
+                          videoElement.pause();
                         }
                       }
                     }}
@@ -542,16 +632,6 @@ export default function ReelsPage() {
                         const newSet = new Set(prev);
                         newSet.add(video.id);
                         return newSet;
-                      });
-                      videoRefs.current.forEach((v, id) => {
-                        if (id !== video.id) {
-                          v.pause();
-                          setPlayingVideos((prev) => {
-                            const newSet = new Set(prev);
-                            newSet.delete(id);
-                            return newSet;
-                          });
-                        }
                       });
                     }}
                     onPause={() => {

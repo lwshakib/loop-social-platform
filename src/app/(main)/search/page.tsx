@@ -23,6 +23,7 @@ import {
 import { useSocialStore } from "@/context";
 import { Heart, Bookmark, MessageCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 type UserResult = {
   id: string;
@@ -126,8 +127,54 @@ export default function SearchPage() {
   const [activeTab, setActiveTab] = useState<"all" | "users" | "posts">("all");
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
+  const [history, setHistory] = useState<{ id: string; term: string }[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Fetch history once on mount
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        setIsLoadingHistory(true);
+        const res = await fetch("/api/search/history");
+        if (res.ok) {
+          const json = await res.json();
+          setHistory(json.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching search history:", error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+    fetchHistory();
+  }, []);
+
+  // Save search term when user submits a non-empty debounced query
+  useEffect(() => {
+    const saveTerm = async (term: string) => {
+      try {
+        await fetch("/api/search/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ term }),
+        });
+        setHistory((prev) => {
+          const filtered = prev.filter(
+            (item) => item.term.toLowerCase() !== term.toLowerCase()
+          );
+          return [{ id: crypto.randomUUID(), term }, ...filtered].slice(0, 10);
+        });
+      } catch (error) {
+        console.error("Error saving search history:", error);
+      }
+    };
+
+    if (debouncedSearchQuery.trim()) {
+      saveTerm(debouncedSearchQuery.trim());
+    }
+  }, [debouncedSearchQuery]);
 
   // Fetch search results
   useEffect(() => {
@@ -569,11 +616,33 @@ export default function SearchPage() {
             )}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <SearchIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              Start typing to search for people, posts, and content
-            </p>
+          <div className="space-y-4 py-12">
+            <div className="text-center space-y-2">
+              <SearchIcon className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground text-sm">
+                Start typing to search for people, posts, and content.
+              </p>
+            </div>
+            {isLoadingHistory ? (
+              <div className="flex gap-2 flex-wrap justify-center">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <Skeleton key={idx} className="h-7 w-24 rounded-full" />
+                ))}
+              </div>
+            ) : history.length > 0 ? (
+              <div className="flex gap-2 flex-wrap justify-center">
+                {history.map((item) => (
+                  <Badge
+                    key={item.id}
+                    variant="secondary"
+                    className="cursor-pointer"
+                    onClick={() => setSearchQuery(item.term)}
+                  >
+                    {item.term}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
       </div>

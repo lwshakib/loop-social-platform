@@ -147,6 +147,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [editFormData, setEditFormData] = useState({
     name: "",
     username: "",
@@ -165,9 +166,11 @@ export default function ProfilePage() {
   // Use username as-is (don't clean it)
   const cleanUsername = username || "";
 
-  // Check if this is the current user's profile
+  // Check if this is the current user's profile (prefer id match)
   const isOwnProfile =
-    currentUser?.username.toLowerCase() === cleanUsername.toLowerCase();
+    !!currentUser &&
+    (currentUser.id === userData?.id ||
+      currentUser.username.toLowerCase() === cleanUsername.toLowerCase());
 
   // Update URL when tab changes
   const handleTabChange = (tab: TabType) => {
@@ -282,12 +285,37 @@ export default function ProfilePage() {
   };
 
   const handleUpdateProfile = async () => {
+    if (!currentUser || !userData) return;
+
     try {
-      // TODO: Implement actual update API call
-      console.log("Updating profile:", editFormData);
-      setIsEditDialogOpen(false);
+      setIsUpdatingProfile(true);
+      const response = await fetch(`/api/users/${cleanUsername}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editFormData),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to update profile");
+        return;
+      }
+
+      const result = await response.json();
+      if (result.data) {
+        setUserData(result.data);
+        setIsEditDialogOpen(false);
+        // If username changed, redirect to the new profile route
+        if (
+          result.data.username &&
+          result.data.username.toLowerCase() !== cleanUsername.toLowerCase()
+        ) {
+          router.replace(`/${result.data.username}`);
+        }
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
+    } finally {
+      setIsUpdatingProfile(false);
     }
   };
 
@@ -1169,7 +1197,9 @@ export default function ProfilePage() {
             >
               Cancel
             </Button>
-            <Button onClick={handleUpdateProfile}>Save Changes</Button>
+            <Button onClick={handleUpdateProfile} disabled={isUpdatingProfile}>
+              {isUpdatingProfile ? "Saving..." : "Save Changes"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

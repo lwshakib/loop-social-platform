@@ -3,7 +3,7 @@ import { getUserByUsername } from "@/actions/user";
 import { currentUser } from "@clerk/nextjs/server";
 import db from "@/db";
 import { followsTable, usersTable } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
@@ -86,3 +86,98 @@ export async function GET(
   }
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ username: string }> | { username: string } }
+) {
+  try {
+    const resolvedParams = await Promise.resolve(params);
+    const usernameParam = resolvedParams.username;
+
+    const authUser = await currentUser();
+    if (!authUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const [dbUser] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.clerkId, authUser.id))
+      .limit(1);
+
+    if (!dbUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Only allow editing your own profile
+    if (dbUser.username !== usernameParam) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const { name, username, bio, imageUrl } = body || {};
+
+    const payload: Partial<typeof usersTable.$inferInsert> = {};
+    if (typeof name === "string") payload.name = name.trim();
+    if (typeof username === "string") payload.username = username.trim();
+    if (typeof bio === "string") payload.bio = bio;
+    if (typeof imageUrl === "string") payload.imageUrl = imageUrl.trim();
+
+    if (Object.keys(payload).length === 0) {
+      return NextResponse.json(
+        { error: "No fields to update" },
+        { status: 400 }
+      );
+    }
+
+    const [updated] = await db
+      .update(usersTable)
+      .set({ ...payload, updatedAt: sql`now()` })
+      .where(eq(usersTable.id, dbUser.id))
+      .returning();
+
+    const refreshed = await getUserByUsername(updated.username);
+    if (!refreshed) {
+      return NextResponse.json(
+        { error: "User not found after update" },
+        { status: 404 }
+      );
+    }
+
+    const response = {
+      id: refreshed.id,
+      username: refreshed.username,
+      name: refreshed.name,
+      email: refreshed.email,
+      bio: refreshed.bio || "",
+      imageUrl: refreshed.imageUrl,
+      dateOfBirth: refreshed.dateOfBirth ? String(refreshed.dateOfBirth) : "",
+      gender: refreshed.gender || "",
+      isVerified: refreshed.isVerified || false,
+      createdAt: refreshed.createdAt.toISOString(),
+      postsCount: refreshed.postsCount || 0,
+      followers: refreshed.followersCount || 0,
+      following: refreshed.followingCount || 0,
+      isFollowing: false,
+    };
+
+    return NextResponse.json({ data: response });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Internal error";
+    const isDuplicate =
+      message.includes("duplicate key value") ||
+      message.toLowerCase().includes("unique constraint");
+    if (isDuplicate) {
+      return NextResponse.json(
+        { error: "Username or email already exists" },
+        { status: 409 }
+      );
+    }
+
+    console.error("Error updating user:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

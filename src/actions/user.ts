@@ -3,6 +3,13 @@ import { usersTable, postsTable, followsTable } from "@/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq, sql } from "drizzle-orm";
 
+type UpdateUserProfileInput = {
+  name?: string;
+  username?: string;
+  bio?: string;
+  imageUrl?: string;
+};
+
 export async function getOrCreateUser() {
   const user = await currentUser();
   if (!user) return null;
@@ -84,4 +91,42 @@ export async function getUserByUsername(username: string) {
     .limit(1);
 
   return user || null;
+}
+
+export async function updateUserProfile(input: UpdateUserProfileInput) {
+  const authUser = await currentUser();
+  if (!authUser) {
+    throw new Error("Unauthorized");
+  }
+
+  // Find the DB user for the authenticated Clerk user
+  const [dbUser] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.clerkId, authUser.id))
+    .limit(1);
+
+  if (!dbUser) {
+    throw new Error("User not found");
+  }
+
+  const payload: UpdateUserProfileInput = {};
+  if (typeof input.name === "string") payload.name = input.name.trim();
+  if (typeof input.username === "string")
+    payload.username = input.username.trim();
+  if (typeof input.bio === "string") payload.bio = input.bio;
+  if (typeof input.imageUrl === "string")
+    payload.imageUrl = input.imageUrl.trim();
+
+  if (Object.keys(payload).length === 0) {
+    throw new Error("No fields to update");
+  }
+
+  const [updated] = await db
+    .update(usersTable)
+    .set({ ...payload, updatedAt: sql`now()` })
+    .where(eq(usersTable.id, dbUser.id))
+    .returning();
+
+  return updated;
 }

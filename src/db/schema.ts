@@ -29,6 +29,7 @@ export const usersTable = pgTable("users", {
   email: varchar({ length: 255 }).notNull().unique(),
   username: varchar({ length: 255 }).notNull().unique(),
   imageUrl: varchar({ length: 255 }).notNull(),
+  coverImageUrl: varchar({ length: 255 }).notNull().default(""),
   bio: text().notNull().default(""),
   dateOfBirth: date(),
   gender: varchar({ length: 255 }).notNull().default(""),

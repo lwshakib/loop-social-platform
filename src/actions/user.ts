@@ -8,6 +8,7 @@ type UpdateUserProfileInput = {
   username?: string;
   bio?: string;
   imageUrl?: string;
+  coverImageUrl?: string;
 };
 
 export async function getOrCreateUser() {
@@ -62,6 +63,7 @@ export async function getUserByUsername(username: string) {
       imageUrl: usersTable.imageUrl,
       bio: usersTable.bio,
       dateOfBirth: usersTable.dateOfBirth,
+      coverImageUrl: usersTable.coverImageUrl,
       gender: usersTable.gender,
       isVerified: usersTable.isVerified,
       createdAt: usersTable.createdAt,
@@ -117,6 +119,8 @@ export async function updateUserProfile(input: UpdateUserProfileInput) {
   if (typeof input.bio === "string") payload.bio = input.bio;
   if (typeof input.imageUrl === "string")
     payload.imageUrl = input.imageUrl.trim();
+  if (typeof input.coverImageUrl === "string")
+    payload.coverImageUrl = input.coverImageUrl.trim();
 
   if (Object.keys(payload).length === 0) {
     throw new Error("No fields to update");

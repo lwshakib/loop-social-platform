@@ -22,6 +22,7 @@ import {
 } from "@/lib/post-actions";
 import { useSocialStore } from "@/context";
 import { Heart, Bookmark, MessageCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type UserResult = {
   id: string;
@@ -50,6 +51,45 @@ type PostResult = {
     imageUrl: string | null;
   };
 };
+
+const UsersSkeleton = () => (
+  <div className="space-y-3">
+    {Array.from({ length: 4 }).map((_, idx) => (
+      <div
+        key={idx}
+        className="flex items-center gap-4 p-4 rounded-lg border border-border"
+      >
+        <Skeleton className="h-12 w-12 rounded-full" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-48" />
+        </div>
+        <Skeleton className="h-5 w-5 rounded-full" />
+      </div>
+    ))}
+  </div>
+);
+
+const PostsSkeleton = () => (
+  <div className="space-y-4">
+    {Array.from({ length: 3 }).map((_, idx) => (
+      <div key={idx} className="border border-border rounded-lg p-4 space-y-3">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-5/6" />
+        </div>
+        <Skeleton className="h-56 w-full rounded-lg" />
+      </div>
+    ))}
+  </div>
+);
 
 // Helper function to format time ago
 const formatTimeAgo = (date: string): string => {
@@ -316,8 +356,13 @@ export default function SearchPage() {
 
         {/* Search Results */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="space-y-6 py-6">
+            {(activeTab === "all" || activeTab === "users") && (
+              <UsersSkeleton />
+            )}
+            {(activeTab === "all" || activeTab === "posts") && (
+              <PostsSkeleton />
+            )}
           </div>
         ) : showResults ? (
           <div className="space-y-6">

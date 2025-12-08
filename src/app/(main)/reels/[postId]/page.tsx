@@ -33,6 +33,7 @@ import {
   createComment,
 } from "@/lib/post-actions";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Post = {
   id: string;
@@ -52,6 +53,55 @@ type Post = {
     imageUrl: string;
   };
 };
+
+const ReelPageSkeleton = () => (
+  <div className="relative flex-1 h-screen overflow-hidden">
+    <div className="absolute inset-0 flex">
+      <div className="w-full md:w-3/5 h-full bg-black flex items-center justify-center">
+        <Skeleton className="h-[70vh] w-full max-w-2xl rounded-3xl" />
+      </div>
+      <div className="hidden md:flex flex-1 flex-col bg-card border-l border-border p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-40" />
+          </div>
+        </div>
+        <div className="space-y-3">
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-5/6" />
+          <Skeleton className="h-3 w-4/6" />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, idx) => (
+            <div key={idx} className="flex gap-3">
+              <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-3 w-5/6" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const ReelCommentsSkeleton = () => (
+  <div className="p-4 space-y-4">
+    {Array.from({ length: 3 }).map((_, idx) => (
+      <div key={idx} className="flex gap-3">
+        <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-3 w-5/6" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 type Comment = {
   id: string;
@@ -520,14 +570,7 @@ export default function ReelsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground mt-4">Loading videos...</p>
-        </div>
-      </div>
-    );
+    return <ReelPageSkeleton />;
   }
 
   if (videos.length === 0) {
@@ -856,9 +899,7 @@ export default function ReelsPage() {
                       {/* Comments List */}
                       <div className="flex-1 overflow-y-auto space-y-4 p-4 max-h-[400px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         {isLoadingComments ? (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                          </div>
+                          <ReelCommentsSkeleton />
                         ) : comments.length === 0 ? (
                           <div className="text-center py-8 text-muted-foreground">
                             No comments yet. Be the first to comment!

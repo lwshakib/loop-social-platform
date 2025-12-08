@@ -12,6 +12,7 @@ import {
 } from "@/lib/post-actions";
 import { useSocialStore } from "@/context";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Reel = {
   id: string;
@@ -31,6 +32,14 @@ type Reel = {
     imageUrl: string;
   };
 };
+
+const ReelsSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+    {Array.from({ length: 8 }).map((_, idx) => (
+      <Skeleton key={idx} className="aspect-[9/16] w-full rounded-xl" />
+    ))}
+  </div>
+);
 
 // Helper function to format time ago
 const formatTimeAgo = (date: string): string => {
@@ -144,10 +153,18 @@ export default function ReelsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading reels...</p>
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <Play className="h-6 w-6 sm:h-8 sm:w-8" />
+              <h1 className="text-2xl sm:text-3xl font-bold">Reels</h1>
+            </div>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Watch short videos from creators
+            </p>
+          </div>
+          <ReelsSkeleton />
         </div>
       </div>
     );

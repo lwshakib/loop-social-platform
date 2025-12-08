@@ -13,6 +13,7 @@ import {
   toggleUnbookmark,
 } from "@/lib/post-actions";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Post = {
   id: string;
@@ -42,6 +43,32 @@ type SuggestedUser = {
   bio: string;
   isVerified?: boolean;
 };
+
+const ExplorePostsSkeleton = () => (
+  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
+    {Array.from({ length: 9 }).map((_, idx) => (
+      <Skeleton key={idx} className="aspect-square w-full rounded-lg" />
+    ))}
+  </div>
+);
+
+const SuggestedUsersSkeleton = () => (
+  <div className="space-y-3">
+    {Array.from({ length: 4 }).map((_, idx) => (
+      <div
+        key={idx}
+        className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card"
+      >
+        <Skeleton className="h-12 w-12 rounded-full" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-48" />
+          <Skeleton className="h-3 w-36" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 // Helper function to format numbers
 const formatNumber = (num: number): string => {
@@ -245,9 +272,7 @@ export default function ExplorePage() {
             <section className="mb-8">
               <h2 className="text-xl font-semibold mb-4">Trending Posts</h2>
               {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
+                <ExplorePostsSkeleton />
               ) : posts.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <p className="text-sm">No posts available</p>
@@ -361,9 +386,7 @@ export default function ExplorePage() {
             <section>
               <h2 className="text-xl font-semibold mb-4">Suggested Users</h2>
               {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                </div>
+                <SuggestedUsersSkeleton />
               ) : suggestedUsers.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <p className="text-sm">No suggestions available</p>

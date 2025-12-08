@@ -38,6 +38,7 @@ import VideoPlayer from "./_components/video-player";
 import Link from "next/link";
 import axios from "axios";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Post = {
   id: string;
@@ -75,6 +76,48 @@ type StoryGroup = {
     expiresAt: string;
   }>;
 };
+
+const StorySkeleton = () => (
+  <div className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0">
+    <Skeleton className="h-14 w-14 sm:h-16 sm:w-16 rounded-full border border-border" />
+    <Skeleton className="h-2 w-12 sm:w-14 rounded-full" />
+  </div>
+);
+
+const StoriesSkeletonRow = () => (
+  <div className="flex gap-2 sm:gap-3 md:gap-4 overflow-hidden w-full">
+    {Array.from({ length: 8 }).map((_, idx) => (
+      <StorySkeleton key={idx} />
+    ))}
+  </div>
+);
+
+const PostSkeleton = () => (
+  <div className="border-b border-border w-full">
+    <div className="px-3 py-3 w-full">
+      <div className="flex items-start gap-2.5">
+        <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+        <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Skeleton className="h-3 w-24 rounded-full" />
+            <Skeleton className="h-3 w-16 rounded-full" />
+            <Skeleton className="h-3 w-10 rounded-full" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-full rounded" />
+            <Skeleton className="h-3 w-5/6 rounded" />
+          </div>
+          <Skeleton className="h-52 sm:h-64 md:h-80 w-full max-w-xl rounded-xl" />
+          <div className="flex items-center gap-4">
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <Skeleton key={idx} className="h-7 w-12 rounded-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 // Helper function to format time ago
 const formatTimeAgo = (date: string | Date): string => {
@@ -649,8 +692,8 @@ export default function HomePage() {
                   className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 cursor-pointer"
                   onClick={() => setIsCreateStoryDialogOpen(true)}
                 >
-                  <div className="relative p-[2px] rounded-full border-2 border-border">
-                    <div className="rounded-full bg-background p-[2px]">
+                  <div className="relative p-0.5 rounded-full border-2 border-border">
+                    <div className="rounded-full bg-background p-0.5">
                       <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
                         <AvatarImage
                           src={getAvatarUrl()}
@@ -672,9 +715,7 @@ export default function HomePage() {
               )}
 
               {isLoadingStories ? (
-                <div className="flex items-center justify-center w-full py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                </div>
+                <StoriesSkeletonRow />
               ) : stories.length === 0 ? (
                 !currentUser && (
                   <div className="flex items-center justify-center w-full py-4 text-muted-foreground text-sm">
@@ -703,8 +744,8 @@ export default function HomePage() {
                         }
                       }}
                     >
-                      <div className="relative p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500">
-                        <div className="rounded-full bg-background p-[2px]">
+                      <div className="relative p-0.5 rounded-full bg-linear-to-tr from-yellow-400 via-pink-500 to-purple-500">
+                        <div className="rounded-full bg-background p-0.5">
                           <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
                             <AvatarImage
                               src={storyGroup.user.imageUrl || ""}
@@ -731,8 +772,10 @@ export default function HomePage() {
           {/* Posts */}
           <div className="space-y-0 w-full">
             {isLoadingPosts ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="space-y-0 w-full">
+                {Array.from({ length: 4 }).map((_, idx) => (
+                  <PostSkeleton key={idx} />
+                ))}
               </div>
             ) : posts.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
@@ -795,7 +838,7 @@ export default function HomePage() {
                           </div>
 
                           {/* Post Content */}
-                          <div className="text-sm mb-2 whitespace-pre-wrap break-words leading-5">
+                          <div className="text-sm mb-2 whitespace-pre-wrap wrap-break-word leading-5">
                             {post.content}
                           </div>
 

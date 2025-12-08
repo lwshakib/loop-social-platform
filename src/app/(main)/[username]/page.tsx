@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ import {
   Play,
   X,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type TabType = "posts" | "reels" | "liked" | "saved";
 
@@ -60,6 +61,7 @@ type UserData = {
   email: string;
   bio: string;
   imageUrl: string;
+  coverImageUrl: string;
   dateOfBirth: string;
   gender: string;
   isVerified: boolean;
@@ -69,6 +71,63 @@ type UserData = {
   following: number;
   isFollowing?: boolean;
 };
+
+const ProfileSkeleton = () => (
+  <div className="flex-1">
+    <div className="space-y-4">
+      <Skeleton className="h-36 sm:h-48 w-full rounded-xl" />
+      <div className="px-4 space-y-4">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <Skeleton className="h-20 w-20 sm:h-24 sm:w-24 rounded-full" />
+          <div className="flex-1 space-y-3">
+            <Skeleton className="h-5 w-32 sm:w-40" />
+            <Skeleton className="h-4 w-52 sm:w-64" />
+            <div className="flex gap-3">
+              {[1, 2, 3].map((item) => (
+                <Skeleton
+                  key={item}
+                  className="h-4 w-16 sm:w-20 rounded-full"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {[1, 2, 3].map((item) => (
+            <Skeleton key={item} className="h-9 w-28 sm:w-32 rounded-lg" />
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-1 sm:gap-2">
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <Skeleton key={idx} className="aspect-square w-full rounded-lg" />
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const PostsGridSkeleton = () => (
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-0.5 sm:gap-1 md:gap-2 p-0.5 sm:p-1 md:p-2">
+    {Array.from({ length: 8 }).map((_, idx) => (
+      <Skeleton key={idx} className="aspect-square w-full rounded-md" />
+    ))}
+  </div>
+);
+
+const CommentsSkeleton = () => (
+  <div className="p-4 space-y-4">
+    {Array.from({ length: 4 }).map((_, idx) => (
+      <div key={idx} className="flex gap-3">
+        <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-3 w-24 sm:w-32" />
+          <Skeleton className="h-3 w-5/6" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 type Comment = {
   id: string;
@@ -153,7 +212,18 @@ export default function ProfilePage() {
     username: "",
     bio: "",
     imageUrl: "",
+    coverImageUrl: "",
   });
+  const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const profilePreview = useMemo(
+    () => (profileFile ? URL.createObjectURL(profileFile) : null),
+    [profileFile]
+  );
+  const coverPreview = useMemo(
+    () => (coverFile ? URL.createObjectURL(coverFile) : null),
+    [coverFile]
+  );
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -279,20 +349,67 @@ export default function ProfilePage() {
         username: userData.username,
         bio: userData.bio || "",
         imageUrl: userData.imageUrl || "",
+        coverImageUrl: userData.coverImageUrl || "",
       });
+      setProfileFile(null);
+      setCoverFile(null);
       setIsEditDialogOpen(true);
     }
+  };
+
+  const uploadImage = async (file: File, folder = "loop-social-platform") => {
+    const signatureRes = await fetch(
+      `/api/cloudinary/signature?folder=${encodeURIComponent(folder)}`
+    );
+    if (!signatureRes.ok) throw new Error("Failed to get upload signature");
+    const signatureJson = await signatureRes.json();
+    const sigData = signatureJson.data;
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("api_key", sigData.apiKey);
+    formData.append("timestamp", String(sigData.timestamp));
+    formData.append("folder", sigData.folder);
+    formData.append("signature", sigData.signature);
+
+    const uploadRes = await fetch(uploadUrl, {
+      method: "POST",
+      body: formData,
+    });
+    if (!uploadRes.ok) throw new Error("Failed to upload image");
+    const uploadJson = await uploadRes.json();
+    return uploadJson.secure_url || uploadJson.url;
   };
 
   const handleUpdateProfile = async () => {
     if (!currentUser || !userData) return;
 
+    let nextImageUrl = editFormData.imageUrl;
+    let nextCoverUrl = editFormData.coverImageUrl;
+
     try {
       setIsUpdatingProfile(true);
+      if (profileFile) {
+        nextImageUrl = await uploadImage(
+          profileFile,
+          "loop-social-platform/profile"
+        );
+      }
+      if (coverFile) {
+        nextCoverUrl = await uploadImage(
+          coverFile,
+          "loop-social-platform/cover"
+        );
+      }
+
       const response = await fetch(`/api/users/${cleanUsername}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify({
+          ...editFormData,
+          imageUrl: nextImageUrl,
+          coverImageUrl: nextCoverUrl,
+        }),
       });
 
       if (!response.ok) {
@@ -303,6 +420,8 @@ export default function ProfilePage() {
       const result = await response.json();
       if (result.data) {
         setUserData(result.data);
+        setProfileFile(null);
+        setCoverFile(null);
         setIsEditDialogOpen(false);
         // If username changed, redirect to the new profile route
         if (
@@ -565,14 +684,7 @@ export default function ProfilePage() {
 
   // Show loading state
   if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading profile...</p>
-        </div>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   // Show error state if user not found
@@ -590,13 +702,17 @@ export default function ProfilePage() {
     userData.imageUrl ||
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`;
   const coverImageUrl = "https://picsum.photos/800/300?random=profile";
+  const currentCoverImage =
+    userData.coverImageUrl && userData.coverImageUrl.length > 0
+      ? userData.coverImageUrl
+      : coverImageUrl;
 
   return (
     <div className="flex-1 overflow-y-auto">
       {/* Cover Image */}
-      <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 bg-gradient-to-r from-blue-500 to-purple-500">
+      <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 bg-linear-to-r from-blue-500 to-purple-500">
         <img
-          src={coverImageUrl}
+          src={currentCoverImage}
           alt="Cover"
           className="w-full h-full object-cover"
         />
@@ -762,12 +878,7 @@ export default function ProfilePage() {
       {/* Posts Grid */}
       <div>
         {isLoadingPosts ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground text-sm">
-              Loading posts...
-            </p>
-          </div>
+          <PostsGridSkeleton />
         ) : posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-muted-foreground text-sm">
@@ -967,9 +1078,7 @@ export default function ProfilePage() {
               {/* Comments Section */}
               <div className="flex-1 overflow-y-auto min-h-0">
                 {isLoadingComments ? (
-                  <div className="flex items-center justify-center p-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                  </div>
+                  <CommentsSkeleton />
                 ) : comments.length === 0 ? (
                   <div className="p-8 text-center text-muted-foreground text-sm">
                     No comments yet. Be the first to comment!
@@ -1095,7 +1204,7 @@ export default function ProfilePage() {
 
               {/* Comment Input - Fixed at bottom */}
               {currentUser && (
-                <div className="flex-shrink-0 p-4 border-t bg-background">
+                <div className="shrink-0 p-4 border-t bg-background">
                   <div className="flex gap-2">
                     <Input
                       value={commentContent}
@@ -1187,6 +1296,90 @@ export default function ProfilePage() {
               <p className="text-xs text-muted-foreground">
                 {editFormData.bio.length}/160
               </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="coverImageUrl">Cover Image URL</Label>
+            <Input
+              id="coverImageUrl"
+              value={editFormData.coverImageUrl}
+              onChange={(e) =>
+                setEditFormData((prev) => ({
+                  ...prev,
+                  coverImageUrl: e.target.value,
+                }))
+              }
+              placeholder="https://example.com/cover.jpg"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Profile Image Upload</Label>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={profilePreview || editFormData.imageUrl} />
+                <AvatarFallback>
+                  {editFormData.name[0]?.toUpperCase() ||
+                    editFormData.username[0]?.toUpperCase() ||
+                    "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex gap-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setProfileFile(file);
+                  }}
+                  className="w-48"
+                />
+                {profileFile && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setProfileFile(null)}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Cover Image Upload</Label>
+            <div className="flex flex-col gap-3">
+              <div className="h-24 w-full rounded-md overflow-hidden bg-muted">
+                <img
+                  src={
+                    coverPreview || editFormData.coverImageUrl || coverImageUrl
+                  }
+                  alt="Cover preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setCoverFile(file);
+                  }}
+                  className="w-48"
+                />
+                {coverFile && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCoverFile(null)}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 

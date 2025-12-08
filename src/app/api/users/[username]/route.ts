@@ -66,6 +66,7 @@ export async function GET(
       email: user.email,
       bio: user.bio || "",
       imageUrl: user.imageUrl,
+      coverImageUrl: user.coverImageUrl || "",
       dateOfBirth: user.dateOfBirth ? String(user.dateOfBirth) : "",
       gender: user.gender || "",
       isVerified: user.isVerified || false,
@@ -115,13 +116,15 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { name, username, bio, imageUrl } = body || {};
+    const { name, username, bio, imageUrl, coverImageUrl } = body || {};
 
     const payload: Partial<typeof usersTable.$inferInsert> = {};
     if (typeof name === "string") payload.name = name.trim();
     if (typeof username === "string") payload.username = username.trim();
     if (typeof bio === "string") payload.bio = bio;
     if (typeof imageUrl === "string") payload.imageUrl = imageUrl.trim();
+    if (typeof coverImageUrl === "string")
+      payload.coverImageUrl = coverImageUrl.trim();
 
     if (Object.keys(payload).length === 0) {
       return NextResponse.json(
@@ -153,6 +156,7 @@ export async function PATCH(
       imageUrl: refreshed.imageUrl,
       dateOfBirth: refreshed.dateOfBirth ? String(refreshed.dateOfBirth) : "",
       gender: refreshed.gender || "",
+      coverImageUrl: refreshed.coverImageUrl || "",
       isVerified: refreshed.isVerified || false,
       createdAt: refreshed.createdAt.toISOString(),
       postsCount: refreshed.postsCount || 0,

@@ -1,5 +1,6 @@
 import { getOrCreateUser } from "@/actions/user";
 import { LeftSidebar } from "./_components/left-sidebar";
+import { MobileNav } from "./_components/mobile-nav";
 import { UserProvider } from "./_components/user-provider";
 import { User } from "@/types";
 
@@ -28,7 +29,8 @@ export default async function MainLayout({
     <div className="flex h-screen bg-background font-sans overflow-hidden">
       <UserProvider user={user} />
       <LeftSidebar />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">{children}</main>
+      <MobileNav />
     </div>
   );
 }

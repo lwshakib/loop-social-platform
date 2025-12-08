@@ -17,6 +17,7 @@ import {
 import { Bookmark, Heart, MessageCircle, ArrowLeft, Play } from "lucide-react";
 import Link from "next/link";
 import VideoPlayer from "../../_components/video-player";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Post = {
   id: string;
@@ -53,6 +54,58 @@ type Comment = {
   };
   replies?: Comment[];
 };
+
+const PostPageSkeleton = () => (
+  <div className="flex-1 overflow-y-auto">
+    <div className="flex flex-col md:flex-row min-h-full md:min-h-[calc(100vh-4rem)] max-w-6xl mx-auto">
+      <Skeleton className="relative w-full md:w-3/5 min-h-[400px] md:min-h-[600px] md:max-h-[calc(100vh-4rem)] rounded-none" />
+      <div className="flex-1 bg-card border-l border-border p-4 flex flex-col">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-40" />
+          </div>
+        </div>
+        <div className="space-y-3 py-4">
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-5/6" />
+          <Skeleton className="h-3 w-4/6" />
+        </div>
+        <div className="flex items-center gap-4">
+          {[1, 2, 3].map((item) => (
+            <Skeleton key={item} className="h-10 w-16 rounded-full" />
+          ))}
+        </div>
+        <div className="mt-4 space-y-3">
+          {Array.from({ length: 3 }).map((_, idx) => (
+            <div key={idx} className="flex gap-3">
+              <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-3 w-5/6" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const CommentsSkeleton = () => (
+  <div className="p-4 space-y-4">
+    {Array.from({ length: 4 }).map((_, idx) => (
+      <div key={idx} className="flex gap-3">
+        <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-3 w-5/6" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 // Helper function to format time ago
 const formatTimeAgo = (date: string): string => {
@@ -309,14 +362,7 @@ export default function PostPage() {
 
   // Show loading state
   if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading post...</p>
-        </div>
-      </div>
-    );
+    return <PostPageSkeleton />;
   }
 
   // Show error state if post not found
@@ -456,9 +502,7 @@ export default function PostPage() {
           {/* Comments Section */}
           <div className="flex-1 overflow-y-auto min-h-0 md:max-h-[calc(100vh-4rem-300px)]">
             {isLoadingComments ? (
-              <div className="flex items-center justify-center p-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-              </div>
+              <CommentsSkeleton />
             ) : comments.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground text-sm">
                 No comments yet. Be the first to comment!

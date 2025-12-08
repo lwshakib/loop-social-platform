@@ -59,7 +59,7 @@ export function LeftSidebar() {
   };
 
   return (
-    <aside className="hidden lg:flex w-72 flex-col border-r border-border bg-background">
+    <aside className="hidden lg:flex w-72 flex-col border-r border-border bg-background h-screen overflow-y-auto">
       <div className="flex flex-col h-full">
         {/* Logo Section */}
         <div className="flex items-center justify-start px-6 py-4">
@@ -105,7 +105,12 @@ export function LeftSidebar() {
             badge={3}
             isActive={isNotificationsActive}
           />
-          <NavItem icon={PlusSquare} label="Create" href="/create" isActive={isCreateActive} />
+          <NavItem
+            icon={PlusSquare}
+            label="Create"
+            href="/create"
+            isActive={isCreateActive}
+          />
           <NavItem
             label="Profile"
             href={`/${user?.username}`}

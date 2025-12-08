@@ -25,10 +25,10 @@ export default async function MainLayout({
     : null;
 
   return (
-    <div className="flex min-h-screen bg-background font-sans">
+    <div className="flex h-screen bg-background font-sans overflow-hidden">
       <UserProvider user={user} />
       <LeftSidebar />
-      {children}
+      <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   );
 }

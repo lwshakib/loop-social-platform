@@ -750,152 +750,153 @@ export default function HomePage() {
                     className="border-b border-border hover:bg-accent/5 transition-colors cursor-pointer w-full"
                     onClick={() => router.push(`/p/${post.id}`)}
                   >
-                    <div className="px-4 py-3 w-full min-w-0">
-                      {/* Post Header */}
-                      <div className="flex items-start gap-3 mb-2">
+                    <div className="px-3 py-2.5 w-full min-w-0">
+                      {/* Post Header and Content - Twitter Style */}
+                      <div className="flex items-start gap-2.5">
                         <Link
                           href={`/${post.user.username}`}
                           onClick={(e) => e.stopPropagation()}
+                          className="shrink-0"
                         >
-                          <Avatar className="h-10 w-10 shrink-0 cursor-pointer">
+                          <Avatar className="h-10 w-10 cursor-pointer">
                             <AvatarImage
                               src={avatarUrl}
                               alt={post.user.username}
                             />
-                            <AvatarFallback className="text-sm">
+                            <AvatarFallback className="text-xs">
                               {(post.user.name ||
                                 post.user.username)[0]?.toUpperCase() || "U"}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Header */}
+                          <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
                             <Link
                               href={`/${post.user.username}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="font-bold text-[15px] hover:underline cursor-pointer leading-5"
+                              className="font-semibold text-sm hover:underline cursor-pointer"
                             >
                               {post.user.name || post.user.username}
                             </Link>
                             <Link
                               href={`/${post.user.username}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="text-[15px] text-muted-foreground hover:underline cursor-pointer leading-5"
+                              className="text-sm text-muted-foreground hover:underline cursor-pointer"
                             >
-                              {post.user.username}
+                              @{post.user.username}
                             </Link>
-                            <span className="text-[15px] text-muted-foreground leading-5">
+                            <span className="text-sm text-muted-foreground">
                               ·
                             </span>
-                            <span className="text-[15px] text-muted-foreground hover:underline leading-5">
+                            <span className="text-sm text-muted-foreground hover:underline">
                               {formatTimeAgo(post.createdAt)}
                             </span>
                           </div>
-                        </div>
-                      </div>
 
-                      {/* Post Content */}
-                      <div className="text-[15px] mb-3 whitespace-pre-wrap break-words leading-[20px]">
-                        {post.content}
-                      </div>
+                          {/* Post Content */}
+                          <div className="text-sm mb-2 whitespace-pre-wrap break-words leading-5">
+                            {post.content}
+                          </div>
 
-                      {/* Post Image or Video */}
-                      {post.imageUrl && post.type === "image" && (
-                        <div className="rounded-2xl overflow-hidden mb-3 w-full">
-                          <img
-                            src={post.imageUrl}
-                            alt="Post"
-                            className="w-full h-auto object-cover"
-                          />
-                        </div>
-                      )}
-                      {post.imageUrl && post.type === "reel" && (
-                        <div className="mb-3 w-full" data-video-id={post.id}>
-                          <VideoPlayer
-                            src={post.imageUrl}
-                            videoId={post.id}
-                            containerClassName="w-full"
-                            className="max-h-[600px]"
-                            intersectionObserverId={post.id}
-                            maxHeight="600px"
-                          />
-                        </div>
-                      )}
+                          {/* Post Image or Video */}
+                          {post.imageUrl && post.type === "image" && (
+                            <div className="rounded-xl overflow-hidden mb-2 w-full max-w-lg">
+                              <img
+                                src={post.imageUrl}
+                                alt="Post"
+                                className="w-full h-auto object-cover"
+                              />
+                            </div>
+                          )}
+                          {post.imageUrl && post.type === "reel" && (
+                            <div
+                              className="mb-2 w-full max-w-lg"
+                              data-video-id={post.id}
+                            >
+                              <VideoPlayer
+                                src={post.imageUrl}
+                                videoId={post.id}
+                                containerClassName="w-full"
+                                className="max-h-[400px] rounded-xl"
+                                intersectionObserverId={post.id}
+                                maxHeight="400px"
+                                autoPlay={false}
+                                loop={true}
+                                initialMuted={true}
+                                showControls={true}
+                              />
+                            </div>
+                          )}
 
-                      {/* Action Buttons */}
-                      <div
-                        className="flex items-center justify-between max-w-[425px] -ml-1 mt-1"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full h-9 px-2 group"
-                          onClick={() => router.push(`/p/${post.id}`)}
-                        >
-                          <MessageCircle className="h-[18.75px] w-[18.75px] mr-2 group-hover:scale-110 transition-transform" />
-                          <span className="text-[13px]">
-                            {formatNumber(post.commentsCount)}
-                          </span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-muted-foreground hover:text-green-500 hover:bg-green-500/10 rounded-full h-9 px-2 group"
-                        >
-                          <Repeat2 className="h-[18.75px] w-[18.75px] mr-2 group-hover:scale-110 transition-transform" />
-                          <span className="text-[13px]">0</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleLike(post.id)}
-                          className={`rounded-full h-9 px-2 group ${
-                            likedPosts.has(post.id)
-                              ? "text-red-500 hover:bg-red-500/10"
-                              : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
-                          }`}
-                        >
-                          <Heart
-                            className={`h-[18.75px] w-[18.75px] mr-2 group-hover:scale-110 transition-transform ${
-                              likedPosts.has(post.id) ? "fill-current" : ""
-                            }`}
-                          />
-                          <span className="text-[13px]">
-                            {formatNumber(post.likesCount)}
-                          </span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full h-9 px-2 group"
-                        >
-                          <Share className="h-[18.75px] w-[18.75px] group-hover:scale-110 transition-transform" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full h-9 px-2 group"
-                        >
-                          <Eye className="h-[18.75px] w-[18.75px] mr-2 group-hover:scale-110 transition-transform" />
-                          <span className="text-[13px]">0</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleSave(post.id)}
-                          className={`rounded-full h-9 px-2 group ${
-                            savedPosts.has(post.id)
-                              ? "text-primary hover:bg-primary/10"
-                              : "text-muted-foreground hover:text-primary hover:bg-primary/10"
-                          }`}
-                        >
-                          <Bookmark
-                            className={`h-[18.75px] w-[18.75px] group-hover:scale-110 transition-transform ${
-                              savedPosts.has(post.id) ? "fill-current" : ""
-                            }`}
-                          />
-                        </Button>
+                          {/* Action Buttons - Compact Twitter Style */}
+                          <div
+                            className="flex items-center justify-between max-w-md -ml-1 mt-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full h-8 px-2 group"
+                              onClick={() => router.push(`/p/${post.id}`)}
+                            >
+                              <MessageCircle className="h-4 w-4 mr-1.5 group-hover:scale-110 transition-transform" />
+                              <span className="text-xs">
+                                {formatNumber(post.commentsCount)}
+                              </span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground hover:text-green-500 hover:bg-green-500/10 rounded-full h-8 px-2 group"
+                            >
+                              <Repeat2 className="h-4 w-4 mr-1.5 group-hover:scale-110 transition-transform" />
+                              <span className="text-xs">0</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleLike(post.id)}
+                              className={`rounded-full h-8 px-2 group ${
+                                likedPosts.has(post.id)
+                                  ? "text-red-500 hover:bg-red-500/10"
+                                  : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                              }`}
+                            >
+                              <Heart
+                                className={`h-4 w-4 mr-1.5 group-hover:scale-110 transition-transform ${
+                                  likedPosts.has(post.id) ? "fill-current" : ""
+                                }`}
+                              />
+                              <span className="text-xs">
+                                {formatNumber(post.likesCount)}
+                              </span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10 rounded-full h-8 px-2 group"
+                            >
+                              <Share className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSave(post.id)}
+                              className={`rounded-full h-8 px-2 group ${
+                                savedPosts.has(post.id)
+                                  ? "text-primary hover:bg-primary/10"
+                                  : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                              }`}
+                            >
+                              <Bookmark
+                                className={`h-4 w-4 group-hover:scale-110 transition-transform ${
+                                  savedPosts.has(post.id) ? "fill-current" : ""
+                                }`}
+                              />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

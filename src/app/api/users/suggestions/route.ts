@@ -28,11 +28,11 @@ export async function GET(request: NextRequest) {
 
     // Get list of user IDs that the current user follows
     const following = await db
-      .select({ followingId: followsTable.followingId })
+      .select({ followedUserId: followsTable.followedUserId })
       .from(followsTable)
-      .where(eq(followsTable.followerId, currentUserId));
+      .where(eq(followsTable.followingUserId, currentUserId));
 
-    const followingIds = following.map((f) => f.followingId);
+    const followingIds = following.map((f) => f.followedUserId);
     followingIds.push(currentUserId); // Exclude self and already following
 
     // Get suggested users (not following, not self, limit 10)
@@ -75,4 +75,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

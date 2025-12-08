@@ -16,6 +16,7 @@ import {
 } from "@/lib/post-actions";
 import { Bookmark, Heart, MessageCircle, ArrowLeft, Play } from "lucide-react";
 import Link from "next/link";
+import VideoPlayer from "../../_components/video-player";
 
 type Post = {
   id: string;
@@ -343,12 +344,19 @@ export default function PostPage() {
         <div className="relative w-full md:w-3/5 bg-black flex items-center justify-center overflow-hidden min-h-[400px] md:min-h-[600px] md:max-h-[calc(100vh-4rem)]">
           {post.imageUrl ? (
             post.type === "reel" ? (
-              <video
-                src={post.imageUrl}
-                className="w-full h-full object-contain max-h-[calc(100vh-4rem)]"
-                controls
-                autoPlay
-              />
+              <div className="w-full h-full flex items-center justify-center">
+                <VideoPlayer
+                  src={post.imageUrl}
+                  videoId={post.id}
+                  containerClassName="w-full h-full max-h-[calc(100vh-4rem)]"
+                  className="w-full h-full object-contain"
+                  intersectionObserverId={post.id}
+                  autoPlay={true}
+                  loop={true}
+                  initialMuted={false}
+                  showControls={true}
+                />
+              </div>
             ) : (
               <img
                 src={post.imageUrl}

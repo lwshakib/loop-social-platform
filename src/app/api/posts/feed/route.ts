@@ -38,11 +38,11 @@ export async function GET(request: NextRequest) {
     if (currentUserId) {
       // Get list of user IDs that the current user follows
       const following = await db
-        .select({ followingId: followsTable.followingId })
+        .select({ followedUserId: followsTable.followedUserId })
         .from(followsTable)
-        .where(eq(followsTable.followerId, currentUserId));
+        .where(eq(followsTable.followingUserId, currentUserId));
 
-      const followingIds = following.map((f) => f.followingId);
+      const followingIds = following.map((f) => f.followedUserId);
       followingIds.push(currentUserId); // Include own posts
 
       // Get posts from followed users
@@ -73,16 +73,11 @@ export async function GET(request: NextRequest) {
         })
         .from(postsTable)
         .innerJoin(usersTable, eq(postsTable.userId, usersTable.id))
-        .where(
-          and(
-            inArray(postsTable.userId, followingIds),
-            sql`${postsTable.type} != 'reel'` // Exclude reels from feed
-          )
-        )
+        .where(inArray(postsTable.userId, followingIds))
         .orderBy(desc(postsTable.createdAt))
         .limit(limit);
     } else {
-      // If not logged in, show all posts (excluding reels)
+      // If not logged in, show all posts (including all types: text, image, reel)
       posts = await db
         .select({
           id: postsTable.id,
@@ -110,7 +105,6 @@ export async function GET(request: NextRequest) {
         })
         .from(postsTable)
         .innerJoin(usersTable, eq(postsTable.userId, usersTable.id))
-        .where(sql`${postsTable.type} != 'reel'`)
         .orderBy(desc(postsTable.createdAt))
         .limit(limit);
     }
@@ -181,4 +175,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

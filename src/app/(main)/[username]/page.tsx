@@ -232,6 +232,12 @@ export default function ProfilePage() {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isFollowersOpen, setIsFollowersOpen] = useState(false);
+  const [isFollowingOpen, setIsFollowingOpen] = useState(false);
+  const [followersList, setFollowersList] = useState<UserData[]>([]);
+  const [followingList, setFollowingList] = useState<UserData[]>([]);
+  const [isLoadingFollowers, setIsLoadingFollowers] = useState(false);
+  const [isLoadingFollowing, setIsLoadingFollowing] = useState(false);
 
   // Use username as-is (don't clean it)
   const cleanUsername = username || "";
@@ -445,18 +451,81 @@ export default function ProfilePage() {
   };
 
   const handleFollow = async () => {
-    // TODO: Implement follow/unfollow API call
-    setIsFollowing(!isFollowing);
-    setUserData((prev) =>
-      prev
-        ? {
-            ...prev,
-            followers: isFollowing
-              ? Math.max(0, prev.followers - 1)
-              : prev.followers + 1,
-          }
-        : null
-    );
+    if (!currentUser || !userData) return;
+
+    const nextFollowing = !isFollowing;
+    const prevIsFollowing = isFollowing;
+    const prevUserData = userData;
+
+    // Optimistic update: adjust following if viewing own profile, otherwise followers of viewed user
+    setIsFollowing(nextFollowing);
+    setUserData((prev) => {
+      if (!prev) return prev;
+      if (isOwnProfile) {
+        return {
+          ...prev,
+          following: nextFollowing
+            ? prev.following + 1
+            : Math.max(0, prev.following - 1),
+        };
+      }
+      return {
+        ...prev,
+        followers: nextFollowing
+          ? prev.followers + 1
+          : Math.max(0, prev.followers - 1),
+      };
+    });
+
+    try {
+      const method = nextFollowing ? "POST" : "DELETE";
+      const res = await fetch(`/api/users/${userData.username}/follow`, {
+        method,
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update follow status");
+      }
+    } catch (error) {
+      console.error("Error following/unfollowing user:", error);
+      // Revert optimistic update on error
+      setIsFollowing(prevIsFollowing);
+      setUserData(prevUserData);
+    }
+  };
+
+  const fetchFollowers = async () => {
+    if (!cleanUsername) return;
+    try {
+      setIsLoadingFollowers(true);
+      const res = await fetch(`/api/users/${cleanUsername}/followers`);
+      if (res.ok) {
+        const json = await res.json();
+        setFollowersList(json.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching followers:", error);
+      setFollowersList([]);
+    } finally {
+      setIsLoadingFollowers(false);
+    }
+  };
+
+  const fetchFollowing = async () => {
+    if (!cleanUsername) return;
+    try {
+      setIsLoadingFollowing(true);
+      const res = await fetch(`/api/users/${cleanUsername}/following`);
+      if (res.ok) {
+        const json = await res.json();
+        setFollowingList(json.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching following:", error);
+      setFollowingList([]);
+    } finally {
+      setIsLoadingFollowing(false);
+    }
   };
 
   // Handle like/unlike with optimistic updates
@@ -813,13 +882,25 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm">
-          <button className="hover:underline shrink-0">
+          <button
+            className="hover:underline shrink-0"
+            onClick={() => {
+              setIsFollowingOpen(true);
+              fetchFollowing();
+            }}
+          >
             <span className="font-semibold text-foreground">
               {userData.following.toLocaleString()}
             </span>{" "}
             <span className="text-muted-foreground">Following</span>
           </button>
-          <button className="hover:underline shrink-0">
+          <button
+            className="hover:underline shrink-0"
+            onClick={() => {
+              setIsFollowersOpen(true);
+              fetchFollowers();
+            }}
+          >
             <span className="font-semibold text-foreground">
               {userData.followers.toLocaleString()}
             </span>{" "}
@@ -1400,6 +1481,96 @@ export default function ProfilePage() {
               {isUpdatingProfile ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Followers Dialog */}
+      <Dialog open={isFollowersOpen} onOpenChange={setIsFollowersOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Followers</DialogTitle>
+            <DialogDescription>
+              People who follow {userData.username}
+            </DialogDescription>
+          </DialogHeader>
+          {isLoadingFollowers ? (
+            <div className="py-6">
+              <CommentsSkeleton />
+            </div>
+          ) : followersList.length === 0 ? (
+            <div className="py-6 text-center text-muted-foreground text-sm">
+              No followers yet.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {followersList.map((follower) => (
+                <div
+                  key={follower.id}
+                  className="flex items-center gap-3 p-3 rounded-lg border"
+                >
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={follower.imageUrl} />
+                    <AvatarFallback>
+                      {follower.name?.[0]?.toUpperCase() ||
+                        follower.username?.[0]?.toUpperCase() ||
+                        "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{follower.username}</p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {follower.name}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Following Dialog */}
+      <Dialog open={isFollowingOpen} onOpenChange={setIsFollowingOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Following</DialogTitle>
+            <DialogDescription>
+              People {userData.username} follows
+            </DialogDescription>
+          </DialogHeader>
+          {isLoadingFollowing ? (
+            <div className="py-6">
+              <CommentsSkeleton />
+            </div>
+          ) : followingList.length === 0 ? (
+            <div className="py-6 text-center text-muted-foreground text-sm">
+              Not following anyone yet.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {followingList.map((followed) => (
+                <div
+                  key={followed.id}
+                  className="flex items-center gap-3 p-3 rounded-lg border"
+                >
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={followed.imageUrl} />
+                    <AvatarFallback>
+                      {followed.name?.[0]?.toUpperCase() ||
+                        followed.username?.[0]?.toUpperCase() ||
+                        "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{followed.username}</p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {followed.name}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

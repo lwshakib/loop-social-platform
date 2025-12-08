@@ -92,7 +92,33 @@ export async function getUserByUsername(username: string) {
     .where(eq(usersTable.username, username))
     .limit(1);
 
-  return user || null;
+  if (!user) return null;
+
+  // Recompute counts defensively to avoid stale/driver-specific return types
+  const [{ count: postsCountRaw }] = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(postsTable)
+    .where(eq(postsTable.userId, user.id));
+
+  const postsCount = Number(postsCountRaw ?? 0);
+
+  const [{ count: followersCountRaw }] = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(followsTable)
+    .where(eq(followsTable.followedUserId, user.id));
+
+  const [{ count: followingCountRaw }] = await db
+    .select({ count: sql<number>`COUNT(*)::int` })
+    .from(followsTable)
+    .where(eq(followsTable.followingUserId, user.id));
+
+  // Normalize numeric aggregates in case the driver returns strings
+  return {
+    ...user,
+    followersCount: Number(followersCountRaw ?? user.followersCount ?? 0),
+    followingCount: Number(followingCountRaw ?? user.followingCount ?? 0),
+    postsCount,
+  };
 }
 
 export async function updateUserProfile(input: UpdateUserProfileInput) {

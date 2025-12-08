@@ -528,6 +528,40 @@ export default function ProfilePage() {
     }
   };
 
+  const handleUnfollowFromList = async (targetUsername: string) => {
+    if (!currentUser || !userData || !isOwnProfile) return;
+
+    const prevList = followingList;
+    const prevUserData = userData;
+
+    // Optimistic update
+    setFollowingList((prev) =>
+      prev.filter((user) => user.username !== targetUsername)
+    );
+    setUserData((prev) =>
+      prev
+        ? {
+            ...prev,
+            following: Math.max(0, prev.following - 1),
+          }
+        : prev
+    );
+
+    try {
+      const res = await fetch(`/api/users/${targetUsername}/follow`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        throw new Error("Failed to unfollow");
+      }
+    } catch (error) {
+      console.error("Error unfollowing user:", error);
+      // Revert on failure
+      setFollowingList(prevList);
+      setUserData(prevUserData);
+    }
+  };
+
   // Handle like/unlike with optimistic updates
   const handleLike = async (postId: string, isLiked: boolean) => {
     if (!currentUser) return;
@@ -1571,6 +1605,15 @@ export default function ProfilePage() {
                       {followed.name}
                     </p>
                   </div>
+                  {isOwnProfile && currentUser && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleUnfollowFromList(followed.username)}
+                    >
+                      Unfollow
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>

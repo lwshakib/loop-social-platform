@@ -5,10 +5,12 @@ Loop is a modern, full‑stack social media platform built with **Next.js 16 (Ap
 ### Features
 
 - **Authentication & onboarding**
+
   - Email/password, OAuth, and session management via `@clerk/nextjs`
   - Auth layouts in `src/app/(auth)` (`sign-in`, `sign-up`)
 
 - **Core social features**
+
   - User profiles at `/{username}`
   - Create and edit posts at `/create` and `/p/[postId]`
   - Reels pages at `/reels` and `/reels/[postId]` with a custom `video-player`
@@ -20,12 +22,14 @@ Loop is a modern, full‑stack social media platform built with **Next.js 16 (Ap
   - Notifications and basic messaging (`/notifications`, `/messages`)
 
 - **Modern UI/UX**
+
   - App shell layout in `src/app/(main)/layout.tsx` with left sidebar, mobile nav, and top navigation
   - Dark/light mode with `next-themes` and `mode-toggle`
   - Reusable UI primitives in `src/components/ui` (buttons, dialogs, sheets, sidebar, forms, etc.)
   - Toasts and feedback using `sonner`
 
 - **Media & uploads**
+
   - Cloudinary signature endpoint at `src/app/api/cloudinary/signature/route.ts`
   - Client utilities in `src/lib` and `src/actions` for handling media and posts
 
@@ -62,7 +66,7 @@ Loop is a modern, full‑stack social media platform built with **Next.js 16 (Ap
 
 ### Prerequisites
 
-- **Node.js**: 18.18+ (recommended LTS)  
+- **Node.js**: 18.18+ (recommended LTS)
 - **Package manager**: npm (project ships with `package-lock.json`)
 - **PostgreSQL** database (local or hosted)
 - **Cloudinary** account (for media uploads)

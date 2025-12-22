@@ -54,10 +54,10 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-[#0a0a0a] overflow-hidden">
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-background overflow-hidden">
       {/* Background Decorative Elements */}
-      <div className="absolute top-0 right-0 w-125 h-125 bg-indigo-600/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-100 h-100 bg-purple-600/10 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
+      <div className="absolute top-0 right-0 w-125 h-125 bg-primary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-100 h-100 bg-primary/5 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -65,33 +65,33 @@ export default function SignInPage() {
         transition={{ duration: 0.6 }}
         className="z-10 w-full max-w-250 p-4 lg:p-8"
       >
-        <div className="grid lg:grid-cols-2 bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl">
+        <div className="grid lg:grid-cols-2 bg-card/50 backdrop-blur-xl border border-border rounded-[2rem] overflow-hidden shadow-2xl">
           {/* Brand Side */}
-          <div className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden bg-zinc-950">
+          <div className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden bg-card">
             <div className="absolute inset-0 z-0">
               <img
                 src="/images/auth-bg.png"
                 alt="Auth background"
                 className="w-full h-full object-cover opacity-60"
               />
-              <div className="absolute inset-0 bg-linear-to-br from-zinc-950/80 via-transparent to-zinc-950/80" />
+              <div className="absolute inset-0 bg-linear-to-br from-card/80 via-transparent to-card/80" />
             </div>
 
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-12">
-                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                  <div className="w-5 h-5 border-2 border-white rounded-full" />
+                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                  <div className="w-5 h-5 border-2 border-primary-foreground rounded-full" />
                 </div>
-                <span className="text-2xl font-bold tracking-tight text-white">
+                <span className="text-2xl font-bold tracking-tight text-foreground">
                   Loop
                 </span>
               </div>
 
-              <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-                Connect with the <span className="text-indigo-400">world</span>{" "}
-                in a better way.
+              <h1 className="text-4xl xl:text-5xl font-bold text-foreground leading-tight mb-6">
+                Connect with the <span className="text-primary">world</span> in
+                a better way.
               </h1>
-              <p className="text-zinc-400 text-lg mb-8 max-w-sm">
+              <p className="text-muted-foreground text-lg mb-8 max-w-sm">
                 Join our community to share your thoughts, discover new ideas,
                 and keep your friends in the loop.
               </p>
@@ -118,10 +118,10 @@ export default function SignInPage() {
                     key={i}
                     className="flex items-center gap-4 group"
                   >
-                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
                       {item.icon}
                     </div>
-                    <span className="text-zinc-300 font-medium">
+                    <span className="text-foreground/80 font-medium">
                       {item.text}
                     </span>
                   </motion.div>
@@ -129,13 +129,13 @@ export default function SignInPage() {
               </div>
             </div>
 
-            <div className="relative z-10 mt-12 pt-8 border-t border-white/5">
+            <div className="relative z-10 mt-12 pt-8 border-t border-border/50">
               <div className="flex items-center gap-3">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map((i) => (
                     <div
                       key={i}
-                      className="w-8 h-8 rounded-full border-2 border-zinc-950 bg-zinc-800 overflow-hidden"
+                      className="w-8 h-8 rounded-full border-2 border-card bg-muted overflow-hidden"
                     >
                       <img
                         src={`https://i.pravatar.cc/150?u=${i}`}
@@ -144,7 +144,7 @@ export default function SignInPage() {
                     </div>
                   ))}
                 </div>
-                <span className="text-sm text-zinc-500 font-medium italic">
+                <span className="text-sm text-muted-foreground font-medium italic">
                   Join 10k+ active users
                 </span>
               </div>
@@ -155,67 +155,67 @@ export default function SignInPage() {
           <div className="p-8 lg:p-12 flex flex-col justify-center">
             <div className="max-w-md mx-auto w-full">
               <div className="flex lg:hidden items-center gap-2 mb-8 justify-center">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                  <div className="w-4 h-4 border-2 border-white rounded-full" />
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-primary-foreground rounded-full" />
                 </div>
-                <span className="text-xl font-bold tracking-tight text-white">
+                <span className="text-xl font-bold tracking-tight text-foreground">
                   Loop
                 </span>
               </div>
 
               <div className="mb-10 text-center lg:text-left">
-                <h2 className="text-3xl font-bold text-white mb-2">
+                <h2 className="text-3xl font-bold text-foreground mb-2">
                   Welcome Back
                 </h2>
-                <p className="text-zinc-400 font-medium">
+                <p className="text-muted-foreground font-medium">
                   Please enter your details to sign in.
                 </p>
               </div>
 
               <form onSubmit={handleSignIn} className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+                  <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                     Email Address
                   </label>
                   <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-indigo-500 transition-colors" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="name@example.com"
                       required
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                      className="w-full bg-muted/30 border border-border rounded-xl py-3.5 pl-12 pr-4 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+                    <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                       Password
                     </label>
                     <Link
                       href="#"
-                      className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
+                      className="text-xs font-bold text-primary hover:text-primary/80 transition-colors"
                     >
                       Forgot Password?
                     </Link>
                   </div>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-indigo-500 transition-colors" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <input
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       required
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-12 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-mono"
+                      className="w-full bg-muted/30 border border-border rounded-xl py-3.5 pl-12 pr-12 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-mono"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {showPassword ? (
                         <EyeOff className="w-5 h-5" />
@@ -231,7 +231,7 @@ export default function SignInPage() {
                   whileTap={{ scale: 0.99 }}
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed group"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed group"
                 >
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -246,9 +246,9 @@ export default function SignInPage() {
 
               <div className="relative my-8 text-center">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10"></div>
+                  <div className="w-full border-t border-border"></div>
                 </div>
-                <span className="relative px-4 text-xs font-bold text-zinc-500 uppercase tracking-widest bg-[#0f0f0f]">
+                <span className="relative px-4 text-xs font-bold text-muted-foreground uppercase tracking-widest bg-card">
                   Or Continue With
                 </span>
               </div>
@@ -256,7 +256,7 @@ export default function SignInPage() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => handleSocialSignIn("google")}
-                  className="flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 text-white transition-all group"
+                  className="flex items-center justify-center gap-3 bg-muted/30 hover:bg-muted/50 border border-border rounded-xl py-3 text-foreground transition-all group"
                 >
                   <img
                     src="https://www.svgrepo.com/show/475656/google-color.svg"
@@ -267,7 +267,7 @@ export default function SignInPage() {
                 </button>
                 <button
                   disabled
-                  className="flex items-center justify-center gap-3 bg-white/5 border border-white/5 rounded-xl py-3 text-zinc-600 cursor-not-allowed transition-all group"
+                  className="flex items-center justify-center gap-3 bg-muted/20 border border-border/10 rounded-xl py-3 text-muted-foreground cursor-not-allowed transition-all group"
                   title="Coming soon"
                 >
                   <Github className="w-5 h-5 opacity-50" />
@@ -281,11 +281,11 @@ export default function SignInPage() {
               </div>
 
               <div className="mt-10 text-center">
-                <p className="text-zinc-500 font-medium">
+                <p className="text-muted-foreground font-medium">
                   New to Loop?{" "}
                   <Link
                     href="/sign-up"
-                    className="text-indigo-400 hover:text-indigo-300 font-bold transition-colors"
+                    className="text-primary hover:text-primary/80 font-bold transition-colors"
                   >
                     Create Account
                   </Link>

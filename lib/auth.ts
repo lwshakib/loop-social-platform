@@ -31,4 +31,22 @@ export const auth = betterAuth({
     },
   },
   plugins: [username()],
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          if (!user.username) {
+            const baseUsername = user.name
+              ? user.name.toLowerCase().replace(/\s+/g, "")
+              : "user";
+            const randomSuffix = Math.random().toString(36).substring(2, 7);
+            user.username = `${baseUsername}_${randomSuffix}`;
+          }
+          return {
+            data: user,
+          };
+        },
+      },
+    },
+  },
 });

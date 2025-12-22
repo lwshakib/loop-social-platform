@@ -59,10 +59,10 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-[#0a0a0a] overflow-hidden">
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-background overflow-hidden">
       {/* Background Decorative Elements */}
-      <div className="absolute top-0 left-0 w-125 h-125 bg-indigo-600/10 blur-[120px] rounded-full -translate-y-1/2 -translate-x-1/2" />
-      <div className="absolute bottom-0 right-0 w-100 h-100 bg-purple-600/10 blur-[100px] rounded-full translate-y-1/2 translate-x-1/2" />
+      <div className="absolute top-0 left-0 w-125 h-125 bg-primary/10 blur-[120px] rounded-full -translate-y-1/2 -translate-x-1/2" />
+      <div className="absolute bottom-0 right-0 w-100 h-100 bg-primary/5 blur-[100px] rounded-full translate-y-1/2 translate-x-1/2" />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -70,33 +70,33 @@ export default function SignUpPage() {
         transition={{ duration: 0.5 }}
         className="z-10 w-full max-w-250 p-4 lg:p-8"
       >
-        <div className="grid lg:grid-cols-2 bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl">
+        <div className="grid lg:grid-cols-2 bg-card/50 backdrop-blur-xl border border-border rounded-[2rem] overflow-hidden shadow-2xl">
           {/* Brand Side - Flipped position for variety */}
-          <div className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden bg-zinc-950 lg:order-2">
+          <div className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden bg-card lg:order-2">
             <div className="absolute inset-0 z-0">
               <img
                 src="/images/auth-bg.png"
                 alt="Auth background"
                 className="w-full h-full object-cover opacity-60 scale-x-[-1]"
               />
-              <div className="absolute inset-0 bg-linear-to-bl from-zinc-950/80 via-transparent to-zinc-950/80" />
+              <div className="absolute inset-0 bg-linear-to-bl from-card/80 via-transparent to-card/80" />
             </div>
 
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-12">
-                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                  <div className="w-5 h-5 border-2 border-white rounded-full" />
+                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+                  <div className="w-5 h-5 border-2 border-primary-foreground rounded-full" />
                 </div>
-                <span className="text-2xl font-bold tracking-tight text-white">
+                <span className="text-2xl font-bold tracking-tight text-foreground">
                   Loop
                 </span>
               </div>
 
-              <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-                Start your <span className="text-indigo-400">journey</span> with
-                us today.
+              <h1 className="text-4xl xl:text-5xl font-bold text-foreground leading-tight mb-6">
+                Start your <span className="text-primary">journey</span> with us
+                today.
               </h1>
-              <p className="text-zinc-400 text-lg mb-8 max-w-sm">
+              <p className="text-muted-foreground text-lg mb-8 max-w-sm">
                 Create an account to unlock full potential of our platform and
                 start connecting with incredible people.
               </p>
@@ -104,15 +104,15 @@ export default function SignUpPage() {
               <div className="space-y-5">
                 {[
                   {
-                    icon: <CheckCircle2 className="w-5 h-5 text-indigo-400" />,
+                    icon: <CheckCircle2 className="w-5 h-5 text-primary" />,
                     text: "Customizable profile and bio",
                   },
                   {
-                    icon: <CheckCircle2 className="w-5 h-5 text-indigo-400" />,
+                    icon: <CheckCircle2 className="w-5 h-5 text-primary" />,
                     text: "Unlimited posts and networking",
                   },
                   {
-                    icon: <CheckCircle2 className="w-5 h-5 text-indigo-400" />,
+                    icon: <CheckCircle2 className="w-5 h-5 text-primary" />,
                     text: "Priority support for creators",
                   },
                 ].map((item, i) => (
@@ -123,10 +123,10 @@ export default function SignUpPage() {
                     key={i}
                     className="flex items-center gap-4 group"
                   >
-                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
                       {item.icon}
                     </div>
-                    <span className="text-zinc-300 font-medium">
+                    <span className="text-foreground/80 font-medium">
                       {item.text}
                     </span>
                   </motion.div>
@@ -134,15 +134,15 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            <div className="relative z-10 mt-12 pt-8 border-t border-white/5">
-              <div className="p-4 bg-white/5 rounded-2xl backdrop-blur-md border border-white/10">
-                <p className="text-sm text-zinc-400 italic">
+            <div className="relative z-10 mt-12 pt-8 border-t border-border/50">
+              <div className="p-4 bg-foreground/5 rounded-2xl backdrop-blur-md border border-border">
+                <p className="text-sm text-muted-foreground italic">
                   "The best social platform I've used. The minimalist design and
                   loop mechanics are genius."
                 </p>
                 <div className="mt-3 flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-indigo-500" />
-                  <span className="text-xs font-bold text-white">
+                  <div className="w-6 h-6 rounded-full bg-primary" />
+                  <span className="text-xs font-bold text-foreground">
                     Sarah Jenkins, Creator
                   </span>
                 </div>
@@ -154,19 +154,19 @@ export default function SignUpPage() {
           <div className="p-8 lg:p-12 flex flex-col justify-center lg:order-1">
             <div className="max-w-md mx-auto w-full">
               <div className="flex lg:hidden items-center gap-2 mb-8 justify-center">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                  <div className="w-4 h-4 border-2 border-white rounded-full" />
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-primary-foreground rounded-full" />
                 </div>
-                <span className="text-xl font-bold tracking-tight text-white">
+                <span className="text-xl font-bold tracking-tight text-foreground">
                   Loop
                 </span>
               </div>
 
               <div className="mb-10 text-center lg:text-left">
-                <h2 className="text-3xl font-bold text-white mb-2">
+                <h2 className="text-3xl font-bold text-foreground mb-2">
                   Create Account
                 </h2>
-                <p className="text-zinc-400 font-medium">
+                <p className="text-muted-foreground font-medium">
                   Join our community in just a few clicks.
                 </p>
               </div>
@@ -174,74 +174,74 @@ export default function SignUpPage() {
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                       Full Name
                     </label>
                     <div className="relative group">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-indigo-500 transition-colors" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="John Doe"
                         required
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                        className="w-full bg-muted/30 border border-border rounded-xl py-3 pl-10 pr-4 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                       Username
                     </label>
                     <div className="relative group">
-                      <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-indigo-500 transition-colors" />
+                      <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <input
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         placeholder="johndoe"
                         required
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                        className="w-full bg-muted/30 border border-border rounded-xl py-3 pl-10 pr-4 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                     Email Address
                   </label>
                   <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-indigo-500 transition-colors" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="name@example.com"
                       required
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                      className="w-full bg-muted/30 border border-border rounded-xl py-3 pl-10 pr-4 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                     Password
                   </label>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-indigo-500 transition-colors" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <input
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       required
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-mono"
+                      className="w-full bg-muted/30 border border-border rounded-xl py-3 pl-10 pr-10 text-foreground text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-mono"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {showPassword ? (
                         <EyeOff className="w-4 h-4" />
@@ -258,7 +258,7 @@ export default function SignUpPage() {
                     whileTap={{ scale: 0.99 }}
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed group"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed group"
                   >
                     {loading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -274,9 +274,9 @@ export default function SignUpPage() {
 
               <div className="relative my-6 text-center">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10"></div>
+                  <div className="w-full border-t border-border"></div>
                 </div>
-                <span className="relative px-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest bg-[#0f0f0f]">
+                <span className="relative px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest bg-card">
                   Or Join With
                 </span>
               </div>
@@ -284,7 +284,7 @@ export default function SignUpPage() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   onClick={() => handleSocialSignIn("google")}
-                  className="flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 text-white transition-all group"
+                  className="flex items-center justify-center gap-3 bg-muted/30 hover:bg-muted/50 border border-border rounded-xl py-3 text-foreground transition-all group"
                 >
                   <img
                     src="https://www.svgrepo.com/show/475656/google-color.svg"
@@ -295,7 +295,7 @@ export default function SignUpPage() {
                 </button>
                 <button
                   disabled
-                  className="flex items-center justify-center gap-3 bg-white/5 border border-white/5 rounded-xl py-3 text-zinc-600 cursor-not-allowed transition-all group"
+                  className="flex items-center justify-center gap-3 bg-muted/20 border border-border/10 rounded-xl py-3 text-muted-foreground cursor-not-allowed transition-all group"
                   title="Coming soon"
                 >
                   <Github className="w-4 h-4 opacity-50" />
@@ -309,11 +309,11 @@ export default function SignUpPage() {
               </div>
 
               <div className="mt-8 text-center">
-                <p className="text-zinc-500 font-medium text-sm">
+                <p className="text-muted-foreground font-medium text-sm">
                   Already have an account?{" "}
                   <Link
                     href="/sign-in"
-                    className="text-indigo-400 hover:text-indigo-300 font-bold transition-colors"
+                    className="text-primary hover:text-primary/80 font-bold transition-colors"
                   >
                     Sign In
                   </Link>

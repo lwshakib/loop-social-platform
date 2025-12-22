@@ -117,8 +117,8 @@ export function LeftSidebar() {
             isActive={isProfileActive}
             avatar={
               <Avatar className="h-6 w-6">
-                <AvatarImage src={user?.imageUrl || ""} />
-                <AvatarFallback className="text-xs">U</AvatarFallback>
+                <AvatarImage src={user?.image || ""} />
+                <AvatarFallback className="text-xs">{user?.username?.slice(0, 2)}</AvatarFallback>
               </Avatar>
             }
           />

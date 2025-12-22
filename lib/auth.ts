@@ -23,11 +23,11 @@ export const auth = betterAuth({
   },
   user: {
     additionalFields: {
-      coverImage: { type: "string" },
-      bio: { type: "string" },
-      dateOfBirth: { type: "date" },
-      gender: { type: "string" },
-      displayUsername: { type: "string" },
+      coverImage: { type: "string", required: false },
+      bio: { type: "string", required: false },
+      dateOfBirth: { type: "date", required: false },
+      gender: { type: "string", required: false },
+      displayUsername: { type: "string", required: false },
     },
   },
   plugins: [username()],

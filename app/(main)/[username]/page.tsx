@@ -249,7 +249,7 @@ export default function ProfilePage() {
   const isOwnProfile =
     !!currentUser &&
     (currentUser.id === userData?.id ||
-      currentUser.username.toLowerCase() === cleanUsername.toLowerCase());
+      currentUser.username?.toLowerCase() === cleanUsername.toLowerCase());
 
   // Update URL when tab changes
   const handleTabChange = (tab: TabType) => {

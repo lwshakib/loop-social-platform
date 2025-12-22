@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
-import { PostType } from "../../../../../generated/prisma/client";
+import { PostType } from "@/generated/prisma/client";
 
 export async function GET(
   request: NextRequest,

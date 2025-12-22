@@ -432,8 +432,8 @@ export default function ProfilePage() {
 
       // Handle username change separately if it's different
       if (editFormData.username !== userData.username) {
-        const { error: usernameError } = await authClient.changeUsername({
-          newUsername: editFormData.username,
+        const { error: usernameError } = await authClient.updateUser({
+          username: editFormData.username,
         });
 
         if (usernameError) {

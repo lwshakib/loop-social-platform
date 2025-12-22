@@ -40,7 +40,7 @@ export const auth = betterAuth({
               ? user.name.toLowerCase().replace(/\s+/g, "")
               : "user";
             const randomSuffix = Math.random().toString(36).substring(2, 7);
-            user.username = `${baseUsername}_${randomSuffix}`;
+            user.username = `@${baseUsername}_${randomSuffix}`;
           }
           return {
             data: user,

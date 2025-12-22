@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { PostType } from "@/generated/prisma/enums";
+import { PostType } from "@/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   try {

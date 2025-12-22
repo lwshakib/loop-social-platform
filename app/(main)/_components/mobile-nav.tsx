@@ -61,7 +61,7 @@ export function MobileNav() {
           )}
         >
           <Avatar className="h-6 w-6 border border-border">
-            <AvatarImage src={user?.imageUrl || ""} />
+            <AvatarImage src={user?.image || ""} />
             <AvatarFallback className="text-[10px]">
               {user?.username?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>

@@ -421,8 +421,8 @@ export default function ProfilePage() {
       const { error: updateError } = await authClient.updateUser({
         name: editFormData.name,
         image: nextImageUrl,
-        bio: editFormData.bio,
         coverImage: nextCoverUrl,
+        bio: editFormData.bio,
       });
 
       if (updateError) {

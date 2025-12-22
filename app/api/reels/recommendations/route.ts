@@ -104,8 +104,8 @@ export async function GET(request: NextRequest) {
         select: { postId: true },
       });
 
-      const likedReelIds = new Set(likedPosts.map((lp: any) => lp.postId));
-      const savedReelIds = new Set(savedPosts.map((sp: any) => sp.postId));
+      const likedReelIds = new Set(likedReels.map((lp) => lp.postId));
+      const savedReelIds = new Set(savedReels.map((sp) => sp.postId));
 
       reelsWithStatus = reels.map((reel: any) => ({
         ...reel,

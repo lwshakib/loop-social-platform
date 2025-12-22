@@ -21,5 +21,14 @@ export const auth = betterAuth({
       enabled: true,
     },
   },
+  user: {
+    additionalFields: {
+      coverImage: { type: "string" },
+      bio: { type: "string" },
+      dateOfBirth: { type: "date" },
+      gender: { type: "string" },
+      displayUsername: { type: "string" },
+    },
+  },
   plugins: [username()],
 });

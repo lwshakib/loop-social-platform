@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import { useSocialStore } from "@/context";
-import { User } from "@/types";
+import { User } from "@/generated/prisma/client";
 
 interface UserProviderProps {
-  user: User | null;
+  user: any;
 }
 
 export function UserProvider({ user }: UserProviderProps) {

@@ -21,7 +21,7 @@ export async function GET(
             id: true,
             username: true,
             name: true,
-            imageUrl: true,
+            image: true,
           },
         },
       },

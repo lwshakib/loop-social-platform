@@ -257,7 +257,7 @@ export default function CreatePage() {
   }, [isEmojiPickerOpen]);
 
   const avatarUrl =
-    currentUser?.imageUrl ||
+    currentUser?.image ||
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${
       currentUser?.username || "user"
     }`;

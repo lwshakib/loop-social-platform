@@ -689,7 +689,7 @@ export default function HomePage() {
   };
 
   const getAvatarUrl = () => {
-    return currentUser?.imageUrl || "";
+    return currentUser?.image || "";
   };
 
   const getAvatarFallback = () => {

@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { PostType } from "../../generated/prisma/client";
+import { PostType } from "@/generated/prisma/client";
 
 export async function getUserPosts(
   username: string,

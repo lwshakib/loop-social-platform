@@ -2,6 +2,8 @@
 
 Loop is a modern, full-stack social media platform built with **Next.js 16**, **React 19**, **Better Auth**, and **Prisma**. It features a rich, responsive UI powered by **shadcn/ui**, **Tailwind CSS 4**, and **Framer Motion**.
 
+![Loop App Demo](public/demo.png)
+
 ## Features
 
 - **Authentication**: Secure sign-up/sign-in via Email/Password and Google OAuth using **Better Auth**.

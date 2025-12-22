@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
     // Get current authenticated user
-    const currentUserData = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const currentUserData = session?.user;
     let currentUserId: string | undefined;
 
     if (currentUserData) {
-      const currentDbUser = await prisma.user.findUnique({
-        where: { clerkId: currentUserData.id },
-        select: { id: true },
-      });
-
-      if (currentDbUser) {
-        currentUserId = currentDbUser.id;
-      }
+      currentUserId = currentUserData.id;
     }
 
     if (!currentUserId) {
@@ -29,7 +24,7 @@ export async function GET(request: NextRequest) {
       select: { followingId: true },
     });
 
-    const followingIds = following.map((f) => f.followingId);
+    const followingIds = following.map((f: any) => f.followingId);
     followingIds.push(currentUserId); // Exclude self and already following
 
     // Get suggested users (not following, not self, limit 10)
@@ -41,19 +36,19 @@ export async function GET(request: NextRequest) {
         id: true,
         username: true,
         name: true,
-        imageUrl: true,
+        image: true,
       },
       take: 10,
     });
 
     // Transform to match expected format
-    const response = suggestions.map((user) => ({
+    const response = suggestions.map((user: any) => ({
       userId: user.id,
       user: {
         id: user.id,
         username: user.username,
         name: user.name,
-        profileImage: user.imageUrl,
+        profileImage: user.image,
       },
       stories: [], // Empty stories array for suggestions
     }));

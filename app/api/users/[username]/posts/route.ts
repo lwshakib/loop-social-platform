@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserPosts } from "@/actions/posts";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function GET(
@@ -26,18 +27,12 @@ export async function GET(
     }
 
     // Get current authenticated user
-    const currentUserData = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const currentUserData = session?.user;
     let currentUserId: string | undefined;
 
     if (currentUserData) {
-      const currentDbUser = await prisma.user.findUnique({
-        where: { clerkId: currentUserData.id },
-        select: { id: true },
-      });
-
-      if (currentDbUser) {
-        currentUserId = currentDbUser.id;
-      }
+      currentUserId = currentUserData.id;
     }
 
     // Get posts

@@ -1,23 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import { PostType } from "../../../../generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
     // Get current authenticated user
-    const currentUserData = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const currentUserData = session?.user;
     let currentUserId: string | undefined;
 
     if (currentUserData) {
-      const currentDbUser = await prisma.user.findUnique({
-        where: { clerkId: currentUserData.id },
-        select: { id: true },
-      });
-
-      if (currentDbUser) {
-        currentUserId = currentDbUser.id;
-      }
+      currentUserId = currentUserData.id;
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -34,8 +29,7 @@ export async function GET(request: NextRequest) {
             id: true,
             username: true,
             name: true,
-            imageUrl: true,
-            isVerified: true,
+            image: true,
           },
         },
         _count: {
@@ -105,14 +99,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get suggested users (users not followed by current user)
-    let suggestedUsers: {
-      id: string;
-      username: string;
-      name: string;
-      imageUrl: string;
-      bio: string;
-      isVerified: boolean;
-    }[] = [];
+    let suggestedUsers: any[] = [];
 
     if (currentUserId) {
       // Get list of user IDs that the current user follows
@@ -133,9 +120,8 @@ export async function GET(request: NextRequest) {
           id: true,
           username: true,
           name: true,
-          imageUrl: true,
+          image: true,
           bio: true,
-          isVerified: true,
         },
         take: 10,
       });
@@ -146,9 +132,8 @@ export async function GET(request: NextRequest) {
           id: true,
           username: true,
           name: true,
-          imageUrl: true,
+          image: true,
           bio: true,
-          isVerified: true,
         },
         take: 10,
       });
@@ -167,15 +152,18 @@ export async function GET(request: NextRequest) {
         createdAt: post.createdAt.toISOString(),
         isLiked: post.isLiked || false,
         isSaved: post.isSaved || false,
-        user: post.user,
+        user: {
+          ...post.user,
+          imageUrl: post.user.image,
+        },
       })),
       suggestedUsers: suggestedUsers.map((user) => ({
         id: user.id,
         username: user.username,
         name: user.name,
-        imageUrl: user.imageUrl,
+        imageUrl: user.image,
         bio: user.bio,
-        isVerified: user.isVerified,
+        isVerified: false,
       })),
     };
 

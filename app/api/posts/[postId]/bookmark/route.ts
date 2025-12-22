@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function POST(
@@ -7,25 +8,14 @@ export async function POST(
   { params }: { params: Promise<{ postId: string }> | { postId: string } }
 ) {
   try {
-    const user = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const user = session?.user;
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const resolvedParams = await Promise.resolve(params);
-    const postId = resolvedParams.postId;
-
-    if (!postId) {
-      return NextResponse.json(
-        { error: "Post ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Get current user's database record
-    const currentDbUser = await prisma.user.findUnique({
-      where: { clerkId: user.id },
-    });
+    // In Better Auth, user is the database user
+    const currentDbUser = user;
 
     if (!currentDbUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -87,25 +77,14 @@ export async function DELETE(
   { params }: { params: Promise<{ postId: string }> | { postId: string } }
 ) {
   try {
-    const user = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const user = session?.user;
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const resolvedParams = await Promise.resolve(params);
-    const postId = resolvedParams.postId;
-
-    if (!postId) {
-      return NextResponse.json(
-        { error: "Post ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Get current user's database record
-    const currentDbUser = await prisma.user.findUnique({
-      where: { clerkId: user.id },
-    });
+    // In Better Auth, user is the database user
+    const currentDbUser = user;
 
     if (!currentDbUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });

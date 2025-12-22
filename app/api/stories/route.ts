@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
     // Get current authenticated user
-    const currentUserData = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const currentUserData = session?.user;
     let currentUserId: string | undefined;
 
     if (currentUserData) {
-      const currentDbUser = await prisma.user.findUnique({
-        where: { clerkId: currentUserData.id },
-        select: { id: true },
-      });
-
-      if (currentDbUser) {
-        currentUserId = currentDbUser.id;
-      }
+      currentUserId = currentUserData.id;
     }
 
     if (!currentUserId) {
@@ -29,7 +24,7 @@ export async function GET(request: NextRequest) {
       select: { followingId: true },
     });
 
-    const followingIds = following.map((f) => f.followingId);
+    const followingIds = following.map((f: any) => f.followingId);
     followingIds.push(currentUserId); // Include own stories
 
     // Get active stories (not expired) from followed users
@@ -44,7 +39,7 @@ export async function GET(request: NextRequest) {
             id: true,
             username: true,
             name: true,
-            imageUrl: true,
+            image: true,
           },
         },
       },
@@ -73,11 +68,16 @@ export async function GET(request: NextRequest) {
       }
     >();
 
-    stories.forEach((story) => {
+    stories.forEach((story: any) => {
       if (!storiesByUser.has(story.userId)) {
         storiesByUser.set(story.userId, {
           userId: story.userId,
-          user: story.user,
+          user: {
+            id: story.user.id,
+            username: story.user.username,
+            name: story.user.name,
+            imageUrl: story.user.image,
+          },
           stories: [],
         });
       }
@@ -105,19 +105,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const user = session?.user;
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get current user's database record
-    const currentDbUser = await prisma.user.findUnique({
-      where: { clerkId: user.id },
-    });
-
-    if (!currentDbUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    // currentDbUser is already user from session in Better Auth
+    const currentDbUser = user;
 
     const body = await request.json();
     const { caption, url } = body;

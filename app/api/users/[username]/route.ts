@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserByUsername } from "@/actions/user";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function GET(
@@ -27,15 +28,14 @@ export async function GET(
     }
 
     // Get current authenticated user
-    const currentUserData = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const currentUserData = session?.user;
     let isFollowing = false;
 
     // Check if current user is following this user
     if (currentUserData) {
       // Get current user's database record
-      const currentDbUser = await prisma.user.findUnique({
-        where: { clerkId: currentUserData.id },
-      });
+      const currentDbUser = currentUserData;
 
       if (currentDbUser) {
         // Check if current user is following the profile user
@@ -59,11 +59,11 @@ export async function GET(
       name: user.name,
       email: user.email,
       bio: user.bio || "",
-      imageUrl: user.imageUrl,
-      coverImageUrl: user.coverImageUrl || "",
+      imageUrl: user.image,
+      coverImageUrl: user.coverImage || "",
       dateOfBirth: user.dateOfBirth ? String(user.dateOfBirth) : "",
       gender: user.gender || "",
-      isVerified: user.isVerified || false,
+      isVerified: false,
       createdAt: user.createdAt.toISOString(),
       postsCount: user.postsCount || 0,
       followers: user.followersCount || 0,
@@ -89,13 +89,14 @@ export async function PATCH(
     const resolvedParams = await Promise.resolve(params);
     const usernameParam = resolvedParams.username;
 
-    const authUser = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const authUser = session?.user;
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const dbUser = await prisma.user.findUnique({
-      where: { clerkId: authUser.id },
+      where: { id: authUser.id },
     });
 
     if (!dbUser) {
@@ -108,21 +109,20 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { name, username, bio, imageUrl, coverImageUrl } = body || {};
+    const { name, username, bio, image, coverImage } = body || {};
 
     const payload: {
       name?: string;
       username?: string;
       bio?: string;
-      imageUrl?: string;
-      coverImageUrl?: string;
+      image?: string;
+      coverImage?: string;
     } = {};
     if (typeof name === "string") payload.name = name.trim();
     if (typeof username === "string") payload.username = username.trim();
     if (typeof bio === "string") payload.bio = bio;
-    if (typeof imageUrl === "string") payload.imageUrl = imageUrl.trim();
-    if (typeof coverImageUrl === "string")
-      payload.coverImageUrl = coverImageUrl.trim();
+    if (typeof image === "string") payload.image = image.trim();
+    if (typeof coverImage === "string") payload.coverImage = coverImage.trim();
 
     if (Object.keys(payload).length === 0) {
       return NextResponse.json(
@@ -150,11 +150,11 @@ export async function PATCH(
       name: refreshed.name,
       email: refreshed.email,
       bio: refreshed.bio || "",
-      imageUrl: refreshed.imageUrl,
+      imageUrl: refreshed.image,
       dateOfBirth: refreshed.dateOfBirth ? String(refreshed.dateOfBirth) : "",
       gender: refreshed.gender || "",
-      coverImageUrl: refreshed.coverImageUrl || "",
-      isVerified: refreshed.isVerified || false,
+      coverImageUrl: refreshed.coverImage || "",
+      isVerified: false,
       createdAt: refreshed.createdAt.toISOString(),
       postsCount: refreshed.postsCount || 0,
       followers: refreshed.followersCount || 0,

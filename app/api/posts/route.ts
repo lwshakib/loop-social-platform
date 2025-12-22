@@ -1,28 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import { PostType } from "../../../../generated/prisma/client";
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const user = session?.user;
     if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get current user's database record
-    const currentDbUser = await prisma.user.findUnique({
-      where: { clerkId: user.id },
-    });
+    // In Better Auth, user.id is the database id
+    const currentDbUser = user;
 
     if (!currentDbUser) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await request.json();
@@ -31,10 +25,7 @@ export async function POST(request: NextRequest) {
     // Validate post type
     const validTypes = ["text", "image", "reel"];
     if (!validTypes.includes(type)) {
-      return NextResponse.json(
-        { error: "Invalid post type" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid post type" }, { status: 400 });
     }
 
     // Validate content

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import { PostType } from "../../../../../generated/prisma/client";
 
@@ -18,18 +19,12 @@ export async function GET(
     }
 
     // Get current authenticated user
-    const currentUserData = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const currentUserData = session?.user;
     let currentUserId: string | undefined;
 
     if (currentUserData) {
-      const currentDbUser = await prisma.user.findUnique({
-        where: { clerkId: currentUserData.id },
-        select: { id: true },
-      });
-
-      if (currentDbUser) {
-        currentUserId = currentDbUser.id;
-      }
+      currentUserId = currentUserData.id;
     }
 
     // Get the specific reel with user info
@@ -44,7 +39,7 @@ export async function GET(
             id: true,
             username: true,
             name: true,
-            imageUrl: true,
+            image: true,
           },
         },
         _count: {

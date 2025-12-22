@@ -2,15 +2,13 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { headers } from "next/headers";
 
-
 type UpdateUserProfileInput = {
   name?: string;
   username?: string;
   bio?: string;
-  imageUrl?: string;
-  coverImageUrl?: string;
+  image?: string;
+  coverImage?: string;
 };
-
 
 export async function getUserByUsername(username: string) {
   const user = await prisma.user.findUnique({
@@ -37,7 +35,7 @@ export async function getUserByUsername(username: string) {
 }
 
 export async function updateUserProfile(input: UpdateUserProfileInput) {
-  const session = await auth.api.getSession({headers: await headers()});
+  const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -55,10 +53,9 @@ export async function updateUserProfile(input: UpdateUserProfileInput) {
   if (typeof input.username === "string")
     payload.username = input.username.trim();
   if (typeof input.bio === "string") payload.bio = input.bio;
-  if (typeof input.imageUrl === "string")
-    payload.imageUrl = input.imageUrl.trim();
-  if (typeof input.coverImageUrl === "string")
-    payload.coverImageUrl = input.coverImageUrl.trim();
+  if (typeof input.image === "string") payload.image = input.image.trim();
+  if (typeof input.coverImage === "string")
+    payload.coverImage = input.coverImage.trim();
 
   if (Object.keys(payload).length === 0) {
     throw new Error("No fields to update");

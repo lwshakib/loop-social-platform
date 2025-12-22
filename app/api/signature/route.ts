@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { v2 as cloudinary } from "cloudinary";
 
 // Configure Cloudinary
@@ -11,7 +12,8 @@ cloudinary.config({
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const user = session?.user;
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

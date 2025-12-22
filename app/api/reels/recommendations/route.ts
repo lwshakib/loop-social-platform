@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import { PostType } from "../../../../../generated/prisma/client";
 
@@ -11,18 +12,12 @@ export async function GET(request: NextRequest) {
       searchParams.get("excludeIds")?.split(",").filter(Boolean) || [];
 
     // Get current authenticated user
-    const currentUserData = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const currentUserData = session?.user;
     let currentUserId: string | undefined;
 
     if (currentUserData) {
-      const currentDbUser = await prisma.user.findUnique({
-        where: { clerkId: currentUserData.id },
-        select: { id: true },
-      });
-
-      if (currentDbUser) {
-        currentUserId = currentDbUser.id;
-      }
+      currentUserId = currentUserData.id;
     }
 
     // Build query for recommended reels
@@ -38,7 +33,7 @@ export async function GET(request: NextRequest) {
             id: true,
             username: true,
             name: true,
-            imageUrl: true,
+            image: true,
           },
         },
         _count: {
@@ -64,7 +59,7 @@ export async function GET(request: NextRequest) {
               id: true,
               username: true,
               name: true,
-              imageUrl: true,
+              image: true,
             },
           },
           _count: {
@@ -109,10 +104,10 @@ export async function GET(request: NextRequest) {
         select: { postId: true },
       });
 
-      const likedReelIds = new Set(likedReels.map((lr) => lr.postId));
-      const savedReelIds = new Set(savedReels.map((sr) => sr.postId));
+      const likedReelIds = new Set(likedPosts.map((lp: any) => lp.postId));
+      const savedReelIds = new Set(savedPosts.map((sp: any) => sp.postId));
 
-      reelsWithStatus = reels.map((reel) => ({
+      reelsWithStatus = reels.map((reel: any) => ({
         ...reel,
         isLiked: likedReelIds.has(reel.id),
         isSaved: savedReelIds.has(reel.id),
@@ -120,7 +115,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Map to response format
-    const response = reelsWithStatus.map((reel) => ({
+    const response = reelsWithStatus.map((reel: any) => ({
       id: reel.id,
       userId: reel.userId,
       content: reel.content,
@@ -129,9 +124,12 @@ export async function GET(request: NextRequest) {
       likesCount: reel._count.likes || 0,
       commentsCount: reel._count.comments || 0,
       createdAt: reel.createdAt.toISOString(),
-      isLiked: reel.isLiked,
-      isSaved: reel.isSaved,
-      user: reel.user,
+      isLiked: reel.isLiked || false,
+      isSaved: reel.isSaved || false,
+      user: {
+        ...reel.user,
+        imageUrl: reel.user.image,
+      },
     }));
 
     return NextResponse.json({ data: response });

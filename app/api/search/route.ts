@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
@@ -18,31 +19,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Get current authenticated user
-    const currentUserData = await currentUser();
+    const session = await auth.api.getSession({ headers: await headers() });
+    const currentUserData = session?.user;
     let currentUserId: string | undefined;
 
     if (currentUserData) {
-      const currentDbUser = await prisma.user.findUnique({
-        where: { clerkId: currentUserData.id },
-        select: { id: true },
-      });
-
-      if (currentDbUser) {
-        currentUserId = currentDbUser.id;
-      }
+      currentUserId = currentUserData.id;
     }
 
     const searchTerm = query.trim();
 
     // Search users
-    let users: {
-      id: string;
-      username: string;
-      name: string;
-      imageUrl: string;
-      bio: string;
-      isVerified: boolean;
-    }[] = [];
+    let users: any[] = [];
     if (type === "all" || type === "users") {
       users = await prisma.user.findMany({
         where: {
@@ -55,35 +43,16 @@ export async function GET(request: NextRequest) {
           id: true,
           username: true,
           name: true,
-          imageUrl: true,
+          image: true,
           bio: true,
-          isVerified: true,
+          // isVerified: true, // isVerified is not in schema
         },
         take: 10,
       });
     }
 
     // Search posts
-    let posts: {
-      id: string;
-      userId: string;
-      content: string;
-      url: string;
-      type: string;
-      createdAt: Date;
-      user: {
-        id: string;
-        username: string;
-        name: string;
-        imageUrl: string;
-      };
-      _count: {
-        likes: number;
-        comments: number;
-      };
-      isLiked?: boolean;
-      isSaved?: boolean;
-    }[] = [];
+    let posts: any[] = [];
     if (type === "all" || type === "posts") {
       const foundPosts = await prisma.post.findMany({
         where: {
@@ -95,7 +64,7 @@ export async function GET(request: NextRequest) {
               id: true,
               username: true,
               name: true,
-              imageUrl: true,
+              image: true,
             },
           },
           _count: {
@@ -156,9 +125,9 @@ export async function GET(request: NextRequest) {
         id: user.id,
         username: user.username,
         name: user.name,
-        imageUrl: user.imageUrl,
+        imageUrl: user.image,
         bio: user.bio,
-        isVerified: user.isVerified,
+        isVerified: false,
       })),
       posts: posts.map((post) => ({
         id: post.id,
@@ -171,7 +140,10 @@ export async function GET(request: NextRequest) {
         createdAt: post.createdAt.toISOString(),
         isLiked: post.isLiked || false,
         isSaved: post.isSaved || false,
-        user: post.user,
+        user: {
+          ...post.user,
+          imageUrl: post.user.image,
+        },
       })),
     };
 

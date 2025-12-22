@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function POST(
@@ -8,18 +6,16 @@ export async function POST(
   { params }: { params: Promise<{ postId: string }> | { postId: string } }
 ) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    const user = session?.user;
+    const resolvedParams = await Promise.resolve(params);
+    const postId = resolvedParams.postId;
+
+    // Get current authenticated user from x-user header (set by proxy middleware)
+    const user = JSON.parse(request.headers.get("x-user") || "null");
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // In Better Auth, user is the database user
     const currentDbUser = user;
-
-    if (!currentDbUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     // Check if post exists
     const post = await prisma.post.findUnique({
@@ -77,18 +73,15 @@ export async function DELETE(
   { params }: { params: Promise<{ postId: string }> | { postId: string } }
 ) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    const user = session?.user;
+    const resolvedParams = await Promise.resolve(params);
+    const postId = resolvedParams.postId;
+
+    const user = JSON.parse(request.headers.get("x-user") || "null");
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // In Better Auth, user is the database user
     const currentDbUser = user;
-
-    if (!currentDbUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     // Delete like
     await prisma.like.deleteMany({

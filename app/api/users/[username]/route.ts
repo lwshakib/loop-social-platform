@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserByUsername } from "@/actions/user";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function GET(
@@ -27,9 +25,9 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get current authenticated user
-    const session = await auth.api.getSession({ headers: await headers() });
-    const currentUserData = session?.user;
+    // Get current authenticated user from x-user header (set by proxy middleware)
+    const userJson = request.headers.get("x-user");
+    const currentUserData = userJson ? JSON.parse(userJson) : null;
     let isFollowing = false;
 
     // Check if current user is following this user
@@ -89,8 +87,8 @@ export async function PATCH(
     const resolvedParams = await Promise.resolve(params);
     const usernameParam = resolvedParams.username;
 
-    const session = await auth.api.getSession({ headers: await headers() });
-    const authUser = session?.user;
+    const userJson = request.headers.get("x-user");
+    const authUser = userJson ? JSON.parse(userJson) : null;
     if (!authUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -136,7 +134,7 @@ export async function PATCH(
       data: payload,
     });
 
-    const refreshed = await getUserByUsername(updated.username);
+    const refreshed = await getUserByUsername(updated.username || "");
     if (!refreshed) {
       return NextResponse.json(
         { error: "User not found after update" },

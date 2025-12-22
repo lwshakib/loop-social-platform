@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 async function resolveUsername(
@@ -10,11 +8,10 @@ async function resolveUsername(
   return resolved.username;
 }
 
-async function getCurrentDbUserId() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const authUser = session?.user;
-  if (!authUser) return null;
-  return authUser.id;
+async function getCurrentDbUserId(request: NextRequest) {
+  const user = JSON.parse(request.headers.get("x-user") || "null");
+  if (!user) return null;
+  return user.id;
 }
 
 async function getTargetUser(username: string) {
@@ -36,7 +33,7 @@ export async function POST(
       );
     }
 
-    const currentUserId = await getCurrentDbUserId();
+    const currentUserId = await getCurrentDbUserId(_req);
     if (!currentUserId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -95,7 +92,7 @@ export async function DELETE(
       );
     }
 
-    const currentUserId = await getCurrentDbUserId();
+    const currentUserId = await getCurrentDbUserId(_req);
     if (!currentUserId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

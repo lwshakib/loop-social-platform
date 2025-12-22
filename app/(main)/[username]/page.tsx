@@ -38,6 +38,9 @@ import {
   X,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 type TabType = "posts" | "reels" | "liked" | "saved";
 
@@ -414,37 +417,59 @@ export default function ProfilePage() {
         );
       }
 
-      const response = await fetch(`/api/users/${cleanUsername}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...editFormData,
-          imageUrl: nextImageUrl,
-          coverImageUrl: nextCoverUrl,
-        }),
+      // Update core user details using authClient
+      const { error: updateError } = await authClient.updateUser({
+        name: editFormData.name,
+        image: nextImageUrl,
+        bio: editFormData.bio,
+        coverImage: nextCoverUrl,
       });
 
-      if (!response.ok) {
-        console.error("Failed to update profile");
+      if (updateError) {
+        toast.error(updateError.message || "Failed to update profile");
         return;
       }
 
-      const result = await response.json();
-      if (result.data) {
-        setUserData(result.data);
-        setProfileFile(null);
-        setCoverFile(null);
-        setIsEditDialogOpen(false);
-        // If username changed, redirect to the new profile route
-        if (
-          result.data.username &&
-          result.data.username.toLowerCase() !== cleanUsername.toLowerCase()
-        ) {
-          router.replace(`/${result.data.username}`);
+      // Handle username change separately if it's different
+      if (editFormData.username !== userData.username) {
+        const { error: usernameError } = await authClient.changeUsername({
+          newUsername: editFormData.username,
+        });
+
+        if (usernameError) {
+          toast.error(usernameError.message || "Failed to update username");
+          // Continue anyway if other updates succeeded
         }
+      }
+
+      toast.success("Profile updated successfully!");
+
+      // Update local state to reflect changes immediately
+      setUserData((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: editFormData.name,
+              username: editFormData.username,
+              bio: editFormData.bio,
+              imageUrl: nextImageUrl,
+              coverImageUrl: nextCoverUrl,
+            }
+          : null
+      );
+
+      // Reset file states and close dialog
+      setProfileFile(null);
+      setCoverFile(null);
+      setIsEditDialogOpen(false);
+
+      // If username changed, redirect to the new profile URL
+      if (editFormData.username !== cleanUsername) {
+        router.push(`/${editFormData.username}`);
       }
     } catch (error) {
       console.error("Error updating profile:", error);
+      toast.error("An unexpected error occurred while updating your profile");
     } finally {
       setIsUpdatingProfile(false);
     }

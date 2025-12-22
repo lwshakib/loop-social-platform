@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function GET(
@@ -18,14 +16,9 @@ export async function GET(
       );
     }
 
-    // Get current authenticated user
-    const session = await auth.api.getSession({ headers: await headers() });
-    const currentUserData = session?.user;
-    let currentUserId: string | undefined;
-
-    if (currentUserData) {
-      currentUserId = currentUserData.id;
-    }
+    // Get current authenticated user from x-user header (set by proxy middleware)
+    const user = JSON.parse(request.headers.get("x-user") || "null");
+    const currentUserId = user?.id;
 
     // Get post with user info
     const post = await prisma.post.findUnique({

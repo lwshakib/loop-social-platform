@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 export async function GET(
@@ -87,18 +85,13 @@ export async function POST(
   { params }: { params: Promise<{ postId: string }> | { postId: string } }
 ) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    const user = session?.user;
+    // Get current authenticated user from x-user header (set by proxy middleware)
+    const user = JSON.parse(request.headers.get("x-user") || "null");
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // In Better Auth, user is already the database user
     const currentDbUser = user;
-
-    if (!currentDbUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
     const resolvedParams = await Promise.resolve(params);
     const postId = resolvedParams.postId;

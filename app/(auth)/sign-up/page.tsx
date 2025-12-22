@@ -294,11 +294,17 @@ export default function SignUpPage() {
                   <span className="text-sm font-semibold">Google</span>
                 </button>
                 <button
-                  onClick={() => handleSocialSignIn("github")}
-                  className="flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 text-white transition-all group"
+                  disabled
+                  className="flex items-center justify-center gap-3 bg-white/5 border border-white/5 rounded-xl py-3 text-zinc-600 cursor-not-allowed transition-all group"
+                  title="Coming soon"
                 >
-                  <Github className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-semibold">GitHub</span>
+                  <Github className="w-4 h-4 opacity-50" />
+                  <span className="text-sm font-semibold">
+                    GitHub{" "}
+                    <span className="text-[10px] block lg:inline-block font-normal">
+                      (Unavailable)
+                    </span>
+                  </span>
                 </button>
               </div>
 

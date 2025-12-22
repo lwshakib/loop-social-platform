@@ -1,3 +1,4 @@
+import { User } from "@/types";
 import { LeftSidebar } from "./_components/left-sidebar";
 import { MobileNav } from "./_components/mobile-nav";
 import { UserProvider } from "./_components/user-provider";
@@ -18,7 +19,7 @@ export default async function MainLayout({
 
   return (
     <div className="flex h-screen bg-background font-sans overflow-hidden">
-      <UserProvider user={session?.user} />
+      <UserProvider user={session?.user as User} />
       <LeftSidebar />
       <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">{children}</main>
       <MobileNav />

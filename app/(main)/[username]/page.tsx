@@ -35,12 +35,11 @@ import {
   MessageCircle,
   MoreHorizontal,
   Play,
-  X,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 type TabType = 'posts' | 'reels' | 'liked' | 'saved';
 
@@ -196,8 +195,8 @@ export default function ProfilePage() {
   const initialTab = tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'posts';
 
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-  const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
+  const [, setLikedPosts] = useState<Set<string>>(new Set());
+  const [, setSavedPosts] = useState<Set<string>>(new Set());
   const [isFollowing, setIsFollowing] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -688,6 +687,7 @@ export default function ProfilePage() {
     };
 
     fetchComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPostDialogOpen, selectedPost?.id]);
 
   // Reset comment state when dialog closes
@@ -806,7 +806,13 @@ export default function ProfilePage() {
       {/* Cover Image */}
       <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 bg-muted border-b">
         {currentCoverImage ? (
-          <img src={currentCoverImage} alt="Cover" className="w-full h-full object-cover" />
+          <Image
+            src={currentCoverImage}
+            alt="Cover"
+            className="w-full h-full object-cover"
+            fill
+            style={{ objectFit: 'cover' }}
+          />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-linear-to-b from-muted to-muted/50">
             <span className="text-xs sm:text-sm font-semibold text-muted-foreground/60 tracking-widest">
@@ -1007,7 +1013,13 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   ) : (
-                    <img src={post.imageUrl} alt="Post" className="w-full h-full object-cover" />
+                    <Image
+                      src={post.imageUrl}
+                      alt="Post"
+                      className="w-full h-full object-cover"
+                      fill
+                      style={{ objectFit: 'cover' }}
+                    />
                   )
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-muted">
@@ -1062,10 +1074,12 @@ export default function ProfilePage() {
                     aspectRatio="9/16"
                   />
                 ) : (
-                  <img
+                  <Image
                     src={selectedPost.imageUrl}
                     alt="Post"
                     className="w-full h-full object-contain max-h-[95vh]"
+                    fill
+                    style={{ objectFit: 'contain' }}
                   />
                 )
               ) : (
@@ -1385,10 +1399,12 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-3">
               <div className="h-24 w-full rounded-md overflow-hidden bg-muted border flex items-center justify-center">
                 {coverPreview || editFormData.coverImageUrl ? (
-                  <img
+                  <Image
                     src={coverPreview || editFormData.coverImageUrl}
                     alt="Cover preview"
                     className="w-full h-full object-cover"
+                    fill
+                    style={{ objectFit: 'cover' }}
                   />
                 ) : (
                   <span className="text-xs font-semibold text-muted-foreground/60 tracking-widest">

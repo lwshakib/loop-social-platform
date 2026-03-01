@@ -1,33 +1,32 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Loader2,
-  Github,
-  ArrowRight,
-  Sparkles,
-  Zap,
-  Globe,
-  CheckCircle2,
-} from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, Github, ArrowRight } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import AuthLayout from '@/components/auth/AuthLayout';
 
+/**
+ * Sign In Page Component
+ * Handles user authentication via email/password and social providers.
+ */
 export default function SignInPage() {
+  // State for form inputs and loading status
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Navigation hook for redirecting users after login
   const router = useRouter();
 
+  /**
+   * Handles the email/password sign-in process.
+   * Calls the authClient to authenticate and handles success/error cases.
+   */
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -35,18 +34,24 @@ export default function SignInPage() {
     const { data, error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: '/',
+      callbackURL: '/', // Redirect to home on success
     });
 
     if (error) {
+      // Display error message from the auth client
       toast.error(error.message || 'Something went wrong. Please try again.');
     } else if (data) {
+      // Show success notification and navigate to home
       toast.success('Successfully signed in!');
       router.push('/');
     }
     setLoading(false);
   };
 
+  /**
+   * Handles social sign-in (Google/GitHub).
+   * Initiates the OAuth flow through the auth client.
+   */
   const handleSocialSignIn = async (provider: 'google' | 'github') => {
     await authClient.signIn.social({
       provider,
@@ -62,12 +67,15 @@ export default function SignInPage() {
         transition={{ duration: 0.5 }}
         className="w-full"
       >
+        {/* Page Header */}
         <div className="mb-8 text-center lg:text-left">
           <h2 className="text-4xl font-extrabold text-foreground mb-3 tracking-tight">Sign In</h2>
           <p className="text-muted-foreground text-lg">Enter your credentials to continue</p>
         </div>
 
+        {/* Sign In Form */}
         <form onSubmit={handleSignIn} className="space-y-5">
+          {/* Email Field */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-muted-foreground tracking-wider">
               Email Address
@@ -85,6 +93,7 @@ export default function SignInPage() {
             </div>
           </div>
 
+          {/* Password Field */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold text-muted-foreground tracking-wider">
@@ -107,6 +116,7 @@ export default function SignInPage() {
                 required
                 className="w-full bg-muted/30 border border-border rounded-xl py-3.5 pl-12 pr-12 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-mono"
               />
+              {/* Toggle Password Visibility */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -117,6 +127,7 @@ export default function SignInPage() {
             </div>
           </div>
 
+          {/* Submit Button */}
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
@@ -135,6 +146,7 @@ export default function SignInPage() {
           </motion.button>
         </form>
 
+        {/* Separator */}
         <div className="relative my-8 text-center">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border"></div>
@@ -144,15 +156,18 @@ export default function SignInPage() {
           </span>
         </div>
 
+        {/* Social Authentication */}
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => handleSocialSignIn('google')}
             className="flex items-center justify-center gap-3 bg-muted/30 hover:bg-muted/50 border border-border rounded-xl py-3 text-foreground transition-all group"
           >
-            <img
+            <Image
               src="https://www.svgrepo.com/show/475656/google-color.svg"
               className="w-5 h-5 group-hover:scale-110 transition-transform"
               alt="Google"
+              width={20}
+              height={20}
             />
             <span className="font-semibold">Google</span>
           </button>
@@ -169,6 +184,7 @@ export default function SignInPage() {
           </button>
         </div>
 
+        {/* Link to Registration */}
         <div className="mt-10 text-center">
           <p className="text-muted-foreground font-medium">
             New to Loop?{' '}

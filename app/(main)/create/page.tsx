@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useSocialStore } from '@/context';
 import { Upload, X, Smile } from 'lucide-react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import axios from 'axios';
 
 export default function CreatePage() {
@@ -187,7 +188,7 @@ export default function CreatePage() {
       });
 
       if (response.ok) {
-        const result = await response.json();
+        await response.json();
         toast.success('Post Created', {
           description: 'Your post has been created successfully!',
         });
@@ -279,10 +280,19 @@ export default function CreatePage() {
                       controls
                     />
                   ) : (
-                    <img
+                    <Image
                       src={createPostData.preview}
                       alt="Preview"
                       className="max-h-[400px] max-w-full rounded-lg object-contain"
+                      width={0}
+                      height={0}
+                      sizes="100vw"
+                      style={{
+                        width: 'auto',
+                        height: 'auto',
+                        maxHeight: '400px',
+                        maxWidth: '100%',
+                      }}
                     />
                   )}
                   <div className="flex items-center justify-center gap-2">

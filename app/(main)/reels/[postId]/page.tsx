@@ -207,6 +207,7 @@ export default function ReelsPage() {
     };
 
     fetchAllVideos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
   // Set up Intersection Observer to detect which video is in view

@@ -10,8 +10,6 @@ import {
   Trash2,
   Smartphone,
   Globe,
-  LogOut,
-  ChevronRight,
   UserCheck,
   Edit2,
   Camera,
@@ -55,7 +53,16 @@ export default function SettingsPage() {
   const setUser = useSocialStore((state) => state.setUser);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<
+    {
+      id: string;
+      device?: string;
+      current?: boolean;
+      userAgent?: string | null;
+      ipAddress?: string | null;
+      createdAt: Date;
+    }[]
+  >([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -80,7 +87,7 @@ export default function SettingsPage() {
     async function fetchSessions() {
       try {
         setIsLoadingSessions(true);
-        // @ts-ignore
+
         const res = await authClient.listSessions();
         if (res?.data) {
           setSessions(res.data);
@@ -194,7 +201,7 @@ export default function SettingsPage() {
   const handleDeleteAccount = async () => {
     try {
       setIsDeletingAccount(true);
-      // @ts-ignore
+
       const res = await authClient.deleteUser();
       if (res?.error) {
         toast.error(res.error.message || 'Failed to delete account');
@@ -212,7 +219,6 @@ export default function SettingsPage() {
 
   const handleRevokeSession = async (tokenId: string) => {
     try {
-      // @ts-ignore
       await authClient.revokeSession({ token: tokenId });
       setSessions((prev) => prev.filter((s) => s.id !== tokenId));
       toast.success('Session revoked');

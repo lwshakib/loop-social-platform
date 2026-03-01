@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
       const likedReelIds = new Set(likedReels.map((lp) => lp.postId));
       const savedReelIds = new Set(savedReels.map((sp) => sp.postId));
 
-      reelsWithStatus = reels.map((reel: any) => ({
+      reelsWithStatus = reels.map((reel) => ({
         ...reel,
         isLiked: likedReelIds.has(reel.id),
         isSaved: savedReelIds.has(reel.id),
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Map to response format
-    const response = reelsWithStatus.map((reel: any) => ({
+    const response = reelsWithStatus.map((reel) => ({
       id: reel.id,
       userId: reel.userId,
       content: reel.content,

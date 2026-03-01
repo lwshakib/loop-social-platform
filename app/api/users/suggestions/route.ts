@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       select: { followingId: true },
     });
 
-    const followingIds = following.map((f: any) => f.followingId);
+    const followingIds = following.map((f) => f.followingId);
     followingIds.push(currentUserId); // Exclude self and already following
 
     // Get suggested users (not following, not self, limit 10)
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform to match expected format
-    const response = suggestions.map((user: any) => ({
+    const response = suggestions.map((user) => ({
       userId: user.id,
       user: {
         id: user.id,

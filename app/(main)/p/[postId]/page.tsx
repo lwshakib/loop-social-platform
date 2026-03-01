@@ -16,6 +16,7 @@ import {
 } from '@/lib/post-actions';
 import { Bookmark, Heart, MessageCircle, ArrowLeft, Play } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import VideoPlayer from '../../_components/video-player';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -137,7 +138,7 @@ export default function PostPage() {
   const [replyContent, setReplyContent] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [morePosts, setMorePosts] = useState<Post[]>([]);
-  const [isLoadingMorePosts, setIsLoadingMorePosts] = useState(false);
+  const [, setIsLoadingMorePosts] = useState(false);
 
   // Fetch post data
   useEffect(() => {
@@ -191,6 +192,7 @@ export default function PostPage() {
     };
 
     fetchComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId, post?.id]);
 
   // Fetch more posts from the same user
@@ -394,10 +396,12 @@ export default function PostPage() {
                 />
               </div>
             ) : (
-              <img
+              <Image
                 src={post.imageUrl}
                 alt="Post"
                 className="w-full h-full object-contain max-h-[calc(100vh-4rem)]"
+                fill
+                style={{ objectFit: 'contain' }}
               />
             )
           ) : (
@@ -629,10 +633,12 @@ export default function PostPage() {
                       </div>
                     </div>
                   ) : (
-                    <img
+                    <Image
                       src={morePost.imageUrl}
                       alt="Post"
                       className="w-full h-full object-cover"
+                      fill
+                      style={{ objectFit: 'cover' }}
                     />
                   )
                 ) : (

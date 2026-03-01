@@ -90,7 +90,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Get suggested users (users not followed by current user)
-    let suggestedUsers: any[] = [];
+    let suggestedUsers: {
+      id: string;
+      username: string | null;
+      name: string;
+      image: string | null;
+      bio: string | null;
+    }[] = [];
 
     if (currentUserId) {
       // Get list of user IDs that the current user follows

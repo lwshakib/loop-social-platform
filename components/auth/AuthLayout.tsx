@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import Image from 'next/image';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -22,7 +23,13 @@ export default function AuthLayout({
             imagePosition === 'right' ? 'lg:order-2' : 'lg:order-1'
           }`}
         >
-          <img src={imageSrc} alt="Auth background" className="w-full h-full object-cover" />
+          <Image
+            src={imageSrc}
+            alt="Auth background"
+            className="w-full h-full object-cover"
+            fill
+            style={{ objectFit: 'cover' }}
+          />
           <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay for depth */}
           <div className="absolute top-12 left-12 z-10 flex items-center gap-2">
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">

@@ -10,25 +10,41 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
 import AuthLayout from '@/components/auth/AuthLayout';
-import { ShieldCheck, Fingerprint, Key } from 'lucide-react';
 
+/**
+ * ResetPasswordForm Component
+ * Handles the logic and UI for the actual password reset.
+ */
 function ResetPasswordForm() {
+  // Local state for the new password and confirmation
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Track communication with the auth server
   const [loading, setLoading] = useState(false);
+
+  // Flag to indicate the password has been successfully updated
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Hook to access URL parameters (needed to extract the 'token' sent via email)
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
+  /**
+   * handleResetPassword
+   * Validates matching passwords and calls the authClient to finalize the reset.
+   */
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Ensure we have the required security token from the URL
     if (!token) {
       toast.error('Invalid or missing reset token.');
       return;
     }
 
+    // Client-side validation for password match
     if (password !== confirmPassword) {
       toast.error('Passwords do not match.');
       return;
@@ -36,20 +52,30 @@ function ResetPasswordForm() {
 
     setLoading(true);
 
-    const { error } = await authClient.resetPassword({
-      newPassword: password,
-      token: token,
-    });
+    try {
+      // Call the auth engine to update the user's password using the token
+      const { error } = await authClient.resetPassword({
+        newPassword: password,
+        token: token,
+      });
 
-    if (error) {
-      toast.error(error.message || 'Failed to reset password.');
-    } else {
-      setIsSuccess(true);
-      toast.success('Password successfully reset!');
+      if (error) {
+        // Handle server-side errors (e.g., expired token)
+        toast.error(error.message || 'Failed to reset password.');
+      } else {
+        // Success! Trigger the success view and notification
+        setIsSuccess(true);
+        toast.success('Password successfully reset!');
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
+  /**
+   * Success View
+   * Shown only after the user has successfully updated their password.
+   */
   if (isSuccess) {
     return (
       <AuthLayout imageSrc="/images/reset-password-bg.png" imagePosition="right">
@@ -58,9 +84,11 @@ function ResetPasswordForm() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full text-center lg:text-left space-y-6"
         >
+          {/* Success Checkmark Icon */}
           <div className="mx-auto lg:mx-0 w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center">
             <CheckCircle2 className="w-8 h-8 text-green-500" />
           </div>
+
           <div className="space-y-2">
             <h2 className="text-4xl font-extrabold text-foreground tracking-tight">Success</h2>
             <p className="text-muted-foreground text-lg">
@@ -85,6 +113,10 @@ function ResetPasswordForm() {
     );
   }
 
+  /**
+   * Form View
+   * The actual input fields for setting the new password.
+   */
   return (
     <AuthLayout imageSrc="/images/reset-password-bg.png" imagePosition="right">
       <motion.div
@@ -93,6 +125,7 @@ function ResetPasswordForm() {
         transition={{ duration: 0.5 }}
         className="w-full"
       >
+        {/* Header Section */}
         <div className="mb-8 text-center lg:text-left">
           <h2 className="text-4xl font-extrabold text-foreground mb-3 tracking-tight">
             New Password
@@ -101,6 +134,7 @@ function ResetPasswordForm() {
         </div>
 
         <form onSubmit={handleResetPassword} className="space-y-5">
+          {/* New Password Input Group */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-muted-foreground tracking-wider">
               New Password
@@ -115,6 +149,7 @@ function ResetPasswordForm() {
                 required
                 className="w-full bg-muted/30 border border-border rounded-xl py-3.5 pl-12 pr-12 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-mono"
               />
+              {/* Eye toggle for viewing/masking the password */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -125,6 +160,7 @@ function ResetPasswordForm() {
             </div>
           </div>
 
+          {/* Confirmation Input Group */}
           <div className="space-y-2">
             <label className="text-sm font-semibold text-muted-foreground tracking-wider">
               Confirm Password
@@ -142,6 +178,7 @@ function ResetPasswordForm() {
             </div>
           </div>
 
+          {/* Submission Button with State handling */}
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
@@ -164,6 +201,10 @@ function ResetPasswordForm() {
   );
 }
 
+/**
+ * ResetPasswordPage (Top-level Entry Point)
+ * Wraps the form in a Suspense boundary because useSearchParams() requires client-side dehydration.
+ */
 export default function ResetPasswordPage() {
   return (
     <Suspense

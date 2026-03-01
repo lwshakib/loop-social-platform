@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import prisma from '@/lib/prisma';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get current authenticated user
     const session = await auth.api.getSession({ headers: await headers() });
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       select: { followingId: true },
     });
 
-    const followingIds = following.map((f: any) => f.followingId);
+    const followingIds = following.map((f) => f.followingId);
     followingIds.push(currentUserId); // Include own stories
 
     // Get active stories (not expired) from followed users
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         userId: string;
         user: {
           id: string;
-          username: string;
+          username: string | null;
           name: string;
           imageUrl: string | null;
         };
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       }
     >();
 
-    stories.forEach((story: any) => {
+    stories.forEach((story) => {
       if (!storiesByUser.has(story.userId)) {
         storiesByUser.set(story.userId, {
           userId: story.userId,

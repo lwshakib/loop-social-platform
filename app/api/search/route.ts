@@ -23,7 +23,13 @@ export async function GET(request: NextRequest) {
     const searchTerm = query.trim();
 
     // Search users
-    let users: any[] = [];
+    let users: {
+      id: string;
+      username: string | null;
+      name: string;
+      image: string | null;
+      bio: string | null;
+    }[] = [];
     if (type === 'all' || type === 'users') {
       users = await prisma.user.findMany({
         where: {
@@ -45,6 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Search posts
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let posts: any[] = [];
     if (type === 'all' || type === 'posts') {
       const foundPosts = await prisma.post.findMany({

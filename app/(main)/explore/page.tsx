@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useSocialStore } from '@/context';
 import { toggleLike, toggleUnlike, toggleBookmark, toggleUnbookmark } from '@/lib/post-actions';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Post = {
@@ -267,10 +268,6 @@ export default function ExplorePage() {
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
                   {posts.map((post) => {
-                    const avatarUrl =
-                      post.user.imageUrl ||
-                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user.username}`;
-
                     return (
                       <div
                         key={post.id}
@@ -291,10 +288,12 @@ export default function ExplorePage() {
                               </div>
                             </div>
                           ) : (
-                            <img
+                            <Image
                               src={post.imageUrl}
                               alt="Post"
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              fill
+                              style={{ objectFit: 'cover' }}
                             />
                           )
                         ) : (
@@ -375,7 +374,7 @@ export default function ExplorePage() {
               ) : (
                 <div className="space-y-3">
                   {suggestedUsers.map((user) => {
-                    const avatarUrl =
+                    const userAvatar =
                       user.imageUrl ||
                       `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`;
 
@@ -386,7 +385,7 @@ export default function ExplorePage() {
                         className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:bg-accent transition-colors cursor-pointer"
                       >
                         <Avatar className="h-12 w-12">
-                          <AvatarImage src={avatarUrl} />
+                          <AvatarImage src={userAvatar} />
                           <AvatarFallback>{user.name[0] || user.username[0]}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">

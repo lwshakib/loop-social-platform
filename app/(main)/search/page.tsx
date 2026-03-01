@@ -1,12 +1,13 @@
 'use client';
 
-import { Search as SearchIcon, User, FileText, Image as ImageIcon, Play } from 'lucide-react';
+import { Search as SearchIcon, User, Play } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useDebounce } from '@/hooks/use-debounce';
 import { toggleLike, toggleUnlike, toggleBookmark, toggleUnbookmark } from '@/lib/post-actions';
 import { useSocialStore } from '@/context';
@@ -481,10 +482,14 @@ export default function SearchPage() {
                             className="rounded-2xl overflow-hidden mb-3 w-full cursor-pointer"
                             onClick={() => router.push(`/p/${post.id}`)}
                           >
-                            <img
+                            <Image
                               src={post.imageUrl}
                               alt="Post"
                               className="w-full h-auto object-cover"
+                              width={0}
+                              height={0}
+                              sizes="100vw"
+                              style={{ width: '100%', height: 'auto' }}
                             />
                           </div>
                         )}

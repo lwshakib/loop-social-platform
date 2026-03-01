@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { X, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 type Story = {
   id: string;
@@ -28,8 +29,6 @@ type StoryData = {
   allStories: Story[];
 };
 
-const STORY_DURATION = 5000; // 5 seconds per story
-
 export default function StoryViewerPage() {
   const params = useParams();
   const router = useRouter();
@@ -43,7 +42,7 @@ export default function StoryViewerPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [isVideo, setIsVideo] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
-  const [videoDuration, setVideoDuration] = useState(0);
+  const [, setVideoDuration] = useState(0);
 
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -335,10 +334,12 @@ export default function StoryViewerPage() {
               onPause={() => setVideoPlaying(false)}
             />
           ) : (
-            <img
+            <Image
               src={currentStory.url}
               alt="Story"
               className="max-w-full max-h-full object-contain"
+              fill
+              style={{ objectFit: 'contain' }}
             />
           )
         ) : (

@@ -18,7 +18,6 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
-  Eye,
   Heart,
   MessageCircle,
   Plus,
@@ -28,33 +27,43 @@ import {
   X,
 } from 'lucide-react';
 import { useSocialStore } from '@/context';
+import { User } from '@/types';
 import { toggleLike, toggleUnlike, toggleBookmark, toggleUnbookmark } from '@/lib/post-actions';
 import VideoPlayer from './_components/video-player';
 import Link from 'next/link';
+import Image from 'next/image';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type Post = {
+/**
+ * Post Interface
+ * Defines the structure of a social post, including user info, engagement counts, and media.
+ */
+interface Post {
   id: string;
   userId: string;
   content: string;
   imageUrl: string | null;
-  type: 'text' | 'image' | 'reel';
+  type: 'text' | 'image' | 'reel'; // The content format
   likesCount: number;
   commentsCount: number;
   createdAt: string;
-  isLiked?: boolean;
-  isSaved?: boolean;
+  isLiked?: boolean; // Tracking if the current user liked this post
+  isSaved?: boolean; // Tracking if the current user saved this post
   user: {
     id: string;
     username: string;
     name: string;
     imageUrl: string | null;
   };
-};
+}
 
-type StoryGroup = {
+/**
+ * StoryGroup Interface
+ * Groups individual stories by user for horizontal scrolling in the feed.
+ */
+interface StoryGroup {
   userId: string;
   user?: {
     id: string;
@@ -62,16 +71,20 @@ type StoryGroup = {
     name?: string;
     imageUrl?: string | null;
   };
-  stories: Array<{
+  stories: {
     id: string;
     userId: string;
     caption: string;
     url: string;
     createdAt: string;
     expiresAt: string;
-  }>;
-};
+  }[];
+}
 
+/**
+ * StorySkeleton Component
+ * Placeholder UI for an individual story while data is loading.
+ */
 const StorySkeleton = () => (
   <div className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0">
     <Skeleton className="h-14 w-14 sm:h-16 sm:w-16 rounded-full border border-border" />
@@ -114,7 +127,10 @@ const PostSkeleton = () => (
   </div>
 );
 
-// Helper function to format time ago
+/**
+ * formatTimeAgo Helper
+ * Converts a date string or object into a relative time (e.g., "5s", "2m", "3h", "4d", "5w", "6mo", "7y").
+ */
 const formatTimeAgo = (date: string | Date): string => {
   const now = new Date();
   const postDate = typeof date === 'string' ? new Date(date) : date;
@@ -138,18 +154,40 @@ const formatNumber = (num: number): string => {
   return num.toLocaleString();
 };
 
+/**
+ * HomePage Component
+ * The central hub of the application. Manages the display of newsfeed posts,
+ * user stories, and suggested connections.
+ */
 export default function HomePage() {
   const router = useRouter();
+  // Access global user state
   const currentUser = useSocialStore((state) => state.user);
+
+  // --- CONTENT STATE ---
+
+  // Array of posts for the main feed
   const [posts, setPosts] = useState<Post[]>([]);
+  // Tracking if initial posts are still being fetched
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+
+  // Optimistic UI tracking for engagement
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set());
+
+  // --- STORIES STATE ---
+
+  // Horizontal list of stories grouped by user
+  const [stories, setStories] = useState<StoryGroup[]>([]);
+  const [isLoadingStories, setIsLoadingStories] = useState(true);
+
+  // Scrolling logic for the story bar
   const storiesScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [stories, setStories] = useState<StoryGroup[]>([]);
-  const [isLoadingStories, setIsLoadingStories] = useState(true);
+
+  // --- STORY CREATION STATE ---
+
   const [isCreateStoryDialogOpen, setIsCreateStoryDialogOpen] = useState(false);
   const [createStoryData, setCreateStoryData] = useState({
     caption: '',
@@ -158,11 +196,23 @@ export default function HomePage() {
   });
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+
+  // --- SOCIAL CONNECTIONS STATE ---
+
+  // Tracking which users the current user follows (for UI updates)
   const [followingUserIds, setFollowingUserIds] = useState<Set<string>>(new Set());
+  // Tracking which follows are in progress (to disable buttons)
   const [followingBusyIds, setFollowingBusyIds] = useState<Set<string>>(new Set());
-  const [suggestedUsers, setSuggestedUsers] = useState<StoryGroup[]>([]);
+  // List of users suggested to follow
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
+
+  // Reference for IntersectionObserver to pause/play videos automatically
   const observerRef = useRef<IntersectionObserver | null>(null);
 
+  /**
+   * checkScrollButtons
+   * Determines if the horizontal stories bar can scroll further in either direction.
+   */
   const checkScrollButtons = () => {
     if (storiesScrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = storiesScrollRef.current;
@@ -171,6 +221,10 @@ export default function HomePage() {
     }
   };
 
+  /**
+   * scrollStories
+   * Moves the stories horizontal bar by a fixed amount.
+   */
   const scrollStories = (direction: 'left' | 'right') => {
     if (storiesScrollRef.current) {
       const scrollAmount = 200;
@@ -184,10 +238,15 @@ export default function HomePage() {
         behavior: 'smooth',
       });
 
+      // Update button visibility after scrolling
       setTimeout(checkScrollButtons, 100);
     }
   };
 
+  /**
+   * handleResize
+   * Updates scroll button visibility when the screen size changes.
+   */
   useEffect(() => {
     checkScrollButtons();
     const handleResize = () => checkScrollButtons();
@@ -195,12 +254,14 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Fetch stories
+  /**
+   * fetchStories
+   * Loads the current active stories from the server.
+   */
   useEffect(() => {
     const fetchStories = async () => {
       try {
         const response = await fetch('/api/stories');
-
         if (response.ok) {
           const result = await response.json();
           if (result.data) {
@@ -211,13 +272,18 @@ export default function HomePage() {
         console.error('Error fetching stories:', error);
       } finally {
         setIsLoadingStories(false);
+        // Ensure scroll buttons are updated after data renders
+        setTimeout(checkScrollButtons, 500);
       }
     };
 
     fetchStories();
   }, []);
 
-  // Fetch posts
+  /**
+   * fetchPosts
+   * Loads the main feed posts and initializes engagement state.
+   */
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -229,7 +295,7 @@ export default function HomePage() {
           if (result.data?.posts) {
             setPosts(result.data.posts);
 
-            // Initialize liked and saved posts
+            // Pre-populate engagement sets for faster LOOKUP during render
             const likedPostIds = result.data.posts
               .filter((post: Post) => post.isLiked)
               .map((post: Post) => post.id);
@@ -251,11 +317,37 @@ export default function HomePage() {
     fetchPosts();
   }, []);
 
-  // Set up Intersection Observer to pause videos when they scroll out of view
+  /**
+   * fetchSuggestedUsers
+   * Loads users that the current user might want to follow.
+   */
+  useEffect(() => {
+    const fetchSuggestedUsers = async () => {
+      try {
+        const response = await fetch('/api/users/suggestions');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.data && Array.isArray(result.data)) {
+            setSuggestedUsers(result.data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching suggested users:', error);
+      }
+    };
+
+    fetchSuggestedUsers();
+  }, []);
+
+  /**
+   * Intersection Observer for Reels
+   * Automatically pauses videos when they are no longer in the viewport.
+   */
   useEffect(() => {
     if (posts.length === 0) return;
 
     const timeoutId = setTimeout(() => {
+      // Disconnect existing observer if posts update
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
@@ -267,17 +359,19 @@ export default function HomePage() {
             const video = container.querySelector('video');
             if (!video) return;
 
+            // Pause if not visible
             if (!entry.isIntersecting && !video.paused) {
               video.pause();
             }
           });
         },
         {
-          threshold: 0.1,
+          threshold: 0.1, // Trigger when 10% of the video is visible
           rootMargin: '0px',
         }
       );
 
+      // Start observing each reel post
       posts.forEach((post) => {
         if (post.type === 'reel' && post.imageUrl) {
           const element = document.querySelector(`[data-video-id="${post.id}"]`);
@@ -296,34 +390,18 @@ export default function HomePage() {
     };
   }, [posts]);
 
-  // Fetch suggested users
-  useEffect(() => {
-    const fetchSuggestedUsers = async () => {
-      try {
-        const response = await fetch('/api/users/suggestions');
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.data && Array.isArray(result.data)) {
-            setSuggestedUsers(result.data);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching suggested users:', error);
-      }
-    };
-
-    fetchSuggestedUsers();
-  }, []);
-
+  /**
+   * refreshStories
+   * Utility to reload story data (e.g., after creating a new one).
+   */
   const refreshStories = async () => {
     try {
       const response = await fetch('/api/stories');
-
       if (response.ok) {
         const result = await response.json();
         if (result.data) {
           setStories(result.data);
+          setTimeout(checkScrollButtons, 100);
         }
       }
     } catch (error) {
@@ -492,22 +570,30 @@ export default function HomePage() {
     };
   }, [createStoryData.preview]);
 
+  /**
+   * handleLike
+   * Optimistically updates the like count and state for a post.
+   * If the API call fails, it reverts to the previous state.
+   */
   const handleLike = async (postId: string) => {
     if (!currentUser) return;
 
+    // Find the post to get its current state
     const post = posts.find((p) => p.id === postId);
     if (!post) return;
 
     const isLiked = post.isLiked || false;
     const previousLikesCount = post.likesCount || 0;
 
-    // Optimistic update
+    // OPTIMISTIC UPDATE: Update UI immediately
     if (isLiked) {
+      // Remove from liked set
       setLikedPosts((prev) => {
         const newSet = new Set(prev);
         newSet.delete(postId);
         return newSet;
       });
+      // Decrement count in main posts state
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
@@ -520,11 +606,13 @@ export default function HomePage() {
         )
       );
     } else {
+      // Add to liked set
       setLikedPosts((prev) => {
         const newSet = new Set(prev);
         newSet.add(postId);
         return newSet;
       });
+      // Increment count in main posts state
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId ? { ...p, likesCount: p.likesCount + 1, isLiked: true } : p
@@ -533,13 +621,14 @@ export default function HomePage() {
     }
 
     try {
+      // Perform the actual API call
       if (isLiked) {
         await toggleUnlike(postId);
       } else {
         await toggleLike(postId);
       }
     } catch (error) {
-      // Revert on error
+      // REVERT ON ERROR: If the server fails, restore the old values
       setLikedPosts((prev) => {
         const newSet = new Set(prev);
         if (isLiked) {
@@ -561,9 +650,14 @@ export default function HomePage() {
         )
       );
       console.error('Error liking post:', error);
+      toast.error('Connection error. Failed to update like.');
     }
   };
 
+  /**
+   * handleSave
+   * Optimistically updates the bookmark state for a post.
+   */
   const handleSave = async (postId: string) => {
     if (!currentUser) return;
 
@@ -572,7 +666,7 @@ export default function HomePage() {
 
     const isSaved = post.isSaved || false;
 
-    // Optimistic update
+    // OPTIMISTIC UPDATE
     if (isSaved) {
       setSavedPosts((prev) => {
         const newSet = new Set(prev);
@@ -596,7 +690,6 @@ export default function HomePage() {
         await toggleBookmark(postId);
       }
     } catch (error) {
-      // Revert on error
       setSavedPosts((prev) => {
         const newSet = new Set(prev);
         if (isSaved) {
@@ -608,15 +701,21 @@ export default function HomePage() {
       });
       setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, isSaved: isSaved } : p)));
       console.error('Error saving post:', error);
+      toast.error('Failed to save post.');
     }
   };
 
+  /**
+   * handleFollowSuggestion
+   * Handles follow/unfollow actions for users in the suggested sidebar.
+   * Tracks "busy" state to prevent double-clicking while request is in flight.
+   */
   const handleFollowSuggestion = async (userId: string, username?: string | null) => {
     if (!currentUser || !username) return;
 
     const isFollowing = followingUserIds.has(userId);
-    const prevSet = new Set(followingUserIds);
 
+    // Set "busy" state for this specific user to show loading/disable button
     setFollowingBusyIds((prev) => {
       const next = new Set(prev);
       next.add(userId);
@@ -624,25 +723,30 @@ export default function HomePage() {
     });
 
     try {
-      const res = await fetch(`/api/users/${username}/follow`, {
+      const response = await fetch(`/api/users/${username}/follow`, {
         method: isFollowing ? 'DELETE' : 'POST',
       });
-      if (!res.ok) {
-        throw new Error('Failed to follow user');
+
+      if (response.ok) {
+        // Success: Update the followed set
+        setFollowingUserIds((prev) => {
+          const next = new Set(prev);
+          if (isFollowing) {
+            next.delete(userId);
+          } else {
+            next.add(userId);
+          }
+          return next;
+        });
+        toast.success(isFollowing ? `Unfollowed @${username}` : `Following @${username}`);
+      } else {
+        toast.error('Failed to update follow status');
       }
-      setFollowingUserIds((prev) => {
-        const next = new Set(prev);
-        if (isFollowing) {
-          next.delete(userId);
-        } else {
-          next.add(userId);
-        }
-        return next;
-      });
     } catch (error) {
-      console.error('Error following suggested user:', error);
-      setFollowingUserIds(prevSet);
+      console.error('Error following user:', error);
+      toast.error('Network error. Failed to follow user.');
     } finally {
+      // Clear busy state regardless of success or failure
       setFollowingBusyIds((prev) => {
         const next = new Set(prev);
         next.delete(userId);
@@ -651,10 +755,18 @@ export default function HomePage() {
     }
   };
 
+  /**
+   * getAvatarUrl
+   * Extracts the profile image URL for the current user.
+   */
   const getAvatarUrl = () => {
     return currentUser?.image || '';
   };
 
+  /**
+   * getAvatarFallback
+   * Provides the first letter of the username as a fallback.
+   */
   const getAvatarFallback = () => {
     return currentUser?.username?.[0]?.toUpperCase() || 'U';
   };
@@ -662,7 +774,7 @@ export default function HomePage() {
   return (
     <div className="w-full max-w-6xl mx-auto px-2 sm:px-3 md:px-4 py-3 sm:py-4 md:py-6 lg:px-8 overflow-x-hidden relative left-0">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 w-full">
-        {/* Main Feed */}
+        {/* === MAIN NEWSFEED SECTION (Left Column) === */}
         <div className="lg:col-span-2 space-y-3 sm:space-y-4 md:space-y-6 min-w-0 w-full relative z-0 pb-4">
           {/* Stories Section */}
           <div className="bg-card border border-border p-2 sm:p-3 md:p-4 overflow-hidden relative rounded-lg sm:rounded-none w-full shadow-sm">
@@ -843,10 +955,14 @@ export default function HomePage() {
                           {/* Post Image or Video */}
                           {post.imageUrl && post.type === 'image' && (
                             <div className="rounded-xl overflow-hidden mb-2 w-full max-w-lg">
-                              <img
+                              <Image
                                 src={post.imageUrl}
                                 alt="Post"
                                 className="w-full h-auto object-cover"
+                                width={0}
+                                height={0}
+                                sizes="100vw"
+                                style={{ width: '100%', height: 'auto' }}
                               />
                             </div>
                           )}
@@ -941,7 +1057,8 @@ export default function HomePage() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="hidden lg:block space-y-4 md:space-y-6 w-72 xl:w-80">
+        {/* === SIDEBAR SECTION (Right Column) === */}
+        <div className="hidden lg:block space-y-4 md:space-y-6 relative z-0">
           {/* Suggestions */}
           <div className="bg-card border rounded-lg p-3 md:p-4">
             <div className="flex items-center justify-between mb-3 md:mb-4">
@@ -954,42 +1071,34 @@ export default function HomePage() {
             </div>
             <div className="space-y-2 md:space-y-3">
               {suggestedUsers
-                .filter((userGroup) => {
-                  if (currentUser?.id && userGroup.userId === currentUser.id) {
+                .filter((user) => {
+                  if (currentUser?.id && user.id === currentUser.id) {
                     return false;
                   }
-                  if (currentUser?.username && userGroup.user?.username === currentUser.username) {
+                  if (currentUser?.username && user.username === currentUser.username) {
                     return false;
                   }
-                  return userGroup.user !== null;
+                  return true;
                 })
                 .slice(0, 5)
-                .map((userGroup) => {
-                  if (!userGroup.user) return null;
+                .map((user) => {
                   return (
-                    <div key={userGroup.userId} className="flex items-center justify-between gap-2">
+                    <div key={user.id} className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                        <Link href={`/${userGroup.user?.username}`}>
+                        <Link href={`/${user.username}`}>
                           <Avatar className="h-7 w-7 md:h-8 md:w-8 shrink-0 cursor-pointer">
-                            <AvatarImage
-                              src={userGroup.user.imageUrl || ''}
-                              alt={userGroup.user.username || ''}
-                            />
+                            <AvatarImage src={user.image || ''} alt={user.username || ''} />
                             <AvatarFallback className="bg-primary text-primary-foreground font-bold text-[10px]">
-                              {(
-                                userGroup.user.name?.[0] ||
-                                userGroup.user.username?.[0] ||
-                                'U'
-                              ).toUpperCase()}
+                              {(user.name?.[0] || user.username?.[0] || 'U').toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
                         <div className="flex-1 min-w-0">
                           <Link
-                            href={`/${userGroup.user?.username}`}
+                            href={`/${user.username}`}
                             className="font-semibold text-xs md:text-sm truncate cursor-pointer hover:underline block"
                           >
-                            {userGroup.user.username || 'unknown'}
+                            {user.username || 'unknown'}
                           </Link>
                           <p className="text-[10px] md:text-xs text-muted-foreground truncate">
                             Suggested for you
@@ -1000,13 +1109,13 @@ export default function HomePage() {
                         variant="ghost"
                         size="sm"
                         className="text-primary text-[10px] md:text-xs h-auto py-1 shrink-0"
-                        disabled={followingBusyIds.has(userGroup.userId)}
+                        disabled={followingBusyIds.has(user.id)}
                         onClick={async (e) => {
                           e.stopPropagation();
-                          await handleFollowSuggestion(userGroup.userId, userGroup.user?.username);
+                          await handleFollowSuggestion(user.id, user.username);
                         }}
                       >
-                        {followingUserIds.has(userGroup.userId) ? 'Following' : 'Follow'}
+                        {followingUserIds.has(user.id) ? 'Following' : 'Follow'}
                       </Button>
                     </div>
                   );
@@ -1043,10 +1152,19 @@ export default function HomePage() {
                         controls
                       />
                     ) : (
-                      <img
+                      <Image
                         src={createStoryData.preview}
                         alt="Preview"
                         className="max-h-[250px] sm:max-h-[300px] md:max-h-[400px] max-w-full rounded-lg object-contain"
+                        width={0}
+                        height={0}
+                        sizes="100vw"
+                        style={{
+                          width: 'auto',
+                          height: 'auto',
+                          maxHeight: '400px',
+                          maxWidth: '100%',
+                        }}
                       />
                     )}
                     <div className="flex items-center justify-center gap-2">

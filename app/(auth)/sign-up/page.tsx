@@ -46,7 +46,7 @@ export default function SignUpPage() {
       toast.error(error.message || 'Something went wrong. Please try again.');
     } else if (data) {
       toast.success('Account created successfully!');
-      router.push('/');
+      router.push('/verify-email');
     }
     setLoading(false);
   };

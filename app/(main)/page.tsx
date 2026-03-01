@@ -752,7 +752,11 @@ export default function HomePage() {
                               alt={storyGroup.user.username || ''}
                             />
                             <AvatarFallback className="bg-primary text-primary-foreground font-bold text-[10px] sm:text-xs">
-                              {(storyGroup.user.name?.[0] || storyGroup.user.username?.[0] || 'U').toUpperCase()}
+                              {(
+                                storyGroup.user.name?.[0] ||
+                                storyGroup.user.username?.[0] ||
+                                'U'
+                              ).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                         </div>
@@ -800,7 +804,11 @@ export default function HomePage() {
                           <Avatar className="h-10 w-10 cursor-pointer">
                             <AvatarImage src={avatarUrl} alt={post.user.username} />
                             <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
-                              {(post.user.name?.[0] || post.user.username?.[0] || 'U').toUpperCase()}
+                              {(
+                                post.user.name?.[0] ||
+                                post.user.username?.[0] ||
+                                'U'
+                              ).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
@@ -968,7 +976,11 @@ export default function HomePage() {
                               alt={userGroup.user.username || ''}
                             />
                             <AvatarFallback className="bg-primary text-primary-foreground font-bold text-[10px]">
-                              {(userGroup.user.name?.[0] || userGroup.user.username?.[0] || 'U').toUpperCase()}
+                              {(
+                                userGroup.user.name?.[0] ||
+                                userGroup.user.username?.[0] ||
+                                'U'
+                              ).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                         </Link>

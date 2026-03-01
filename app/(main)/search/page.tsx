@@ -437,7 +437,11 @@ export default function SearchPage() {
                             <Avatar className="h-10 w-10 shrink-0 cursor-pointer">
                               <AvatarImage src={avatarUrl} alt={post.user.username} />
                               <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
-                                {(post.user.name?.[0] || post.user.username?.[0] || 'U').toUpperCase()}
+                                {(
+                                  post.user.name?.[0] ||
+                                  post.user.username?.[0] ||
+                                  'U'
+                                ).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                           </Link>

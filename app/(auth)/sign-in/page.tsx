@@ -164,9 +164,7 @@ export default function SignInPage() {
             <Github className="w-5 h-5 opacity-50" />
             <span className="font-semibold text-sm">
               GitHub{' '}
-              <span className="text-[10px] block lg:inline-block font-normal">
-                (Unavailable)
-              </span>
+              <span className="text-[10px] block lg:inline-block font-normal">(Unavailable)</span>
             </span>
           </button>
         </div>
@@ -186,4 +184,3 @@ export default function SignInPage() {
     </AuthLayout>
   );
 }
-

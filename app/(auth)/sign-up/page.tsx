@@ -75,7 +75,8 @@ export default function SignUpPage() {
           <div className="space-y-2">
             <h1 className="text-4xl font-extrabold text-foreground tracking-tight">Check Email</h1>
             <p className="text-muted-foreground text-lg">
-              We&apos;ve sent a verification link to <span className="font-semibold text-foreground">{email}</span>.
+              We&apos;ve sent a verification link to{' '}
+              <span className="font-semibold text-foreground">{email}</span>.
             </p>
           </div>
 
@@ -121,7 +122,9 @@ export default function SignUpPage() {
         className="w-full"
       >
         <div className="mb-8 text-center lg:text-left">
-          <h2 className="text-4xl font-extrabold text-foreground mb-3 tracking-tight">Create Account</h2>
+          <h2 className="text-4xl font-extrabold text-foreground mb-3 tracking-tight">
+            Create Account
+          </h2>
           <p className="text-muted-foreground text-lg">Join our community in just a few clicks</p>
         </div>
 
@@ -251,9 +254,7 @@ export default function SignUpPage() {
             <Github className="w-4 h-4 opacity-50" />
             <span className="text-sm font-semibold">
               GitHub{' '}
-              <span className="text-[10px] block lg:inline-block font-normal">
-                (Unavailable)
-              </span>
+              <span className="text-[10px] block lg:inline-block font-normal">(Unavailable)</span>
             </span>
           </button>
         </div>
@@ -273,4 +274,3 @@ export default function SignUpPage() {
     </AuthLayout>
   );
 }
-

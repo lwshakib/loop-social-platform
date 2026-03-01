@@ -50,7 +50,8 @@ export default function ForgotPasswordPage() {
           <div className="space-y-2">
             <h1 className="text-4xl font-extrabold text-foreground tracking-tight">Check Email</h1>
             <p className="text-muted-foreground text-lg">
-              We&apos;ve sent a password reset link to <span className="font-semibold text-foreground">{email}</span>.
+              We&apos;ve sent a password reset link to{' '}
+              <span className="font-semibold text-foreground">{email}</span>.
             </p>
           </div>
 
@@ -146,4 +147,3 @@ export default function ForgotPasswordPage() {
     </AuthLayout>
   );
 }
-

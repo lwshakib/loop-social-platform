@@ -13,10 +13,10 @@ cloudinary.config({
 export async function GET(request: NextRequest) {
   try {
     // Check session server-side
-    const session = await auth.api.getSession({ 
-        headers: await headers() 
+    const session = await auth.api.getSession({
+      headers: await headers(),
     });
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

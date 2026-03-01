@@ -74,7 +74,7 @@ function ResetPasswordForm() {
               className={buttonVariants({
                 variant: 'default',
                 size: 'lg',
-              className: 'w-full text-md font-semibold',
+                className: 'w-full text-md font-semibold',
               })}
             >
               Back to Login
@@ -94,7 +94,9 @@ function ResetPasswordForm() {
         className="w-full"
       >
         <div className="mb-8 text-center lg:text-left">
-          <h2 className="text-4xl font-extrabold text-foreground mb-3 tracking-tight">New Password</h2>
+          <h2 className="text-4xl font-extrabold text-foreground mb-3 tracking-tight">
+            New Password
+          </h2>
           <p className="text-muted-foreground text-lg">Set your new secure password below</p>
         </div>
 
@@ -164,13 +166,14 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      }
+    >
       <ResetPasswordForm />
     </Suspense>
   );
 }
-

@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  User, 
-  Mail, 
-  Calendar, 
-  Shield, 
-  Trash2, 
-  Smartphone, 
-  Globe, 
+import {
+  User,
+  Mail,
+  Calendar,
+  Shield,
+  Trash2,
+  Smartphone,
+  Globe,
   LogOut,
   ChevronRight,
   UserCheck,
@@ -19,30 +19,30 @@ import {
   X,
   Github,
   Chrome,
-  Loader2
+  Loader2,
 } from 'lucide-react';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { authClient } from '@/lib/auth-client';
@@ -54,12 +54,12 @@ export default function SettingsPage() {
   const currentUser = useSocialStore((state) => state.user);
   const setUser = useSocialStore((state) => state.setUser);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [sessions, setSessions] = useState<any[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  
+
   // Edit states
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
@@ -112,18 +112,18 @@ export default function SettingsPage() {
 
     // Capture original state for rollback
     const originalUser = { ...currentUser };
-    
+
     // Prepare optimistic state with updated info and preview image
     const optimisticUser = {
       ...currentUser,
       name: editName,
       username: editUsername,
-      image: avatarPreview || currentUser.image
+      image: avatarPreview || currentUser.image,
     };
 
     try {
       setIsUpdating(true);
-      
+
       // OPTIMISTIC UPDATE: Update UI immediately
       setUser(optimisticUser);
       setIsEditing(false);
@@ -157,7 +157,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           name: editName,
           username: editUsername,
-          image: finalImageUrl
+          image: finalImageUrl,
         }),
       });
 
@@ -167,23 +167,23 @@ export default function SettingsPage() {
         toast.success('Profile updated successfully');
         setAvatarFile(null);
         setAvatarPreview(null);
-        
+
         // Final sync with server data
         if (result.data) {
           setUser(result.data);
         }
-        
+
         router.refresh();
       } else {
         throw new Error(result.error || 'Failed to update profile');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      
+
       // ROLLBACK on error: Restore old data and reopen edit mode
       setUser(originalUser);
       setIsEditing(true);
-      
+
       const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
       toast.error(errorMessage);
     } finally {
@@ -208,7 +208,7 @@ export default function SettingsPage() {
     } finally {
       setIsDeletingAccount(false);
     }
-  }
+  };
 
   const handleRevokeSession = async (tokenId: string) => {
     try {
@@ -220,7 +220,7 @@ export default function SettingsPage() {
       console.error('Error revoking session:', error);
       toast.error('Failed to revoke session');
     }
-  }
+  };
 
   if (!currentUser) return null;
 
@@ -246,9 +246,9 @@ export default function SettingsPage() {
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setIsEditing(false);
                   setEditName(currentUser.name || '');
@@ -260,9 +260,9 @@ export default function SettingsPage() {
               >
                 <X className="h-4 w-4 mr-2" /> Cancel
               </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
+              <Button
+                variant="default"
+                size="sm"
                 onClick={handleUpdateProfile}
                 disabled={isUpdating}
                 className="gap-2"
@@ -292,22 +292,22 @@ export default function SettingsPage() {
                 </AvatarFallback>
               </Avatar>
               {isEditing && (
-                <button 
+                <button
                   onClick={() => fileInputRef.current?.click()}
                   className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
                   <Camera className="h-6 w-6 text-white" />
                 </button>
               )}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleAvatarChange} 
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleAvatarChange}
               />
             </div>
-            
+
             <div className="flex-1 space-y-4">
               {!isEditing ? (
                 <div>
@@ -318,25 +318,25 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-muted-foreground">Full name</label>
-                    <Input 
-                      value={editName} 
-                      onChange={(e) => setEditName(e.target.value)} 
+                    <Input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
                       placeholder="Your name"
                       className="h-9 bg-background"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-muted-foreground">Username</label>
-                    <Input 
-                      value={editUsername} 
-                      onChange={(e) => setEditUsername(e.target.value)} 
+                    <Input
+                      value={editUsername}
+                      onChange={(e) => setEditUsername(e.target.value)}
                       placeholder="Username"
                       className="h-9 bg-background"
                     />
                   </div>
                 </div>
               )}
-              
+
               <div className="flex gap-2">
                 {currentUser.emailVerified && (
                   <Badge variant="secondary" className="gap-1 px-1.5 py-0 font-medium">
@@ -367,7 +367,7 @@ export default function SettingsPage() {
                 <p className="text-sm font-medium">
                   {new Date(currentUser.createdAt).toLocaleDateString(undefined, {
                     month: 'long',
-                    year: 'numeric'
+                    year: 'numeric',
                   })}
                 </p>
               </div>
@@ -397,7 +397,10 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[10px] text-green-500 border-green-200 bg-green-50">
+              <Badge
+                variant="outline"
+                className="text-[10px] text-green-500 border-green-200 bg-green-50"
+              >
                 Connected
               </Badge>
             </div>
@@ -439,8 +442,8 @@ export default function SettingsPage() {
               </div>
             ) : sessions.length > 0 ? (
               sessions.map((session) => (
-                <div 
-                  key={session.id} 
+                <div
+                  key={session.id}
                   className="flex items-center justify-between p-4 rounded-xl border border-border bg-background"
                 >
                   <div className="flex items-center gap-4">
@@ -453,17 +456,23 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold">
-                        {session.device || 'Unknown browser'} {session.current && <Badge className="ml-2 text-[10px] h-4 py-0 bg-primary/10 text-primary border-primary/20">Active now</Badge>}
+                        {session.device || 'Unknown browser'}{' '}
+                        {session.current && (
+                          <Badge className="ml-2 text-[10px] h-4 py-0 bg-primary/10 text-primary border-primary/20">
+                            Active now
+                          </Badge>
+                        )}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {session.ipAddress || 'Private IP'} · {new Date(session.createdAt).toLocaleDateString()}
+                        {session.ipAddress || 'Private IP'} ·{' '}
+                        {new Date(session.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   {!session.current && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="text-xs text-red-500 hover:text-red-500 hover:bg-red-50"
                       onClick={() => handleRevokeSession(session.id)}
                     >
@@ -473,7 +482,9 @@ export default function SettingsPage() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">No other active sessions detected.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No other active sessions detected.
+              </p>
             )}
           </div>
         </CardContent>
@@ -490,7 +501,10 @@ export default function SettingsPage() {
         <CardFooter className="pt-2">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-100 hover:text-red-600 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                className="text-red-500 border-red-200 hover:bg-red-100 hover:text-red-600 w-full sm:w-auto"
+              >
                 Delete account
               </Button>
             </AlertDialogTrigger>
@@ -498,13 +512,13 @@ export default function SettingsPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account
-                  and remove your data from our servers.
+                  This action cannot be undone. This will permanently delete your account and remove
+                  your data from our servers.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction 
+                <AlertDialogAction
                   onClick={handleDeleteAccount}
                   className="bg-red-600 text-white hover:bg-red-700 font-medium gap-2"
                   disabled={isDeletingAccount}
@@ -524,5 +538,5 @@ export default function SettingsPage() {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

@@ -18,8 +18,8 @@ export default function VerifyEmailPage() {
             Email Verified!
           </h1>
           <p className="text-muted-foreground text-lg">
-            Your account has been successfully verified. You can now log in to access all the features
-            of Loop.
+            Your account has been successfully verified. You can now log in to access all the
+            features of Loop.
           </p>
         </div>
 
@@ -36,9 +36,7 @@ export default function VerifyEmailPage() {
           </Link>
         </div>
 
-        <p className="text-sm text-muted-foreground pt-4">
-          Welcome to the community!
-        </p>
+        <p className="text-sm text-muted-foreground pt-4">Welcome to the community!</p>
       </div>
     </AuthLayout>
   );

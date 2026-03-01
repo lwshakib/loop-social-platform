@@ -11,11 +11,12 @@ export default function MessagesPage() {
           <Send className="h-10 w-10 text-muted-foreground/40 -rotate-12" />
           <div className="absolute inset-0 border-2 border-dashed border-muted-foreground/20 rounded-full animate-[spin_10s_linear_infinite]" />
         </div>
-        
+
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">Messages</h1>
           <p className="text-muted-foreground text-sm">
-            This service is not available right now. We&apos;re working on bringing real-time conversations to Loop.
+            This service is not available right now. We&apos;re working on bringing real-time
+            conversations to Loop.
           </p>
         </div>
 

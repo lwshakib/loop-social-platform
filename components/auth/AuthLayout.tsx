@@ -22,18 +22,15 @@ export default function AuthLayout({
             imagePosition === 'right' ? 'lg:order-2' : 'lg:order-1'
           }`}
         >
-          <img
-            src={imageSrc}
-            alt="Auth background"
-            className="w-full h-full object-cover"
-          />
+          <img src={imageSrc} alt="Auth background" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay for depth */}
-          
           <div className="absolute top-12 left-12 z-10 flex items-center gap-2">
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
               <div className="w-5 h-5 border-2 border-primary-foreground rounded-full" />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-white drop-shadow-md">Loop</span>
+            <span className="text-2xl font-bold tracking-tight text-white drop-shadow-md">
+              Loop
+            </span>
           </div>
         </div>
 

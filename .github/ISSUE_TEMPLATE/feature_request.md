@@ -1,8 +1,8 @@
 ---
 name: 🚀 Feature Request
 about: Suggest an idea for Loop Social Platform
-title: "[FEAT] "
-labels: ["enhancement"]
+title: '[FEAT] '
+labels: ['enhancement']
 assignees: []
 ---
 

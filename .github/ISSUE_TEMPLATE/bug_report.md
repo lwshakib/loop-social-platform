@@ -1,8 +1,8 @@
 ---
 name: 🐛 Bug Report
 about: Create a report to help us improve Loop Social Platform
-title: "[BUG] "
-labels: ["bug"]
+title: '[BUG] '
+labels: ['bug']
 assignees: []
 ---
 
@@ -19,7 +19,7 @@ assignees: []
 - [ ] Auth
 - [ ] Media/Cloudinary
 - [ ] Search/Explore
-- [ ] Other: **__**
+- [ ] Other: **\_\_**
 
 ## 🔁 Reproduction Steps
 

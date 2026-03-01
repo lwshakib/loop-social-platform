@@ -1,26 +1,21 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Compass, Heart, MessageCircle, Bookmark, Play } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { useSocialStore } from "@/context";
-import {
-  toggleLike,
-  toggleUnlike,
-  toggleBookmark,
-  toggleUnbookmark,
-} from "@/lib/post-actions";
-import Link from "next/link";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Compass, Heart, MessageCircle, Bookmark, Play } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { useSocialStore } from '@/context';
+import { toggleLike, toggleUnlike, toggleBookmark, toggleUnbookmark } from '@/lib/post-actions';
+import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Post = {
   id: string;
   userId: string;
   content: string;
   imageUrl: string | null;
-  type: "text" | "image" | "reel";
+  type: 'text' | 'image' | 'reel';
   likesCount: number;
   commentsCount: number;
   createdAt: string;
@@ -93,7 +88,7 @@ export default function ExplorePage() {
     const fetchExploreData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("/api/explore?limit=30");
+        const response = await fetch('/api/explore?limit=30');
 
         if (response.ok) {
           const result = await response.json();
@@ -114,7 +109,7 @@ export default function ExplorePage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching explore data:", error);
+        console.error('Error fetching explore data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -159,9 +154,7 @@ export default function ExplorePage() {
       });
       setPosts((prev) =>
         prev.map((p) =>
-          p.id === postId
-            ? { ...p, likesCount: p.likesCount + 1, isLiked: true }
-            : p
+          p.id === postId ? { ...p, likesCount: p.likesCount + 1, isLiked: true } : p
         )
       );
     }
@@ -194,7 +187,7 @@ export default function ExplorePage() {
             : p
         )
       );
-      console.error("Error liking post:", error);
+      console.error('Error liking post:', error);
     }
   };
 
@@ -214,18 +207,14 @@ export default function ExplorePage() {
         newSet.delete(postId);
         return newSet;
       });
-      setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, isSaved: false } : p))
-      );
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, isSaved: false } : p)));
     } else {
       setSavedPosts((prev) => {
         const newSet = new Set(prev);
         newSet.add(postId);
         return newSet;
       });
-      setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, isSaved: true } : p))
-      );
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, isSaved: true } : p)));
     }
 
     try {
@@ -245,10 +234,8 @@ export default function ExplorePage() {
         }
         return newSet;
       });
-      setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, isSaved: isSaved } : p))
-      );
-      console.error("Error saving post:", error);
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, isSaved: isSaved } : p)));
+      console.error('Error saving post:', error);
     }
   };
 
@@ -291,7 +278,7 @@ export default function ExplorePage() {
                         onClick={() => router.push(`/p/${post.id}`)}
                       >
                         {post.imageUrl ? (
-                          post.type === "reel" ? (
+                          post.type === 'reel' ? (
                             <div className="relative w-full h-full">
                               <video
                                 src={post.imageUrl}
@@ -313,7 +300,7 @@ export default function ExplorePage() {
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-muted p-4">
                             <p className="text-xs text-muted-foreground line-clamp-3 text-center">
-                              {post.content || "Post"}
+                              {post.content || 'Post'}
                             </p>
                           </div>
                         )}
@@ -324,9 +311,7 @@ export default function ExplorePage() {
                             <div className="flex items-center gap-1.5">
                               <Heart
                                 className={`h-5 w-5 ${
-                                  likedPosts.has(post.id)
-                                    ? "fill-current text-red-500"
-                                    : ""
+                                  likedPosts.has(post.id) ? 'fill-current text-red-500' : ''
                                 }`}
                               />
                               <span className="text-sm font-semibold">
@@ -352,9 +337,7 @@ export default function ExplorePage() {
                           >
                             <Heart
                               className={`h-4 w-4 ${
-                                likedPosts.has(post.id)
-                                  ? "fill-current text-red-500"
-                                  : ""
+                                likedPosts.has(post.id) ? 'fill-current text-red-500' : ''
                               }`}
                             />
                           </Button>
@@ -366,9 +349,7 @@ export default function ExplorePage() {
                           >
                             <Bookmark
                               className={`h-4 w-4 ${
-                                savedPosts.has(post.id)
-                                  ? "fill-current text-primary"
-                                  : ""
+                                savedPosts.has(post.id) ? 'fill-current text-primary' : ''
                               }`}
                             />
                           </Button>
@@ -406,22 +387,14 @@ export default function ExplorePage() {
                       >
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={avatarUrl} />
-                          <AvatarFallback>
-                            {user.name[0] || user.username[0]}
-                          </AvatarFallback>
+                          <AvatarFallback>{user.name[0] || user.username[0]}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <p className="font-semibold truncate">
-                              {user.username}
-                            </p>
-                            {user.isVerified && (
-                              <span className="text-primary">✓</span>
-                            )}
+                            <p className="font-semibold truncate">{user.username}</p>
+                            {user.isVerified && <span className="text-primary">✓</span>}
                           </div>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {user.name}
-                          </p>
+                          <p className="text-sm text-muted-foreground truncate">{user.name}</p>
                           {user.bio && (
                             <p className="text-xs text-muted-foreground truncate mt-1">
                               {user.bio}

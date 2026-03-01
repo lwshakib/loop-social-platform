@@ -1,5 +1,5 @@
-import { User } from "@/types";
-import { create } from "zustand";
+import { User } from '@/types';
+import { create } from 'zustand';
 
 interface socialStore {
   user: User | null;

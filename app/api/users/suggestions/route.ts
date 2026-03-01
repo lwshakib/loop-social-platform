@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
     // Get current authenticated user from x-user header (set by proxy middleware)
-    const user = JSON.parse(request.headers.get("x-user") || "null");
+    const user = JSON.parse(request.headers.get('x-user') || 'null');
     const currentUserId = user?.id;
 
     if (!currentUserId) {
@@ -48,10 +48,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error fetching suggestions:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching suggestions:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

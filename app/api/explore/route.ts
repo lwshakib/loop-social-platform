@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { PostType } from "@/generated/prisma/enums";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { PostType } from '@/generated/prisma/enums';
 
 export async function GET(request: NextRequest) {
   try {
     // Get current authenticated user from x-user header (set by proxy middleware)
-    const user = JSON.parse(request.headers.get("x-user") || "null");
+    const user = JSON.parse(request.headers.get('x-user') || 'null');
     const currentUserId = user?.id;
 
     const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const limit = parseInt(searchParams.get('limit') || '20');
 
     // Get trending posts (ordered by likes count and recency, excluding reels)
     const trendingPosts = await prisma.post.findMany({
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: limit * 2, // Get more to filter by engagement
     });
 
@@ -47,9 +47,7 @@ export async function GET(request: NextRequest) {
         if (b.engagement !== a.engagement) {
           return b.engagement - a.engagement;
         }
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       })
       .slice(0, limit);
 
@@ -162,10 +160,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error fetching explore data:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching explore data:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

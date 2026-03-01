@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
@@ -10,10 +10,7 @@ export async function GET(
     const postId = resolvedParams.postId;
 
     if (!postId) {
-      return NextResponse.json(
-        { error: "Post ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
     }
 
     // Get all comments with user info
@@ -29,7 +26,7 @@ export async function GET(
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     // Separate top-level comments and replies
@@ -72,11 +69,8 @@ export async function GET(
 
     return NextResponse.json({ data: commentsWithReplies });
   } catch (error) {
-    console.error("Error fetching comments:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching comments:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -86,9 +80,9 @@ export async function POST(
 ) {
   try {
     // Get current authenticated user from x-user header (set by proxy middleware)
-    const user = JSON.parse(request.headers.get("x-user") || "null");
+    const user = JSON.parse(request.headers.get('x-user') || 'null');
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const currentDbUser = user;
@@ -97,10 +91,7 @@ export async function POST(
     const postId = resolvedParams.postId;
 
     if (!postId) {
-      return NextResponse.json(
-        { error: "Post ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
     }
 
     // Check if post exists
@@ -109,17 +100,14 @@ export async function POST(
     });
 
     if (!post) {
-      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
     const body = await request.json();
     const { content, parentId } = body;
 
-    if (!content || content.trim() === "") {
-      return NextResponse.json(
-        { error: "Comment content is required" },
-        { status: 400 }
-      );
+    if (!content || content.trim() === '') {
+      return NextResponse.json({ error: 'Comment content is required' }, { status: 400 });
     }
 
     // If parentId is provided, verify it exists and belongs to the same post
@@ -129,10 +117,7 @@ export async function POST(
       });
 
       if (!parentComment || parentComment.postId !== postId) {
-        return NextResponse.json(
-          { error: "Invalid parent comment" },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid parent comment' }, { status: 400 });
       }
     }
 
@@ -173,10 +158,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error("Error creating comment:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error creating comment:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

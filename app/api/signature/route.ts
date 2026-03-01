@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { v2 as cloudinary } from "cloudinary";
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { v2 as cloudinary } from 'cloudinary';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -15,11 +15,11 @@ export async function GET(request: NextRequest) {
     const session = await auth.api.getSession({ headers: await headers() });
     const user = session?.user;
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const folder = searchParams.get("folder") || "loop-social-platform";
+    const folder = searchParams.get('folder') || 'loop-social-platform';
     const timestamp = Math.floor(Date.now() / 1000);
 
     // Generate signature
@@ -38,10 +38,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error generating Cloudinary signature:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error generating Cloudinary signature:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

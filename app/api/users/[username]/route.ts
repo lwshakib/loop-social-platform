@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getUserByUsername } from "@/actions/user";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserByUsername } from '@/actions/user';
+import prisma from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
@@ -12,21 +12,18 @@ export async function GET(
     const username = resolvedParams.username;
 
     if (!username) {
-      return NextResponse.json(
-        { error: "Username is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
     // Get user by username (don't clean the username)
     const user = await getUserByUsername(username);
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Get current authenticated user from x-user header (set by proxy middleware)
-    const userJson = request.headers.get("x-user");
+    const userJson = request.headers.get('x-user');
     const currentUserData = userJson ? JSON.parse(userJson) : null;
     let isFollowing = false;
 
@@ -56,11 +53,11 @@ export async function GET(
       username: user.username,
       name: user.name,
       email: user.email,
-      bio: user.bio || "",
+      bio: user.bio || '',
       imageUrl: user.image,
-      coverImageUrl: user.coverImage || "",
-      dateOfBirth: user.dateOfBirth ? String(user.dateOfBirth) : "",
-      gender: user.gender || "",
+      coverImageUrl: user.coverImage || '',
+      dateOfBirth: user.dateOfBirth ? String(user.dateOfBirth) : '',
+      gender: user.gender || '',
       isVerified: false,
       createdAt: user.createdAt.toISOString(),
       postsCount: user.postsCount || 0,
@@ -71,11 +68,8 @@ export async function GET(
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error fetching user:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching user:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -87,10 +81,10 @@ export async function PATCH(
     const resolvedParams = await Promise.resolve(params);
     const usernameParam = resolvedParams.username;
 
-    const userJson = request.headers.get("x-user");
+    const userJson = request.headers.get('x-user');
     const authUser = userJson ? JSON.parse(userJson) : null;
     if (!authUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const dbUser = await prisma.user.findUnique({
@@ -98,12 +92,12 @@ export async function PATCH(
     });
 
     if (!dbUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Only allow editing your own profile
     if (dbUser.username !== usernameParam) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await request.json().catch(() => ({}));
@@ -116,17 +110,14 @@ export async function PATCH(
       image?: string;
       coverImage?: string;
     } = {};
-    if (typeof name === "string") payload.name = name.trim();
-    if (typeof username === "string") payload.username = username.trim();
-    if (typeof bio === "string") payload.bio = bio;
-    if (typeof image === "string") payload.image = image.trim();
-    if (typeof coverImage === "string") payload.coverImage = coverImage.trim();
+    if (typeof name === 'string') payload.name = name.trim();
+    if (typeof username === 'string') payload.username = username.trim();
+    if (typeof bio === 'string') payload.bio = bio;
+    if (typeof image === 'string') payload.image = image.trim();
+    if (typeof coverImage === 'string') payload.coverImage = coverImage.trim();
 
     if (Object.keys(payload).length === 0) {
-      return NextResponse.json(
-        { error: "No fields to update" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
     const updated = await prisma.user.update({
@@ -134,12 +125,9 @@ export async function PATCH(
       data: payload,
     });
 
-    const refreshed = await getUserByUsername(updated.username || "");
+    const refreshed = await getUserByUsername(updated.username || '');
     if (!refreshed) {
-      return NextResponse.json(
-        { error: "User not found after update" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found after update' }, { status: 404 });
     }
 
     const response = {
@@ -147,11 +135,11 @@ export async function PATCH(
       username: refreshed.username,
       name: refreshed.name,
       email: refreshed.email,
-      bio: refreshed.bio || "",
+      bio: refreshed.bio || '',
       imageUrl: refreshed.image,
-      dateOfBirth: refreshed.dateOfBirth ? String(refreshed.dateOfBirth) : "",
-      gender: refreshed.gender || "",
-      coverImageUrl: refreshed.coverImage || "",
+      dateOfBirth: refreshed.dateOfBirth ? String(refreshed.dateOfBirth) : '',
+      gender: refreshed.gender || '',
+      coverImageUrl: refreshed.coverImage || '',
       isVerified: false,
       createdAt: refreshed.createdAt.toISOString(),
       postsCount: refreshed.postsCount || 0,
@@ -162,21 +150,15 @@ export async function PATCH(
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Internal error";
+    const message = error instanceof Error ? error.message : 'Internal error';
     const isDuplicate =
-      message.includes("duplicate key value") ||
-      message.toLowerCase().includes("unique constraint");
+      message.includes('duplicate key value') ||
+      message.toLowerCase().includes('unique constraint');
     if (isDuplicate) {
-      return NextResponse.json(
-        { error: "Username or email already exists" },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: 'Username or email already exists' }, { status: 409 });
     }
 
-    console.error("Error updating user:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error updating user:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

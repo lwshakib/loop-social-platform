@@ -1,9 +1,9 @@
-import prisma from "@/lib/prisma";
-import { PostType } from "@/generated/prisma/client";
+import prisma from '@/lib/prisma';
+import { PostType } from '@/generated/prisma/client';
 
 export async function getUserPosts(
   username: string,
-  type: "posts" | "reels" | "liked" | "saved",
+  type: 'posts' | 'reels' | 'liked' | 'saved',
   currentUserId?: string
 ) {
   // First get the user by username
@@ -18,7 +18,7 @@ export async function getUserPosts(
   let posts;
 
   // Filter based on type
-  if (type === "posts") {
+  if (type === 'posts') {
     // Regular posts (text or image, not reels)
     posts = await prisma.post.findMany({
       where: {
@@ -33,9 +33,9 @@ export async function getUserPosts(
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
-  } else if (type === "reels") {
+  } else if (type === 'reels') {
     // Only reels
     posts = await prisma.post.findMany({
       where: {
@@ -50,9 +50,9 @@ export async function getUserPosts(
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
-  } else if (type === "liked" && currentUserId) {
+  } else if (type === 'liked' && currentUserId) {
     // Posts liked by current user
     const currentDbUser = await prisma.user.findUnique({
       where: { id: currentUserId },
@@ -76,9 +76,9 @@ export async function getUserPosts(
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
-  } else if (type === "saved" && currentUserId) {
+  } else if (type === 'saved' && currentUserId) {
     // Posts saved by current user
     const currentDbUser = await prisma.user.findUnique({
       where: { id: currentUserId },
@@ -102,7 +102,7 @@ export async function getUserPosts(
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
   } else {
     // Default to empty for liked/saved if no current user

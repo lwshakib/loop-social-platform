@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getUserPosts } from "@/actions/posts";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import { getUserPosts } from '@/actions/posts';
+import prisma from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
@@ -11,21 +11,14 @@ export async function GET(
     const resolvedParams = await Promise.resolve(params);
     const username = resolvedParams.username;
     const searchParams = request.nextUrl.searchParams;
-    const type = (searchParams.get("type") || "posts") as
-      | "posts"
-      | "reels"
-      | "liked"
-      | "saved";
+    const type = (searchParams.get('type') || 'posts') as 'posts' | 'reels' | 'liked' | 'saved';
 
     if (!username) {
-      return NextResponse.json(
-        { error: "Username is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
     // Get current authenticated user from x-user header (set by proxy middleware)
-    const user = JSON.parse(request.headers.get("x-user") || "null");
+    const user = JSON.parse(request.headers.get('x-user') || 'null');
     const currentUserId = user?.id;
 
     // Get posts
@@ -52,10 +45,7 @@ export async function GET(
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error fetching posts:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching posts:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

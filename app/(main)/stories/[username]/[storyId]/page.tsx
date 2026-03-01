@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { X, ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
-import Link from "next/link";
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { X, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
+import Link from 'next/link';
 
 type Story = {
   id: string;
@@ -57,7 +57,7 @@ export default function StoryViewerPage() {
       router.replace(`/stories/${username}/${nextStory.id}`);
     } else {
       // Go to next user's stories or back to home
-      router.push("/");
+      router.push('/');
     }
   }, [storyData, currentStoryIndex, username, router]);
 
@@ -68,7 +68,7 @@ export default function StoryViewerPage() {
       const prevStory = storyData.allStories[currentStoryIndex - 1];
       router.replace(`/stories/${username}/${prevStory.id}`);
     } else {
-      router.push("/");
+      router.push('/');
     }
   }, [storyData, currentStoryIndex, username, router]);
 
@@ -97,34 +97,31 @@ export default function StoryViewerPage() {
 
         if (!response.ok) {
           if (response.status === 404) {
-            router.push("/");
+            router.push('/');
             return;
           }
-          throw new Error("Failed to fetch story");
+          throw new Error('Failed to fetch story');
         }
 
         const result = await response.json();
         if (result.data) {
           setStoryData(result.data);
           // Find current story index
-          const index = result.data.allStories.findIndex(
-            (s: Story) => s.id === storyId
-          );
+          const index = result.data.allStories.findIndex((s: Story) => s.id === storyId);
           const storyIndex = index >= 0 ? index : 0;
           setCurrentStoryIndex(storyIndex);
           // Check if story has video
           const currentStory = result.data.allStories[storyIndex];
           if (currentStory?.url) {
-            const isVideoFile =
-              currentStory.url.match(/\.(mp4|webm|ogg|mov|avi|mkv)$/i) !== null;
+            const isVideoFile = currentStory.url.match(/\.(mp4|webm|ogg|mov|avi|mkv)$/i) !== null;
             setIsVideo(isVideoFile);
           } else {
             setIsVideo(false);
           }
         }
       } catch (error) {
-        console.error("Error fetching story:", error);
-        router.push("/");
+        console.error('Error fetching story:', error);
+        router.push('/');
       } finally {
         setIsLoading(false);
       }
@@ -192,18 +189,18 @@ export default function StoryViewerPage() {
         setVideoPlaying(false);
       };
 
-      video.addEventListener("timeupdate", handleTimeUpdate);
-      video.addEventListener("loadedmetadata", handleLoadedMetadata);
-      video.addEventListener("ended", handleEnded);
-      video.addEventListener("play", handlePlay);
-      video.addEventListener("pause", handlePause);
+      video.addEventListener('timeupdate', handleTimeUpdate);
+      video.addEventListener('loadedmetadata', handleLoadedMetadata);
+      video.addEventListener('ended', handleEnded);
+      video.addEventListener('play', handlePlay);
+      video.addEventListener('pause', handlePause);
 
       return () => {
-        video.removeEventListener("timeupdate", handleTimeUpdate);
-        video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-        video.removeEventListener("ended", handleEnded);
-        video.removeEventListener("play", handlePlay);
-        video.removeEventListener("pause", handlePause);
+        video.removeEventListener('timeupdate', handleTimeUpdate);
+        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        video.removeEventListener('ended', handleEnded);
+        video.removeEventListener('play', handlePlay);
+        video.removeEventListener('pause', handlePause);
       };
     }
   }, [isVideo, currentStoryIndex, handleNext]);
@@ -216,8 +213,7 @@ export default function StoryViewerPage() {
     if (storyData) {
       const currentStory = storyData.allStories[currentStoryIndex];
       if (currentStory?.url) {
-        const isVideoFile =
-          currentStory.url.match(/\.(mp4|webm|ogg|mov|avi|mkv)$/i) !== null;
+        const isVideoFile = currentStory.url.match(/\.(mp4|webm|ogg|mov|avi|mkv)$/i) !== null;
         setIsVideo(isVideoFile);
       } else {
         setIsVideo(false);
@@ -238,20 +234,20 @@ export default function StoryViewerPage() {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         handleNext();
-      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         handlePrevious();
-      } else if (e.key === "Escape") {
-        router.push("/");
-      } else if (e.key === " ") {
+      } else if (e.key === 'Escape') {
+        router.push('/');
+      } else if (e.key === ' ') {
         e.preventDefault();
         togglePause();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleNext, handlePrevious, togglePause, router]);
 
   if (isLoading || !storyData) {
@@ -270,25 +266,22 @@ export default function StoryViewerPage() {
       {/* Progress Bars */}
       <div className="absolute top-0 left-0 right-0 z-20 p-2 flex gap-1">
         {storyData.allStories.map((story, index) => (
-          <div
-            key={story.id}
-            className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden"
-          >
+          <div key={story.id} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
             <div
               className={`h-full bg-white transition-all duration-100 ${
                 index < currentStoryIndex
-                  ? "w-full"
+                  ? 'w-full'
                   : index === currentStoryIndex
-                  ? "w-full"
-                  : "w-0"
+                    ? 'w-full'
+                    : 'w-0'
               }`}
               style={{
                 width:
                   index < currentStoryIndex
-                    ? "100%"
+                    ? '100%'
                     : index === currentStoryIndex
-                    ? `${progress}%`
-                    : "0%",
+                      ? `${progress}%`
+                      : '0%',
               }}
             />
           </div>
@@ -302,7 +295,7 @@ export default function StoryViewerPage() {
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
           <Avatar className="h-10 w-10 border-2 border-white">
-            <AvatarImage src={user.imageUrl || ""} />
+            <AvatarImage src={user.imageUrl || ''} />
             <AvatarFallback className="bg-muted text-foreground">
               {user.name[0] || user.username[0]}
             </AvatarFallback>
@@ -311,8 +304,8 @@ export default function StoryViewerPage() {
             <p className="text-white font-semibold text-sm">{user.username}</p>
             <p className="text-white/70 text-xs">
               {new Date(currentStory.createdAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
+                hour: '2-digit',
+                minute: '2-digit',
               })}
             </p>
           </div>
@@ -320,7 +313,7 @@ export default function StoryViewerPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.push("/")}
+          onClick={() => router.push('/')}
           className="text-white hover:bg-white/20"
         >
           <X className="h-6 w-6" />
@@ -350,9 +343,7 @@ export default function StoryViewerPage() {
           )
         ) : (
           <div className="text-center p-8 text-white max-w-md">
-            <p className="text-lg whitespace-pre-wrap">
-              {currentStory.caption}
-            </p>
+            <p className="text-lg whitespace-pre-wrap">{currentStory.caption}</p>
           </div>
         )}
       </div>

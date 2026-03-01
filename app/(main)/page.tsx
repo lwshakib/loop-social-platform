@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -11,9 +11,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Bookmark,
   ChevronLeft,
@@ -26,26 +26,21 @@ import {
   Share,
   Upload,
   X,
-} from "lucide-react";
-import { useSocialStore } from "@/context";
-import {
-  toggleLike,
-  toggleUnlike,
-  toggleBookmark,
-  toggleUnbookmark,
-} from "@/lib/post-actions";
-import VideoPlayer from "./_components/video-player";
-import Link from "next/link";
-import axios from "axios";
-import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
+} from 'lucide-react';
+import { useSocialStore } from '@/context';
+import { toggleLike, toggleUnlike, toggleBookmark, toggleUnbookmark } from '@/lib/post-actions';
+import VideoPlayer from './_components/video-player';
+import Link from 'next/link';
+import axios from 'axios';
+import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Post = {
   id: string;
   userId: string;
   content: string;
   imageUrl: string | null;
-  type: "text" | "image" | "reel";
+  type: 'text' | 'image' | 'reel';
   likesCount: number;
   commentsCount: number;
   createdAt: string;
@@ -122,7 +117,7 @@ const PostSkeleton = () => (
 // Helper function to format time ago
 const formatTimeAgo = (date: string | Date): string => {
   const now = new Date();
-  const postDate = typeof date === "string" ? new Date(date) : date;
+  const postDate = typeof date === 'string' ? new Date(date) : date;
   const diffInSeconds = Math.floor((now.getTime() - postDate.getTime()) / 1000);
 
   if (diffInSeconds < 60) return `${diffInSeconds}s`;
@@ -130,8 +125,7 @@ const formatTimeAgo = (date: string | Date): string => {
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
   if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
-  if (diffInSeconds < 31536000)
-    return `${Math.floor(diffInSeconds / 2592000)}mo`;
+  if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo`;
   return `${Math.floor(diffInSeconds / 31536000)}y`;
 };
 
@@ -158,18 +152,14 @@ export default function HomePage() {
   const [isLoadingStories, setIsLoadingStories] = useState(true);
   const [isCreateStoryDialogOpen, setIsCreateStoryDialogOpen] = useState(false);
   const [createStoryData, setCreateStoryData] = useState({
-    caption: "",
+    caption: '',
     file: null as File | null,
     preview: null as string | null,
   });
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const [followingUserIds, setFollowingUserIds] = useState<Set<string>>(
-    new Set()
-  );
-  const [followingBusyIds, setFollowingBusyIds] = useState<Set<string>>(
-    new Set()
-  );
+  const [followingUserIds, setFollowingUserIds] = useState<Set<string>>(new Set());
+  const [followingBusyIds, setFollowingBusyIds] = useState<Set<string>>(new Set());
   const [suggestedUsers, setSuggestedUsers] = useState<StoryGroup[]>([]);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -181,17 +171,17 @@ export default function HomePage() {
     }
   };
 
-  const scrollStories = (direction: "left" | "right") => {
+  const scrollStories = (direction: 'left' | 'right') => {
     if (storiesScrollRef.current) {
       const scrollAmount = 200;
       const newScrollLeft =
-        direction === "left"
+        direction === 'left'
           ? storiesScrollRef.current.scrollLeft - scrollAmount
           : storiesScrollRef.current.scrollLeft + scrollAmount;
 
       storiesScrollRef.current.scrollTo({
         left: newScrollLeft,
-        behavior: "smooth",
+        behavior: 'smooth',
       });
 
       setTimeout(checkScrollButtons, 100);
@@ -201,15 +191,15 @@ export default function HomePage() {
   useEffect(() => {
     checkScrollButtons();
     const handleResize = () => checkScrollButtons();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Fetch stories
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const response = await fetch("/api/stories");
+        const response = await fetch('/api/stories');
 
         if (response.ok) {
           const result = await response.json();
@@ -218,7 +208,7 @@ export default function HomePage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching stories:", error);
+        console.error('Error fetching stories:', error);
       } finally {
         setIsLoadingStories(false);
       }
@@ -232,7 +222,7 @@ export default function HomePage() {
     const fetchPosts = async () => {
       try {
         setIsLoadingPosts(true);
-        const response = await fetch("/api/posts/feed?limit=50");
+        const response = await fetch('/api/posts/feed?limit=50');
 
         if (response.ok) {
           const result = await response.json();
@@ -252,7 +242,7 @@ export default function HomePage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching posts:", error);
+        console.error('Error fetching posts:', error);
       } finally {
         setIsLoadingPosts(false);
       }
@@ -274,7 +264,7 @@ export default function HomePage() {
         (entries) => {
           entries.forEach((entry) => {
             const container = entry.target as HTMLElement;
-            const video = container.querySelector("video");
+            const video = container.querySelector('video');
             if (!video) return;
 
             if (!entry.isIntersecting && !video.paused) {
@@ -284,15 +274,13 @@ export default function HomePage() {
         },
         {
           threshold: 0.1,
-          rootMargin: "0px",
+          rootMargin: '0px',
         }
       );
 
       posts.forEach((post) => {
-        if (post.type === "reel" && post.imageUrl) {
-          const element = document.querySelector(
-            `[data-video-id="${post.id}"]`
-          );
+        if (post.type === 'reel' && post.imageUrl) {
+          const element = document.querySelector(`[data-video-id="${post.id}"]`);
           if (element && observerRef.current) {
             observerRef.current.observe(element);
           }
@@ -312,7 +300,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchSuggestedUsers = async () => {
       try {
-        const response = await fetch("/api/users/suggestions");
+        const response = await fetch('/api/users/suggestions');
 
         if (response.ok) {
           const result = await response.json();
@@ -321,7 +309,7 @@ export default function HomePage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching suggested users:", error);
+        console.error('Error fetching suggested users:', error);
       }
     };
 
@@ -330,7 +318,7 @@ export default function HomePage() {
 
   const refreshStories = async () => {
     try {
-      const response = await fetch("/api/stories");
+      const response = await fetch('/api/stories');
 
       if (response.ok) {
         const result = await response.json();
@@ -339,7 +327,7 @@ export default function HomePage() {
         }
       }
     } catch (error) {
-      console.error("Error refreshing stories:", error);
+      console.error('Error refreshing stories:', error);
     }
   };
 
@@ -358,10 +346,7 @@ export default function HomePage() {
     e.preventDefault();
     e.stopPropagation();
     const file = e.dataTransfer.files?.[0];
-    if (
-      file &&
-      (file.type.startsWith("image/") || file.type.startsWith("video/"))
-    ) {
+    if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
       setCreateStoryData((prev) => ({
         ...prev,
         file,
@@ -378,7 +363,7 @@ export default function HomePage() {
   const handleCreateStoryClose = () => {
     setIsCreateStoryDialogOpen(false);
     setCreateStoryData({
-      caption: "",
+      caption: '',
       file: null,
       preview: null,
     });
@@ -389,60 +374,51 @@ export default function HomePage() {
   const handleCreateStorySubmit = async () => {
     try {
       if (!currentUser) {
-        toast.error("Authentication Required", {
-          description: "You must be logged in to create a story.",
+        toast.error('Authentication Required', {
+          description: 'You must be logged in to create a story.',
         });
         return;
       }
 
-      let storyType: "text" | "image" | "video" = "text";
-      let storyUrl = "";
+      let storyType: 'text' | 'image' | 'video' = 'text';
+      let storyUrl = '';
 
       if (createStoryData.file) {
         setIsUploading(true);
         setUploadProgress(0);
 
         try {
-          if (createStoryData.file.type.startsWith("image/")) {
-            storyType = "image";
-          } else if (createStoryData.file.type.startsWith("video/")) {
-            storyType = "video";
+          if (createStoryData.file.type.startsWith('image/')) {
+            storyType = 'image';
+          } else if (createStoryData.file.type.startsWith('video/')) {
+            storyType = 'video';
           }
 
-          const { data: response } = await axios.get(
-            "/api/cloudinary/signature",
-            {
-              params: {
-                folder: "loop-social-platform/stories",
-              },
-            }
-          );
+          const { data: response } = await axios.get('/api/cloudinary/signature', {
+            params: {
+              folder: 'loop-social-platform/stories',
+            },
+          });
 
           const signature = response.data;
-          const uploadType = storyType === "video" ? "video" : "image";
+          const uploadType = storyType === 'video' ? 'video' : 'image';
           const uploadApi = `https://api.cloudinary.com/v1_1/${signature.cloudName}/${uploadType}/upload`;
 
           const formData = new FormData();
-          formData.append("file", createStoryData.file);
-          formData.append("api_key", signature.apiKey);
-          formData.append("timestamp", signature.timestamp.toString());
-          formData.append("folder", signature.folder);
-          formData.append("signature", signature.signature);
+          formData.append('file', createStoryData.file);
+          formData.append('api_key', signature.apiKey);
+          formData.append('timestamp', signature.timestamp.toString());
+          formData.append('folder', signature.folder);
+          formData.append('signature', signature.signature);
 
-          const { data: uploadResponse } = await axios.post(
-            uploadApi,
-            formData,
-            {
-              onUploadProgress: (progressEvent) => {
-                if (progressEvent.total) {
-                  const progress = Math.round(
-                    (progressEvent.loaded * 100) / progressEvent.total
-                  );
-                  setUploadProgress(progress);
-                }
-              },
-            }
-          );
+          const { data: uploadResponse } = await axios.post(uploadApi, formData, {
+            onUploadProgress: (progressEvent) => {
+              if (progressEvent.total) {
+                const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                setUploadProgress(progress);
+              }
+            },
+          });
 
           storyUrl = uploadResponse.secure_url || uploadResponse.url;
           setIsUploading(false);
@@ -450,9 +426,9 @@ export default function HomePage() {
         } catch (error) {
           setIsUploading(false);
           setUploadProgress(0);
-          console.error("Error uploading file:", error);
-          toast.error("Upload Failed", {
-            description: "Failed to upload file. Please try again.",
+          console.error('Error uploading file:', error);
+          toast.error('Upload Failed', {
+            description: 'Failed to upload file. Please try again.',
           });
           return;
         }
@@ -472,40 +448,38 @@ export default function HomePage() {
       }
 
       if (!requestBody.caption && !requestBody.url) {
-        toast.error("Validation Error", {
-          description: "Caption or media is required",
+        toast.error('Validation Error', {
+          description: 'Caption or media is required',
         });
         return;
       }
 
-      const response = await fetch("/api/stories", {
-        method: "POST",
+      const response = await fetch('/api/stories', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
-        toast.success("Story Created", {
-          description: "Your story has been created successfully!",
+        toast.success('Story Created', {
+          description: 'Your story has been created successfully!',
         });
         handleCreateStoryClose();
         await refreshStories();
       } else {
         const error = await response.json();
-        toast.error("Failed to Create Story", {
-          description:
-            error.message || "Failed to create story. Please try again.",
+        toast.error('Failed to Create Story', {
+          description: error.message || 'Failed to create story. Please try again.',
         });
       }
     } catch (error) {
-      console.error("Error creating story:", error);
+      console.error('Error creating story:', error);
       setIsUploading(false);
       setUploadProgress(0);
-      toast.error("Error", {
-        description:
-          "An error occurred while creating the story. Please try again.",
+      toast.error('Error', {
+        description: 'An error occurred while creating the story. Please try again.',
       });
     }
   };
@@ -553,9 +527,7 @@ export default function HomePage() {
       });
       setPosts((prev) =>
         prev.map((p) =>
-          p.id === postId
-            ? { ...p, likesCount: p.likesCount + 1, isLiked: true }
-            : p
+          p.id === postId ? { ...p, likesCount: p.likesCount + 1, isLiked: true } : p
         )
       );
     }
@@ -588,7 +560,7 @@ export default function HomePage() {
             : p
         )
       );
-      console.error("Error liking post:", error);
+      console.error('Error liking post:', error);
     }
   };
 
@@ -607,18 +579,14 @@ export default function HomePage() {
         newSet.delete(postId);
         return newSet;
       });
-      setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, isSaved: false } : p))
-      );
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, isSaved: false } : p)));
     } else {
       setSavedPosts((prev) => {
         const newSet = new Set(prev);
         newSet.add(postId);
         return newSet;
       });
-      setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, isSaved: true } : p))
-      );
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, isSaved: true } : p)));
     }
 
     try {
@@ -638,17 +606,12 @@ export default function HomePage() {
         }
         return newSet;
       });
-      setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, isSaved: isSaved } : p))
-      );
-      console.error("Error saving post:", error);
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, isSaved: isSaved } : p)));
+      console.error('Error saving post:', error);
     }
   };
 
-  const handleFollowSuggestion = async (
-    userId: string,
-    username?: string | null
-  ) => {
+  const handleFollowSuggestion = async (userId: string, username?: string | null) => {
     if (!currentUser || !username) return;
 
     const isFollowing = followingUserIds.has(userId);
@@ -662,10 +625,10 @@ export default function HomePage() {
 
     try {
       const res = await fetch(`/api/users/${username}/follow`, {
-        method: isFollowing ? "DELETE" : "POST",
+        method: isFollowing ? 'DELETE' : 'POST',
       });
       if (!res.ok) {
-        throw new Error("Failed to follow user");
+        throw new Error('Failed to follow user');
       }
       setFollowingUserIds((prev) => {
         const next = new Set(prev);
@@ -677,7 +640,7 @@ export default function HomePage() {
         return next;
       });
     } catch (error) {
-      console.error("Error following suggested user:", error);
+      console.error('Error following suggested user:', error);
       setFollowingUserIds(prevSet);
     } finally {
       setFollowingBusyIds((prev) => {
@@ -689,11 +652,11 @@ export default function HomePage() {
   };
 
   const getAvatarUrl = () => {
-    return currentUser?.image || "";
+    return currentUser?.image || '';
   };
 
   const getAvatarFallback = () => {
-    return currentUser?.username?.[0]?.toUpperCase() || "U";
+    return currentUser?.username?.[0]?.toUpperCase() || 'U';
   };
 
   return (
@@ -709,7 +672,7 @@ export default function HomePage() {
                 variant="ghost"
                 size="icon"
                 className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 h-7 w-7 sm:h-8 sm:w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-md"
-                onClick={() => scrollStories("left")}
+                onClick={() => scrollStories('left')}
               >
                 <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
@@ -721,7 +684,7 @@ export default function HomePage() {
                 variant="ghost"
                 size="icon"
                 className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 h-7 w-7 sm:h-8 sm:w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-md"
-                onClick={() => scrollStories("right")}
+                onClick={() => scrollStories('right')}
               >
                 <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
@@ -741,10 +704,7 @@ export default function HomePage() {
                   <div className="relative p-0.5 rounded-full border-2 border-border">
                     <div className="rounded-full bg-background p-0.5">
                       <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
-                        <AvatarImage
-                          src={getAvatarUrl()}
-                          alt={currentUser.username || ""}
-                        />
+                        <AvatarImage src={getAvatarUrl()} alt={currentUser.username || ''} />
                         <AvatarFallback className="text-xs sm:text-sm">
                           {getAvatarFallback()}
                         </AvatarFallback>
@@ -770,11 +730,7 @@ export default function HomePage() {
                 )
               ) : (
                 stories.map((storyGroup) => {
-                  if (
-                    !storyGroup.user ||
-                    !storyGroup.stories ||
-                    storyGroup.stories.length === 0
-                  ) {
+                  if (!storyGroup.user || !storyGroup.stories || storyGroup.stories.length === 0) {
                     return null;
                   }
                   const firstStory = storyGroup.stories[0];
@@ -784,9 +740,7 @@ export default function HomePage() {
                       className="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0 cursor-pointer"
                       onClick={() => {
                         if (storyGroup.user?.username && firstStory?.id) {
-                          router.push(
-                            `/stories/${storyGroup.user.username}/${firstStory.id}`
-                          );
+                          router.push(`/stories/${storyGroup.user.username}/${firstStory.id}`);
                         }
                       }}
                     >
@@ -794,19 +748,17 @@ export default function HomePage() {
                         <div className="rounded-full bg-background p-0.5">
                           <Avatar className="h-12 w-12 sm:h-14 sm:w-14">
                             <AvatarImage
-                              src={storyGroup.user.imageUrl || ""}
-                              alt={storyGroup.user.username || ""}
+                              src={storyGroup.user.imageUrl || ''}
+                              alt={storyGroup.user.username || ''}
                             />
                             <AvatarFallback className="text-xs sm:text-sm">
-                              {storyGroup.user.name?.[0] ||
-                                storyGroup.user.username?.[0] ||
-                                "U"}
+                              {storyGroup.user.name?.[0] || storyGroup.user.username?.[0] || 'U'}
                             </AvatarFallback>
                           </Avatar>
                         </div>
                       </div>
                       <span className="text-[10px] sm:text-xs text-foreground truncate max-w-[60px] sm:max-w-[70px] text-center hover:underline">
-                        {storyGroup.user.username || "unknown"}
+                        {storyGroup.user.username || 'unknown'}
                       </span>
                     </div>
                   );
@@ -848,13 +800,9 @@ export default function HomePage() {
                           className="shrink-0"
                         >
                           <Avatar className="h-10 w-10 cursor-pointer">
-                            <AvatarImage
-                              src={avatarUrl}
-                              alt={post.user.username}
-                            />
+                            <AvatarImage src={avatarUrl} alt={post.user.username} />
                             <AvatarFallback className="text-xs">
-                              {(post.user.name ||
-                                post.user.username)[0]?.toUpperCase() || "U"}
+                              {(post.user.name || post.user.username)[0]?.toUpperCase() || 'U'}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
@@ -875,9 +823,7 @@ export default function HomePage() {
                             >
                               @{post.user.username}
                             </Link>
-                            <span className="text-sm text-muted-foreground">
-                              ·
-                            </span>
+                            <span className="text-sm text-muted-foreground">·</span>
                             <span className="text-sm text-muted-foreground hover:underline">
                               {formatTimeAgo(post.createdAt)}
                             </span>
@@ -889,7 +835,7 @@ export default function HomePage() {
                           </div>
 
                           {/* Post Image or Video */}
-                          {post.imageUrl && post.type === "image" && (
+                          {post.imageUrl && post.type === 'image' && (
                             <div className="rounded-xl overflow-hidden mb-2 w-full max-w-lg">
                               <img
                                 src={post.imageUrl}
@@ -898,11 +844,8 @@ export default function HomePage() {
                               />
                             </div>
                           )}
-                          {post.imageUrl && post.type === "reel" && (
-                            <div
-                              className="mb-2 w-full max-w-lg"
-                              data-video-id={post.id}
-                            >
+                          {post.imageUrl && post.type === 'reel' && (
+                            <div className="mb-2 w-full max-w-lg" data-video-id={post.id}>
                               <VideoPlayer
                                 src={post.imageUrl}
                                 videoId={post.id}
@@ -930,9 +873,7 @@ export default function HomePage() {
                               onClick={() => router.push(`/p/${post.id}`)}
                             >
                               <MessageCircle className="h-4 w-4 mr-1.5 group-hover:scale-110 transition-transform" />
-                              <span className="text-xs">
-                                {formatNumber(post.commentsCount)}
-                              </span>
+                              <span className="text-xs">{formatNumber(post.commentsCount)}</span>
                             </Button>
                             <Button
                               variant="ghost"
@@ -948,18 +889,16 @@ export default function HomePage() {
                               onClick={() => handleLike(post.id)}
                               className={`rounded-full h-8 px-2 group ${
                                 likedPosts.has(post.id)
-                                  ? "text-red-500 hover:bg-red-500/10"
-                                  : "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                                  ? 'text-red-500 hover:bg-red-500/10'
+                                  : 'text-muted-foreground hover:text-red-500 hover:bg-red-500/10'
                               }`}
                             >
                               <Heart
                                 className={`h-4 w-4 mr-1.5 group-hover:scale-110 transition-transform ${
-                                  likedPosts.has(post.id) ? "fill-current" : ""
+                                  likedPosts.has(post.id) ? 'fill-current' : ''
                                 }`}
                               />
-                              <span className="text-xs">
-                                {formatNumber(post.likesCount)}
-                              </span>
+                              <span className="text-xs">{formatNumber(post.likesCount)}</span>
                             </Button>
                             <Button
                               variant="ghost"
@@ -974,13 +913,13 @@ export default function HomePage() {
                               onClick={() => handleSave(post.id)}
                               className={`rounded-full h-8 px-2 group ${
                                 savedPosts.has(post.id)
-                                  ? "text-primary hover:bg-primary/10"
-                                  : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                  ? 'text-primary hover:bg-primary/10'
+                                  : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
                               }`}
                             >
                               <Bookmark
                                 className={`h-4 w-4 group-hover:scale-110 transition-transform ${
-                                  savedPosts.has(post.id) ? "fill-current" : ""
+                                  savedPosts.has(post.id) ? 'fill-current' : ''
                                 }`}
                               />
                             </Button>
@@ -1003,11 +942,7 @@ export default function HomePage() {
               <p className="font-semibold text-xs md:text-sm text-muted-foreground">
                 Suggestions for you
               </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-[10px] md:text-xs h-auto py-1"
-              >
+              <Button variant="ghost" size="sm" className="text-[10px] md:text-xs h-auto py-1">
                 See All
               </Button>
             </div>
@@ -1017,10 +952,7 @@ export default function HomePage() {
                   if (currentUser?.id && userGroup.userId === currentUser.id) {
                     return false;
                   }
-                  if (
-                    currentUser?.username &&
-                    userGroup.user?.username === currentUser.username
-                  ) {
+                  if (currentUser?.username && userGroup.user?.username === currentUser.username) {
                     return false;
                   }
                   return userGroup.user !== null;
@@ -1029,21 +961,16 @@ export default function HomePage() {
                 .map((userGroup) => {
                   if (!userGroup.user) return null;
                   return (
-                    <div
-                      key={userGroup.userId}
-                      className="flex items-center justify-between gap-2"
-                    >
+                    <div key={userGroup.userId} className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                         <Link href={`/${userGroup.user?.username}`}>
                           <Avatar className="h-7 w-7 md:h-8 md:w-8 shrink-0 cursor-pointer">
                             <AvatarImage
-                              src={userGroup.user.imageUrl || ""}
-                              alt={userGroup.user.username || ""}
+                              src={userGroup.user.imageUrl || ''}
+                              alt={userGroup.user.username || ''}
                             />
                             <AvatarFallback className="text-[10px] md:text-xs">
-                              {userGroup.user.name?.[0] ||
-                                userGroup.user.username?.[0] ||
-                                "U"}
+                              {userGroup.user.name?.[0] || userGroup.user.username?.[0] || 'U'}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
@@ -1052,7 +979,7 @@ export default function HomePage() {
                             href={`/${userGroup.user?.username}`}
                             className="font-semibold text-xs md:text-sm truncate cursor-pointer hover:underline block"
                           >
-                            {userGroup.user.username || "unknown"}
+                            {userGroup.user.username || 'unknown'}
                           </Link>
                           <p className="text-[10px] md:text-xs text-muted-foreground truncate">
                             Suggested for you
@@ -1066,15 +993,10 @@ export default function HomePage() {
                         disabled={followingBusyIds.has(userGroup.userId)}
                         onClick={async (e) => {
                           e.stopPropagation();
-                          await handleFollowSuggestion(
-                            userGroup.userId,
-                            userGroup.user?.username
-                          );
+                          await handleFollowSuggestion(userGroup.userId, userGroup.user?.username);
                         }}
                       >
-                        {followingUserIds.has(userGroup.userId)
-                          ? "Following"
-                          : "Follow"}
+                        {followingUserIds.has(userGroup.userId) ? 'Following' : 'Follow'}
                       </Button>
                     </div>
                   );
@@ -1085,10 +1007,7 @@ export default function HomePage() {
       </div>
 
       {/* Create Story Dialog */}
-      <Dialog
-        open={isCreateStoryDialogOpen}
-        onOpenChange={setIsCreateStoryDialogOpen}
-      >
+      <Dialog open={isCreateStoryDialogOpen} onOpenChange={setIsCreateStoryDialogOpen}>
         <DialogContent className="sm:max-w-[900px] max-w-[95vw] max-h-[90vh] p-3 sm:p-4 md:p-6">
           <DialogHeader>
             <DialogTitle>Create New Story</DialogTitle>
@@ -1107,7 +1026,7 @@ export default function HomePage() {
               >
                 {createStoryData.preview ? (
                   <div className="space-y-3 sm:space-y-4 w-full h-full flex flex-col items-center justify-center p-3 sm:p-4">
-                    {createStoryData.file?.type.startsWith("video/") ? (
+                    {createStoryData.file?.type.startsWith('video/') ? (
                       <video
                         src={createStoryData.preview}
                         className="max-h-[250px] sm:max-h-[300px] md:max-h-[400px] max-w-full rounded-lg object-contain"
@@ -1159,7 +1078,7 @@ export default function HomePage() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        document.getElementById("story-file-upload")?.click();
+                        document.getElementById('story-file-upload')?.click();
                       }}
                     >
                       <Upload className="h-4 w-4 mr-2" />
@@ -1181,7 +1100,7 @@ export default function HomePage() {
                   </AvatarFallback>
                 </Avatar>
                 <span className="font-semibold text-xs sm:text-sm truncate">
-                  {currentUser?.username || "You"}
+                  {currentUser?.username || 'You'}
                 </span>
               </div>
 
@@ -1237,15 +1156,10 @@ export default function HomePage() {
               </Button>
               <Button
                 onClick={handleCreateStorySubmit}
-                disabled={
-                  (!createStoryData.caption.trim() && !createStoryData.file) ||
-                  isUploading
-                }
+                disabled={(!createStoryData.caption.trim() && !createStoryData.file) || isUploading}
                 className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
               >
-                {isUploading
-                  ? `Uploading... ${uploadProgress}%`
-                  : "Create Story"}
+                {isUploading ? `Uploading... ${uploadProgress}%` : 'Create Story'}
               </Button>
             </div>
           </DialogFooter>

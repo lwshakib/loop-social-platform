@@ -1,25 +1,20 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Play, Heart, MessageCircle, Bookmark } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  toggleLike,
-  toggleUnlike,
-  toggleBookmark,
-  toggleUnbookmark,
-} from "@/lib/post-actions";
-import { useSocialStore } from "@/context";
-import Link from "next/link";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Play, Heart, MessageCircle, Bookmark } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toggleLike, toggleUnlike, toggleBookmark, toggleUnbookmark } from '@/lib/post-actions';
+import { useSocialStore } from '@/context';
+import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Reel = {
   id: string;
   userId: string;
   content: string;
   imageUrl: string;
-  type: "reel";
+  type: 'reel';
   likesCount: number;
   commentsCount: number;
   createdAt: string;
@@ -52,8 +47,7 @@ const formatTimeAgo = (date: string): string => {
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
   if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
-  if (diffInSeconds < 31536000)
-    return `${Math.floor(diffInSeconds / 2592000)}mo`;
+  if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo`;
   return `${Math.floor(diffInSeconds / 31536000)}y`;
 };
 
@@ -68,10 +62,10 @@ export default function ReelsPage() {
     const fetchReels = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("/api/reels");
+        const response = await fetch('/api/reels');
 
         if (!response.ok) {
-          throw new Error("Failed to fetch reels");
+          throw new Error('Failed to fetch reels');
         }
 
         const result = await response.json();
@@ -79,7 +73,7 @@ export default function ReelsPage() {
           setReels(result.data);
         }
       } catch (error) {
-        console.error("Error fetching reels:", error);
+        console.error('Error fetching reels:', error);
         setReels([]);
       } finally {
         setIsLoading(false);
@@ -102,9 +96,7 @@ export default function ReelsPage() {
           ? {
               ...reel,
               isLiked: !isLiked,
-              likesCount: isLiked
-                ? Math.max(0, reel.likesCount - 1)
-                : reel.likesCount + 1,
+              likesCount: isLiked ? Math.max(0, reel.likesCount - 1) : reel.likesCount + 1,
             }
           : reel
       )
@@ -118,7 +110,7 @@ export default function ReelsPage() {
         await toggleLike(reelId);
       }
     } catch (error) {
-      console.error("Error toggling like:", error);
+      console.error('Error toggling like:', error);
       // Revert on error
       setReels(previousReels);
     }
@@ -132,9 +124,7 @@ export default function ReelsPage() {
 
     // Optimistically update UI immediately
     setReels((prev) =>
-      prev.map((reel) =>
-        reel.id === reelId ? { ...reel, isSaved: !isSaved } : reel
-      )
+      prev.map((reel) => (reel.id === reelId ? { ...reel, isSaved: !isSaved } : reel))
     );
 
     // Make API call in background
@@ -145,7 +135,7 @@ export default function ReelsPage() {
         await toggleBookmark(reelId);
       }
     } catch (error) {
-      console.error("Error toggling bookmark:", error);
+      console.error('Error toggling bookmark:', error);
       // Revert on error
       setReels(previousReels);
     }
@@ -188,9 +178,7 @@ export default function ReelsPage() {
         {reels.length === 0 ? (
           <div className="text-center py-12">
             <Play className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              No reels available yet. Check back later!
-            </p>
+            <p className="text-muted-foreground">No reels available yet. Check back later!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -229,25 +217,20 @@ export default function ReelsPage() {
                       <Avatar className="h-8 w-8 border-2 border-background shrink-0">
                         <AvatarImage src={avatarUrl} />
                         <AvatarFallback>
-                          {reel.user.name[0]?.toUpperCase() ||
-                            reel.user.username[0].toUpperCase()}
+                          {reel.user.name[0]?.toUpperCase() || reel.user.username[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-white truncate">
                           {reel.user.name}
                         </p>
-                        <p className="text-xs text-white/70 truncate">
-                          {reel.user.username}
-                        </p>
+                        <p className="text-xs text-white/70 truncate">{reel.user.username}</p>
                       </div>
                     </Link>
 
                     {/* Description */}
                     {reel.content && (
-                      <p className="text-sm text-white mb-3 line-clamp-2">
-                        {reel.content}
-                      </p>
+                      <p className="text-sm text-white mb-3 line-clamp-2">{reel.content}</p>
                     )}
 
                     {/* Stats and Actions */}
@@ -259,16 +242,10 @@ export default function ReelsPage() {
                             handleLike(reel.id, reel.isLiked || false);
                           }}
                           className={`flex items-center gap-1.5 transition-colors pointer-events-auto ${
-                            reel.isLiked
-                              ? "text-red-500"
-                              : "text-white/80 hover:text-red-500"
+                            reel.isLiked ? 'text-red-500' : 'text-white/80 hover:text-red-500'
                           }`}
                         >
-                          <Heart
-                            className={`h-4 w-4 ${
-                              reel.isLiked ? "fill-current" : ""
-                            }`}
-                          />
+                          <Heart className={`h-4 w-4 ${reel.isLiked ? 'fill-current' : ''}`} />
                           <span>{reel.likesCount || 0}</span>
                         </button>
                         <button
@@ -281,9 +258,7 @@ export default function ReelsPage() {
                           <MessageCircle className="h-4 w-4" />
                           <span>{reel.commentsCount || 0}</span>
                         </button>
-                        <span className="text-white/60">
-                          {formatTimeAgo(reel.createdAt)}
-                        </span>
+                        <span className="text-white/60">{formatTimeAgo(reel.createdAt)}</span>
                       </div>
                       {currentUser && (
                         <button
@@ -292,16 +267,10 @@ export default function ReelsPage() {
                             handleBookmark(reel.id, reel.isSaved || false);
                           }}
                           className={`transition-colors pointer-events-auto ${
-                            reel.isSaved
-                              ? "text-yellow-500"
-                              : "text-white/80 hover:text-yellow-500"
+                            reel.isSaved ? 'text-yellow-500' : 'text-white/80 hover:text-yellow-500'
                           }`}
                         >
-                          <Bookmark
-                            className={`h-4 w-4 ${
-                              reel.isSaved ? "fill-current" : ""
-                            }`}
-                          />
+                          <Bookmark className={`h-4 w-4 ${reel.isSaved ? 'fill-current' : ''}`} />
                         </button>
                       )}
                     </div>

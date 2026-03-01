@@ -1,19 +1,12 @@
-import Link from "next/link";
+import Link from 'next/link';
 
 type SidebarLogoProps = {
   showLabel?: boolean;
   className?: string;
 };
 
-export const SidebarLogo = ({
-  showLabel = true,
-  className = "",
-}: SidebarLogoProps) => (
-  <Link
-    href="/"
-    className={`flex items-center gap-1.5 ${className}`}
-    aria-label="Go to home"
-  >
+export const SidebarLogo = ({ showLabel = true, className = '' }: SidebarLogoProps) => (
+  <Link href="/" className={`flex items-center gap-1.5 ${className}`} aria-label="Go to home">
     <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border-4 border-primary/70 bg-transparent">
       <span className="h-1 w-1 rounded-full bg-transparent" />
     </span>

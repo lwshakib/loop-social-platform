@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import * as React from 'react';
+import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface PostDialogProps {
   open: boolean;
@@ -23,30 +23,30 @@ export function PostDialog({
   React.useEffect(() => {
     // Prevent body scroll when dialog is open
     if (open) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = "";
+      document.body.style.overflow = '';
     }
 
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = '';
     };
   }, [open]);
 
   // Close on escape key
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && open) {
+      if (e.key === 'Escape' && open) {
         onOpenChange(false);
       }
     };
 
     if (open) {
-      document.addEventListener("keydown", handleEscape);
+      document.addEventListener('keydown', handleEscape);
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener('keydown', handleEscape);
     };
   }, [open, onOpenChange]);
 
@@ -64,15 +64,15 @@ export function PostDialog({
       {/* Dialog Content */}
       <div
         className={cn(
-          "fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6",
+          'fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6',
           className
         )}
         onClick={(e) => e.stopPropagation()}
       >
         <div
           className={cn(
-            "relative w-full max-w-6xl max-h-[95vh] bg-background rounded-lg overflow-hidden shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200",
-            "flex flex-col"
+            'relative w-full max-w-6xl max-h-[95vh] bg-background rounded-lg overflow-hidden shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200',
+            'flex flex-col'
           )}
         >
           {showCloseButton && (

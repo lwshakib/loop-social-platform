@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
@@ -10,14 +10,11 @@ export async function GET(
     const postId = resolvedParams.postId;
 
     if (!postId) {
-      return NextResponse.json(
-        { error: "Post ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
     }
 
     // Get current authenticated user from x-user header (set by proxy middleware)
-    const user = JSON.parse(request.headers.get("x-user") || "null");
+    const user = JSON.parse(request.headers.get('x-user') || 'null');
     const currentUserId = user?.id;
 
     // Get post with user info
@@ -41,7 +38,7 @@ export async function GET(
     });
 
     if (!post) {
-      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
     // Check if current user has liked/saved this post
@@ -90,10 +87,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error fetching post:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching post:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,16 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState, useRef } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bookmark,
   ChevronDown,
@@ -22,8 +18,8 @@ import {
   Share,
   Volume2,
   VolumeX,
-} from "lucide-react";
-import { useSocialStore } from "@/context";
+} from 'lucide-react';
+import { useSocialStore } from '@/context';
 import {
   toggleLike,
   toggleUnlike,
@@ -31,16 +27,16 @@ import {
   toggleUnbookmark,
   getPostComments,
   createComment,
-} from "@/lib/post-actions";
-import Link from "next/link";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/lib/post-actions';
+import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Post = {
   id: string;
   userId: string;
   content: string;
   imageUrl: string;
-  type: "reel";
+  type: 'reel';
   likesCount: number;
   commentsCount: number;
   createdAt: string;
@@ -123,7 +119,7 @@ type Comment = {
 // Helper function to format numbers (e.g., 82300 -> 82.3K)
 const formatNumber = (num: number | undefined | null): string => {
   if (num === undefined || num === null || isNaN(num)) {
-    return "0";
+    return '0';
   }
   if (num >= 1000000) {
     return `${(num / 1000000).toFixed(1)}M`;
@@ -145,17 +141,16 @@ const formatTimeAgo = (date: string): string => {
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
   if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
-  if (diffInSeconds < 31536000)
-    return `${Math.floor(diffInSeconds / 2592000)}mo`;
+  if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo`;
   return `${Math.floor(diffInSeconds / 31536000)}y`;
 };
 
 // Helper function to format time (MM:SS)
 const formatTime = (seconds: number): string => {
-  if (!seconds || isNaN(seconds)) return "0:00";
+  if (!seconds || isNaN(seconds)) return '0:00';
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
 export default function ReelsPage() {
@@ -169,18 +164,14 @@ export default function ReelsPage() {
   const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
-  const [newComment, setNewComment] = useState("");
+  const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [mutedVideos, setMutedVideos] = useState<Set<string>>(new Set());
   const [playingVideos, setPlayingVideos] = useState<Set<string>>(new Set());
-  const [videoProgress, setVideoProgress] = useState<Record<string, number>>(
-    {}
-  );
-  const [videoDuration, setVideoDuration] = useState<Record<string, number>>(
-    {}
-  );
+  const [videoProgress, setVideoProgress] = useState<Record<string, number>>({});
+  const [videoDuration, setVideoDuration] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -194,9 +185,9 @@ export default function ReelsPage() {
         setIsLoading(true);
 
         // Fetch all reels at once
-        const response = await fetch("/api/reels");
+        const response = await fetch('/api/reels');
         if (!response.ok) {
-          throw new Error("Failed to fetch reels");
+          throw new Error('Failed to fetch reels');
         }
 
         const result = await response.json();
@@ -209,7 +200,7 @@ export default function ReelsPage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching videos:", error);
+        console.error('Error fetching videos:', error);
       } finally {
         setIsLoading(false);
       }
@@ -237,7 +228,7 @@ export default function ReelsPage() {
         let maxRatio = 0;
 
         entries.forEach((entry) => {
-          const entryVideoId = entry.target.getAttribute("data-video-id");
+          const entryVideoId = entry.target.getAttribute('data-video-id');
 
           // Pause videos that are going out of view
           if (!entry.isIntersecting || entry.intersectionRatio < 0.3) {
@@ -262,8 +253,10 @@ export default function ReelsPage() {
         });
 
         if (bestEntry && maxRatio > 0.5) {
-          const newVideoId = (bestEntry as IntersectionObserverEntry).target.getAttribute("data-video-id");
-          const currentVideoId = window.location.pathname.split("/").pop();
+          const newVideoId = (bestEntry as IntersectionObserverEntry).target.getAttribute(
+            'data-video-id'
+          );
+          const currentVideoId = window.location.pathname.split('/').pop();
 
           if (newVideoId && newVideoId !== currentVideoId) {
             isUpdatingRef.current = true;
@@ -290,7 +283,7 @@ export default function ReelsPage() {
       },
       {
         threshold: [0, 0.25, 0.5, 0.75, 1.0],
-        rootMargin: "-20% 0px -20% 0px", // Only trigger when video is in center 60% of viewport
+        rootMargin: '-20% 0px -20% 0px', // Only trigger when video is in center 60% of viewport
       }
     );
 
@@ -326,8 +319,7 @@ export default function ReelsPage() {
         const container = containerRef.current;
         const elementTop = element.offsetTop;
         const containerHeight = container.clientHeight;
-        const scrollPosition =
-          elementTop - containerHeight / 2 + element.clientHeight / 2;
+        const scrollPosition = elementTop - containerHeight / 2 + element.clientHeight / 2;
 
         // Only scroll if not already at the right position
         const currentScroll = container.scrollTop;
@@ -337,7 +329,7 @@ export default function ReelsPage() {
           isUpdatingRef.current = true;
           container.scrollTo({
             top: scrollPosition,
-            behavior: "smooth",
+            behavior: 'smooth',
           });
 
           setTimeout(() => {
@@ -383,12 +375,12 @@ export default function ReelsPage() {
 
             if (videoElement.paused) {
               videoElement.play().catch((error) => {
-                console.error("Error playing video:", error);
+                console.error('Error playing video:', error);
               });
               // State will be updated by onPlay event handler
             }
           } else {
-            videoElement.addEventListener("loadeddata", playVideo, {
+            videoElement.addEventListener('loadeddata', playVideo, {
               once: true,
             });
             videoElement.load();
@@ -418,9 +410,7 @@ export default function ReelsPage() {
           ? {
               ...post,
               isLiked: !isLiked,
-              likesCount: isLiked
-                ? Math.max(0, post.likesCount - 1)
-                : post.likesCount + 1,
+              likesCount: isLiked ? Math.max(0, post.likesCount - 1) : post.likesCount + 1,
             }
           : post
       )
@@ -445,7 +435,7 @@ export default function ReelsPage() {
             : post
         )
       );
-      console.error("Error liking post:", error);
+      console.error('Error liking post:', error);
     }
   };
 
@@ -459,9 +449,7 @@ export default function ReelsPage() {
 
     // Optimistic update
     setVideos((prev) =>
-      prev.map((post) =>
-        post.id === postId ? { ...post, isSaved: !isSaved } : post
-      )
+      prev.map((post) => (post.id === postId ? { ...post, isSaved: !isSaved } : post))
     );
 
     try {
@@ -473,11 +461,9 @@ export default function ReelsPage() {
     } catch (error) {
       // Revert on error
       setVideos((prev) =>
-        prev.map((post) =>
-          post.id === postId ? { ...post, isSaved: isSaved } : post
-        )
+        prev.map((post) => (post.id === postId ? { ...post, isSaved: isSaved } : post))
       );
-      console.error("Error saving post:", error);
+      console.error('Error saving post:', error);
     }
   };
 
@@ -498,7 +484,7 @@ export default function ReelsPage() {
           setReplyText({});
         }
       } catch (error) {
-        console.error("Error fetching comments:", error);
+        console.error('Error fetching comments:', error);
       } finally {
         setIsLoadingComments(false);
       }
@@ -508,9 +494,7 @@ export default function ReelsPage() {
   }, [selectedVideo?.id, isCommentsDialogOpen]);
 
   const handleSubmitComment = async (parentId?: string) => {
-    const commentText = parentId
-      ? replyText[parentId]?.trim()
-      : newComment.trim();
+    const commentText = parentId ? replyText[parentId]?.trim() : newComment.trim();
 
     if (!commentText || !selectedVideo?.id) {
       return;
@@ -522,11 +506,7 @@ export default function ReelsPage() {
 
     try {
       setIsSubmittingComment(true);
-      const result = await createComment(
-        selectedVideo.id,
-        commentText,
-        parentId
-      );
+      const result = await createComment(selectedVideo.id, commentText, parentId);
 
       if (result.data) {
         if (parentId) {
@@ -542,11 +522,11 @@ export default function ReelsPage() {
               return comment;
             })
           );
-          setReplyText((prev) => ({ ...prev, [parentId]: "" }));
+          setReplyText((prev) => ({ ...prev, [parentId]: '' }));
           setReplyingTo(null);
         } else {
           setComments((prev) => [result.data, ...prev]);
-          setNewComment("");
+          setNewComment('');
         }
 
         setVideos((prev) =>
@@ -558,7 +538,7 @@ export default function ReelsPage() {
         );
       }
     } catch (error) {
-      console.error("Error posting comment:", error);
+      console.error('Error posting comment:', error);
     } finally {
       setIsSubmittingComment(false);
     }
@@ -625,20 +605,20 @@ export default function ReelsPage() {
                 {/* Glassmorphism container around video - 9:16 aspect ratio */}
                 <div
                   className="h-full w-full max-w-[calc(98vh*9/16)] flex items-center justify-center relative bg-background/30 backdrop-blur-2xl rounded-2xl shadow-2xl p-2 sm:p-4 group"
-                  style={{ aspectRatio: "9/16" }}
+                  style={{ aspectRatio: '9/16' }}
                 >
                   <video
                     ref={(el) => {
                       if (el) {
                         videoRefs.current.set(video.id, el);
                         el.muted = mutedVideos.has(video.id);
-                        el.addEventListener("timeupdate", () => {
+                        el.addEventListener('timeupdate', () => {
                           setVideoProgress((prev) => ({
                             ...prev,
                             [video.id]: el.currentTime,
                           }));
                         });
-                        el.addEventListener("loadedmetadata", () => {
+                        el.addEventListener('loadedmetadata', () => {
                           setVideoDuration((prev) => ({
                             ...prev,
                             [video.id]: el.duration,
@@ -658,7 +638,7 @@ export default function ReelsPage() {
                       if (videoElement) {
                         if (videoElement.paused) {
                           videoElement.play().catch((error) => {
-                            console.error("Error playing video:", error);
+                            console.error('Error playing video:', error);
                           });
                         } else {
                           videoElement.pause();
@@ -706,7 +686,7 @@ export default function ReelsPage() {
                         }
                       }}
                       className="p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-colors"
-                      aria-label={mutedVideos.has(video.id) ? "Unmute" : "Mute"}
+                      aria-label={mutedVideos.has(video.id) ? 'Unmute' : 'Mute'}
                     >
                       {mutedVideos.has(video.id) ? (
                         <VolumeX className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -729,12 +709,10 @@ export default function ReelsPage() {
                         <motion.button
                           onClick={(e) => {
                             e.stopPropagation();
-                            const videoElement = videoRefs.current.get(
-                              video.id
-                            );
+                            const videoElement = videoRefs.current.get(video.id);
                             if (videoElement) {
                               videoElement.play().catch((error) => {
-                                console.error("Error playing video:", error);
+                                console.error('Error playing video:', error);
                               });
                             }
                           }}
@@ -744,7 +722,7 @@ export default function ReelsPage() {
                           animate={{ scale: 1, opacity: 1 }}
                           exit={{ scale: 0.3, opacity: 0 }}
                           transition={{
-                            type: "spring",
+                            type: 'spring',
                             stiffness: 300,
                             damping: 20,
                             duration: 0.3,
@@ -769,9 +747,7 @@ export default function ReelsPage() {
                           max={videoDuration[video.id] || 0}
                           value={videoProgress[video.id] || 0}
                           onChange={(e) => {
-                            const videoElement = videoRefs.current.get(
-                              video.id
-                            );
+                            const videoElement = videoRefs.current.get(video.id);
                             if (videoElement) {
                               const newTime = parseFloat(e.target.value);
                               videoElement.currentTime = newTime;
@@ -784,12 +760,10 @@ export default function ReelsPage() {
                           className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0"
                           style={{
                             background: `linear-gradient(to right, white 0%, white ${
-                              ((videoProgress[video.id] || 0) /
-                                (videoDuration[video.id] || 1)) *
+                              ((videoProgress[video.id] || 0) / (videoDuration[video.id] || 1)) *
                               100
                             }%, rgba(255, 255, 255, 0.2) ${
-                              ((videoProgress[video.id] || 0) /
-                                (videoDuration[video.id] || 1)) *
+                              ((videoProgress[video.id] || 0) / (videoDuration[video.id] || 1)) *
                               100
                             }%, rgba(255, 255, 255, 0.2) 100%)`,
                           }}
@@ -807,14 +781,11 @@ export default function ReelsPage() {
                       <div className="flex items-center gap-2 mb-2">
                         <Link href={`/${video.user.username}`}>
                           <Avatar className="h-6 w-6 sm:h-7 sm:w-7 border border-white/50 shrink-0 cursor-pointer">
-                            <AvatarImage
-                              src={avatarUrl}
-                              alt={video.user.username}
-                            />
+                            <AvatarImage src={avatarUrl} alt={video.user.username} />
                             <AvatarFallback className="text-[10px] sm:text-xs">
                               {video.user.name[0]?.toUpperCase() ||
                                 video.user.username[0].toUpperCase() ||
-                                "U"}
+                                'U'}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
@@ -823,7 +794,7 @@ export default function ReelsPage() {
                             href={`/${video.user.username}`}
                             className="font-semibold text-white text-xs sm:text-sm truncate cursor-pointer hover:underline"
                           >
-                            {video.user.username || "unknown"}
+                            {video.user.username || 'unknown'}
                           </Link>
                         </div>
                       </div>
@@ -847,8 +818,8 @@ export default function ReelsPage() {
                     <Heart
                       className={`h-6 w-6 sm:h-7 sm:w-7 stroke-2 ${
                         video.isLiked
-                          ? "fill-red-500 text-red-500 stroke-red-500"
-                          : "fill-none stroke-white"
+                          ? 'fill-red-500 text-red-500 stroke-red-500'
+                          : 'fill-none stroke-white'
                       }`}
                     />
                     <span className="text-xs sm:text-sm font-normal text-white">
@@ -857,9 +828,7 @@ export default function ReelsPage() {
                   </button>
 
                   <Popover
-                    open={
-                      isCommentsDialogOpen && selectedVideo?.id === video.id
-                    }
+                    open={isCommentsDialogOpen && selectedVideo?.id === video.id}
                     onOpenChange={(open) => {
                       setIsCommentsDialogOpen(open);
                       if (open) {
@@ -909,7 +878,7 @@ export default function ReelsPage() {
                                     <AvatarFallback>
                                       {comment.user.name[0]?.toUpperCase() ||
                                         comment.user.username[0].toUpperCase() ||
-                                        "U"}
+                                        'U'}
                                     </AvatarFallback>
                                   </Avatar>
                                 </Link>
@@ -919,28 +888,24 @@ export default function ReelsPage() {
                                       href={`/${comment.user.username}`}
                                       className="font-semibold text-sm cursor-pointer hover:underline"
                                     >
-                                      {comment.user.username || "unknown"}
+                                      {comment.user.username || 'unknown'}
                                     </Link>
                                     <span className="text-xs text-muted-foreground">
                                       {formatTimeAgo(comment.createdAt)}
                                     </span>
                                   </div>
-                                  <p className="text-sm whitespace-pre-wrap">
-                                    {comment.content}
-                                  </p>
+                                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
                                   <div className="flex items-center gap-4 mt-2">
                                     {currentUser && (
                                       <button
                                         onClick={() => {
                                           setReplyingTo(
-                                            replyingTo === comment.id
-                                              ? null
-                                              : comment.id
+                                            replyingTo === comment.id ? null : comment.id
                                           );
                                           if (replyingTo !== comment.id) {
                                             setReplyText((prev) => ({
                                               ...prev,
-                                              [comment.id]: "",
+                                              [comment.id]: '',
                                             }));
                                           }
                                         }}
@@ -960,10 +925,8 @@ export default function ReelsPage() {
                                   <div className="flex gap-2">
                                     <Input
                                       type="text"
-                                      placeholder={`Reply to ${
-                                        comment.user.username || "user"
-                                      }...`}
-                                      value={replyText[comment.id] || ""}
+                                      placeholder={`Reply to ${comment.user.username || 'user'}...`}
+                                      value={replyText[comment.id] || ''}
                                       onChange={(e) =>
                                         setReplyText((prev) => ({
                                           ...prev,
@@ -971,7 +934,7 @@ export default function ReelsPage() {
                                         }))
                                       }
                                       onKeyDown={(e) => {
-                                        if (e.key === "Enter" && !e.shiftKey) {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
                                           e.preventDefault();
                                           handleSubmitComment(comment.id);
                                         }
@@ -981,18 +944,13 @@ export default function ReelsPage() {
                                       autoFocus
                                     />
                                     <Button
-                                      onClick={() =>
-                                        handleSubmitComment(comment.id)
-                                      }
+                                      onClick={() => handleSubmitComment(comment.id)}
                                       disabled={
-                                        !replyText[comment.id]?.trim() ||
-                                        isSubmittingComment
+                                        !replyText[comment.id]?.trim() || isSubmittingComment
                                       }
                                       size="sm"
                                     >
-                                      {isSubmittingComment
-                                        ? "Posting..."
-                                        : "Reply"}
+                                      {isSubmittingComment ? 'Posting...' : 'Reply'}
                                     </Button>
                                     <Button
                                       variant="ghost"
@@ -1013,49 +971,42 @@ export default function ReelsPage() {
                               )}
 
                               {/* Replies */}
-                              {comment.replies &&
-                                comment.replies.length > 0 && (
-                                  <div className="ml-11 space-y-2 border-l-2 border-muted pl-4">
-                                    {comment.replies.map((reply) => (
-                                      <div key={reply.id} className="space-y-2">
-                                        <div className="flex gap-3">
-                                          <Link
-                                            href={`/${reply.user.username}`}
-                                          >
-                                            <Avatar className="h-7 w-7 shrink-0 cursor-pointer">
-                                              <AvatarImage
-                                                src={reply.user.imageUrl}
-                                              />
-                                              <AvatarFallback>
-                                                {reply.user.name[0]?.toUpperCase() ||
-                                                  reply.user.username[0].toUpperCase() ||
-                                                  "U"}
-                                              </AvatarFallback>
-                                            </Avatar>
-                                          </Link>
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1">
-                                              <Link
-                                                href={`/${reply.user.username}`}
-                                                className="font-semibold text-sm cursor-pointer hover:underline"
-                                              >
-                                                @
-                                                {reply.user.username ||
-                                                  "unknown"}
-                                              </Link>
-                                              <span className="text-xs text-muted-foreground">
-                                                {formatTimeAgo(reply.createdAt)}
-                                              </span>
-                                            </div>
-                                            <p className="text-sm whitespace-pre-wrap">
-                                              {reply.content}
-                                            </p>
+                              {comment.replies && comment.replies.length > 0 && (
+                                <div className="ml-11 space-y-2 border-l-2 border-muted pl-4">
+                                  {comment.replies.map((reply) => (
+                                    <div key={reply.id} className="space-y-2">
+                                      <div className="flex gap-3">
+                                        <Link href={`/${reply.user.username}`}>
+                                          <Avatar className="h-7 w-7 shrink-0 cursor-pointer">
+                                            <AvatarImage src={reply.user.imageUrl} />
+                                            <AvatarFallback>
+                                              {reply.user.name[0]?.toUpperCase() ||
+                                                reply.user.username[0].toUpperCase() ||
+                                                'U'}
+                                            </AvatarFallback>
+                                          </Avatar>
+                                        </Link>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <Link
+                                              href={`/${reply.user.username}`}
+                                              className="font-semibold text-sm cursor-pointer hover:underline"
+                                            >
+                                              @{reply.user.username || 'unknown'}
+                                            </Link>
+                                            <span className="text-xs text-muted-foreground">
+                                              {formatTimeAgo(reply.createdAt)}
+                                            </span>
                                           </div>
+                                          <p className="text-sm whitespace-pre-wrap">
+                                            {reply.content}
+                                          </p>
                                         </div>
                                       </div>
-                                    ))}
-                                  </div>
-                                )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           ))
                         )}
@@ -1071,7 +1022,7 @@ export default function ReelsPage() {
                               value={newComment}
                               onChange={(e) => setNewComment(e.target.value)}
                               onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
+                                if (e.key === 'Enter' && !e.shiftKey) {
                                   e.preventDefault();
                                   handleSubmitComment();
                                 }
@@ -1081,11 +1032,9 @@ export default function ReelsPage() {
                             />
                             <Button
                               onClick={() => handleSubmitComment()}
-                              disabled={
-                                !newComment.trim() || isSubmittingComment
-                              }
+                              disabled={!newComment.trim() || isSubmittingComment}
                             >
-                              {isSubmittingComment ? "Posting..." : "Post"}
+                              {isSubmittingComment ? 'Posting...' : 'Post'}
                             </Button>
                           </div>
                         </div>
@@ -1103,9 +1052,7 @@ export default function ReelsPage() {
                   >
                     <Bookmark
                       className={`h-6 w-6 sm:h-7 sm:w-7 stroke-2 ${
-                        video.isSaved
-                          ? "fill-white stroke-white"
-                          : "fill-none stroke-white"
+                        video.isSaved ? 'fill-white stroke-white' : 'fill-none stroke-white'
                       }`}
                     />
                   </button>

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Mail,
   Lock,
@@ -13,16 +13,16 @@ import {
   Zap,
   Globe,
   CheckCircle2,
-} from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
+} from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 export default function SignInPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -34,22 +34,22 @@ export default function SignInPage() {
     const { data, error } = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/",
+      callbackURL: '/',
     });
 
     if (error) {
-      toast.error(error.message || "Something went wrong. Please try again.");
+      toast.error(error.message || 'Something went wrong. Please try again.');
     } else if (data) {
-      toast.success("Successfully signed in!");
-      router.push("/");
+      toast.success('Successfully signed in!');
+      router.push('/');
     }
     setLoading(false);
   };
 
-  const handleSocialSignIn = async (provider: "google" | "github") => {
+  const handleSocialSignIn = async (provider: 'google' | 'github') => {
     await authClient.signIn.social({
       provider,
-      callbackURL: "/",
+      callbackURL: '/',
     });
   };
 
@@ -82,33 +82,30 @@ export default function SignInPage() {
                 <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                   <div className="w-5 h-5 border-2 border-primary-foreground rounded-full" />
                 </div>
-                <span className="text-2xl font-bold tracking-tight text-foreground">
-                  Loop
-                </span>
+                <span className="text-2xl font-bold tracking-tight text-foreground">Loop</span>
               </div>
 
               <h1 className="text-4xl xl:text-5xl font-bold text-foreground leading-tight mb-6">
-                Connect with the <span className="text-primary">world</span> in
-                a better way.
+                Connect with the <span className="text-primary">world</span> in a better way.
               </h1>
               <p className="text-muted-foreground text-lg mb-8 max-w-sm">
-                Join our community to share your thoughts, discover new ideas,
-                and keep your friends in the loop.
+                Join our community to share your thoughts, discover new ideas, and keep your friends
+                in the loop.
               </p>
 
               <div className="space-y-5">
                 {[
                   {
                     icon: <Zap className="w-5 h-5 text-yellow-400" />,
-                    text: "Real-time updates and notifications",
+                    text: 'Real-time updates and notifications',
                   },
                   {
                     icon: <Globe className="w-5 h-5 text-blue-400" />,
-                    text: "Connect with creators worldwide",
+                    text: 'Connect with creators worldwide',
                   },
                   {
                     icon: <CheckCircle2 className="w-5 h-5 text-green-400" />,
-                    text: "Secured with end-to-end encryption",
+                    text: 'Secured with end-to-end encryption',
                   },
                 ].map((item, i) => (
                   <motion.div
@@ -121,9 +118,7 @@ export default function SignInPage() {
                     <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
                       {item.icon}
                     </div>
-                    <span className="text-foreground/80 font-medium">
-                      {item.text}
-                    </span>
+                    <span className="text-foreground/80 font-medium">{item.text}</span>
                   </motion.div>
                 ))}
               </div>
@@ -137,10 +132,7 @@ export default function SignInPage() {
                       key={i}
                       className="w-8 h-8 rounded-full border-2 border-card bg-muted overflow-hidden"
                     >
-                      <img
-                        src={`https://i.pravatar.cc/150?u=${i}`}
-                        alt="user"
-                      />
+                      <img src={`https://i.pravatar.cc/150?u=${i}`} alt="user" />
                     </div>
                   ))}
                 </div>
@@ -158,15 +150,11 @@ export default function SignInPage() {
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-primary-foreground rounded-full" />
                 </div>
-                <span className="text-xl font-bold tracking-tight text-foreground">
-                  Loop
-                </span>
+                <span className="text-xl font-bold tracking-tight text-foreground">Loop</span>
               </div>
 
               <div className="mb-10 text-center lg:text-left">
-                <h2 className="text-3xl font-bold text-foreground mb-2">
-                  Welcome Back
-                </h2>
+                <h2 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h2>
                 <p className="text-muted-foreground font-medium">
                   Please enter your details to sign in.
                 </p>
@@ -205,7 +193,7 @@ export default function SignInPage() {
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <input
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
@@ -217,11 +205,7 @@ export default function SignInPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
@@ -255,7 +239,7 @@ export default function SignInPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <button
-                  onClick={() => handleSocialSignIn("google")}
+                  onClick={() => handleSocialSignIn('google')}
                   className="flex items-center justify-center gap-3 bg-muted/30 hover:bg-muted/50 border border-border rounded-xl py-3 text-foreground transition-all group"
                 >
                   <img
@@ -272,7 +256,7 @@ export default function SignInPage() {
                 >
                   <Github className="w-5 h-5 opacity-50" />
                   <span className="font-semibold text-sm">
-                    GitHub{" "}
+                    GitHub{' '}
                     <span className="text-[10px] block lg:inline-block font-normal">
                       (Unavailable)
                     </span>
@@ -282,7 +266,7 @@ export default function SignInPage() {
 
               <div className="mt-10 text-center">
                 <p className="text-muted-foreground font-medium">
-                  New to Loop?{" "}
+                  New to Loop?{' '}
                   <Link
                     href="/sign-up"
                     className="text-primary hover:text-primary/80 font-bold transition-colors"

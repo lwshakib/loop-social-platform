@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import prisma from "@/lib/prisma";
-import { PostType } from "@/generated/prisma/client";
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import prisma from '@/lib/prisma';
+import { PostType } from '@/generated/prisma/client';
 
 export async function GET(
   request: NextRequest,
@@ -12,10 +12,7 @@ export async function GET(
     const { postId } = await params;
 
     if (!postId) {
-      return NextResponse.json(
-        { error: "Post ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
     }
 
     // Get current authenticated user
@@ -52,7 +49,7 @@ export async function GET(
     });
 
     if (!reel) {
-      return NextResponse.json({ error: "Reel not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Reel not found' }, { status: 404 });
     }
 
     // Check if current user has liked/saved this reel
@@ -99,10 +96,7 @@ export async function GET(
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error fetching reel:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching reel:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

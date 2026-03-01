@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
@@ -28,10 +28,7 @@ export async function GET(
     });
 
     if (!story) {
-      return NextResponse.json(
-        { error: "Story not found or expired" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Story not found or expired' }, { status: 404 });
     }
 
     // Get all active stories from the same user
@@ -40,7 +37,7 @@ export async function GET(
         userId: story.userId,
         expiresAt: { gt: new Date() },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: 'asc' },
     });
 
     const response = {
@@ -65,10 +62,7 @@ export async function GET(
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error fetching story:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching story:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

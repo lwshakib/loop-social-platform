@@ -1,9 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
-async function resolveUsername(
-  params: Promise<{ username: string }> | { username: string }
-) {
+async function resolveUsername(params: Promise<{ username: string }> | { username: string }) {
   const resolved = await Promise.resolve(params);
   return resolved.username;
 }
@@ -15,10 +13,7 @@ export async function GET(
   try {
     const username = await resolveUsername(params);
     if (!username) {
-      return NextResponse.json(
-        { error: "Username is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({
@@ -26,7 +21,7 @@ export async function GET(
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Get followers (users who follow this user)
@@ -48,10 +43,7 @@ export async function GET(
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error fetching followers:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching followers:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

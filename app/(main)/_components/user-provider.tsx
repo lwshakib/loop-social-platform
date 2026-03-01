@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useSocialStore } from "@/context";
-import { User } from "@/types";
+import { useEffect } from 'react';
+import { useSocialStore } from '@/context';
+import { User } from '@/types';
 
 interface UserProviderProps {
   user: User;

@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { PostType } from "@/generated/prisma/client";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { PostType } from '@/generated/prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
     // Get current authenticated user from x-user header (set by proxy middleware)
-    const user = JSON.parse(request.headers.get("x-user") || "null");
+    const user = JSON.parse(request.headers.get('x-user') || 'null');
     const currentUserId = user?.id;
 
     // Get all reels with user info
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     // Check if current user has liked/saved each reel
@@ -85,10 +85,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error fetching reels:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching reels:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

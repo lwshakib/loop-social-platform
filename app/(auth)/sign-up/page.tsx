@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Mail,
   Lock,
@@ -14,18 +14,18 @@ import {
   Zap,
   Globe,
   CheckCircle2,
-} from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { motion } from "framer-motion";
+} from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 export default function SignUpPage() {
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -39,22 +39,22 @@ export default function SignUpPage() {
       password,
       name,
       username,
-      callbackURL: "/",
+      callbackURL: '/',
     });
 
     if (error) {
-      toast.error(error.message || "Something went wrong. Please try again.");
+      toast.error(error.message || 'Something went wrong. Please try again.');
     } else if (data) {
-      toast.success("Account created successfully!");
-      router.push("/");
+      toast.success('Account created successfully!');
+      router.push('/');
     }
     setLoading(false);
   };
 
-  const handleSocialSignIn = async (provider: "google" | "github") => {
+  const handleSocialSignIn = async (provider: 'google' | 'github') => {
     await authClient.signIn.social({
       provider,
-      callbackURL: "/",
+      callbackURL: '/',
     });
   };
 
@@ -87,33 +87,30 @@ export default function SignUpPage() {
                 <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                   <div className="w-5 h-5 border-2 border-primary-foreground rounded-full" />
                 </div>
-                <span className="text-2xl font-bold tracking-tight text-foreground">
-                  Loop
-                </span>
+                <span className="text-2xl font-bold tracking-tight text-foreground">Loop</span>
               </div>
 
               <h1 className="text-4xl xl:text-5xl font-bold text-foreground leading-tight mb-6">
-                Start your <span className="text-primary">journey</span> with us
-                today.
+                Start your <span className="text-primary">journey</span> with us today.
               </h1>
               <p className="text-muted-foreground text-lg mb-8 max-w-sm">
-                Create an account to unlock full potential of our platform and
-                start connecting with incredible people.
+                Create an account to unlock full potential of our platform and start connecting with
+                incredible people.
               </p>
 
               <div className="space-y-5">
                 {[
                   {
                     icon: <CheckCircle2 className="w-5 h-5 text-primary" />,
-                    text: "Customizable profile and bio",
+                    text: 'Customizable profile and bio',
                   },
                   {
                     icon: <CheckCircle2 className="w-5 h-5 text-primary" />,
-                    text: "Unlimited posts and networking",
+                    text: 'Unlimited posts and networking',
                   },
                   {
                     icon: <CheckCircle2 className="w-5 h-5 text-primary" />,
-                    text: "Priority support for creators",
+                    text: 'Priority support for creators',
                   },
                 ].map((item, i) => (
                   <motion.div
@@ -126,9 +123,7 @@ export default function SignUpPage() {
                     <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
                       {item.icon}
                     </div>
-                    <span className="text-foreground/80 font-medium">
-                      {item.text}
-                    </span>
+                    <span className="text-foreground/80 font-medium">{item.text}</span>
                   </motion.div>
                 ))}
               </div>
@@ -137,14 +132,12 @@ export default function SignUpPage() {
             <div className="relative z-10 mt-12 pt-8 border-t border-border/50">
               <div className="p-4 bg-foreground/5 rounded-2xl backdrop-blur-md border border-border">
                 <p className="text-sm text-muted-foreground italic">
-                  "The best social platform I've used. The minimalist design and
-                  loop mechanics are genius."
+                  "The best social platform I've used. The minimalist design and loop mechanics are
+                  genius."
                 </p>
                 <div className="mt-3 flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-primary" />
-                  <span className="text-xs font-bold text-foreground">
-                    Sarah Jenkins, Creator
-                  </span>
+                  <span className="text-xs font-bold text-foreground">Sarah Jenkins, Creator</span>
                 </div>
               </div>
             </div>
@@ -157,15 +150,11 @@ export default function SignUpPage() {
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-primary-foreground rounded-full" />
                 </div>
-                <span className="text-xl font-bold tracking-tight text-foreground">
-                  Loop
-                </span>
+                <span className="text-xl font-bold tracking-tight text-foreground">Loop</span>
               </div>
 
               <div className="mb-10 text-center lg:text-left">
-                <h2 className="text-3xl font-bold text-foreground mb-2">
-                  Create Account
-                </h2>
+                <h2 className="text-3xl font-bold text-foreground mb-2">Create Account</h2>
                 <p className="text-muted-foreground font-medium">
                   Join our community in just a few clicks.
                 </p>
@@ -231,7 +220,7 @@ export default function SignUpPage() {
                   <div className="relative group">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <input
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
@@ -243,11 +232,7 @@ export default function SignUpPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
@@ -283,7 +268,7 @@ export default function SignUpPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <button
-                  onClick={() => handleSocialSignIn("google")}
+                  onClick={() => handleSocialSignIn('google')}
                   className="flex items-center justify-center gap-3 bg-muted/30 hover:bg-muted/50 border border-border rounded-xl py-3 text-foreground transition-all group"
                 >
                   <img
@@ -300,7 +285,7 @@ export default function SignUpPage() {
                 >
                   <Github className="w-4 h-4 opacity-50" />
                   <span className="text-sm font-semibold">
-                    GitHub{" "}
+                    GitHub{' '}
                     <span className="text-[10px] block lg:inline-block font-normal">
                       (Unavailable)
                     </span>
@@ -310,7 +295,7 @@ export default function SignUpPage() {
 
               <div className="mt-8 text-center">
                 <p className="text-muted-foreground font-medium text-sm">
-                  Already have an account?{" "}
+                  Already have an account?{' '}
                   <Link
                     href="/sign-in"
                     className="text-primary hover:text-primary/80 font-bold transition-colors"

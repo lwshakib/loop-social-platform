@@ -4,20 +4,20 @@
 export async function toggleLike(postId: string) {
   try {
     const response = await fetch(`/api/posts/${postId}/like`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to like post");
+      throw new Error(error.error || 'Failed to like post');
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error toggling like:", error);
+    console.error('Error toggling like:', error);
     throw error;
   }
 }
@@ -25,20 +25,20 @@ export async function toggleLike(postId: string) {
 export async function toggleUnlike(postId: string) {
   try {
     const response = await fetch(`/api/posts/${postId}/like`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to unlike post");
+      throw new Error(error.error || 'Failed to unlike post');
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error toggling unlike:", error);
+    console.error('Error toggling unlike:', error);
     throw error;
   }
 }
@@ -46,20 +46,20 @@ export async function toggleUnlike(postId: string) {
 export async function toggleBookmark(postId: string) {
   try {
     const response = await fetch(`/api/posts/${postId}/bookmark`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to bookmark post");
+      throw new Error(error.error || 'Failed to bookmark post');
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error toggling bookmark:", error);
+    console.error('Error toggling bookmark:', error);
     throw error;
   }
 }
@@ -67,20 +67,20 @@ export async function toggleBookmark(postId: string) {
 export async function toggleUnbookmark(postId: string) {
   try {
     const response = await fetch(`/api/posts/${postId}/bookmark`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to unbookmark post");
+      throw new Error(error.error || 'Failed to unbookmark post');
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error toggling unbookmark:", error);
+    console.error('Error toggling unbookmark:', error);
     throw error;
   }
 }
@@ -88,46 +88,42 @@ export async function toggleUnbookmark(postId: string) {
 export async function getPostComments(postId: string) {
   try {
     const response = await fetch(`/api/posts/${postId}/comments`, {
-      method: "GET",
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to fetch comments");
+      throw new Error(error.error || 'Failed to fetch comments');
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error fetching comments:", error);
+    console.error('Error fetching comments:', error);
     throw error;
   }
 }
 
-export async function createComment(
-  postId: string,
-  content: string,
-  parentId?: string
-) {
+export async function createComment(postId: string, content: string, parentId?: string) {
   try {
     const response = await fetch(`/api/posts/${postId}/comments`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ content, parentId }),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to create comment");
+      throw new Error(error.error || 'Failed to create comment');
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error creating comment:", error);
+    console.error('Error creating comment:', error);
     throw error;
   }
 }

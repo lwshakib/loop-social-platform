@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     // Group stories by user
@@ -95,11 +95,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error fetching stories:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching stories:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -108,7 +105,7 @@ export async function POST(request: NextRequest) {
     const session = await auth.api.getSession({ headers: await headers() });
     const user = session?.user;
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // currentDbUser is already user from session in Better Auth
@@ -119,10 +116,7 @@ export async function POST(request: NextRequest) {
 
     // Validate
     if (!url && !caption) {
-      return NextResponse.json(
-        { error: "Story must have either caption or url" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Story must have either caption or url' }, { status: 400 });
     }
 
     // Create story with 24-hour expiration
@@ -133,7 +127,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: currentDbUser.id,
         caption: caption || null,
-        url: url || "",
+        url: url || '',
         expiresAt,
       },
     });
@@ -149,10 +143,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error creating story:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error creating story:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

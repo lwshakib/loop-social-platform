@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useSocialStore } from "@/context";
-import { Upload, X, Smile } from "lucide-react";
-import { toast } from "sonner";
-import axios from "axios";
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useSocialStore } from '@/context';
+import { Upload, X, Smile } from 'lucide-react';
+import { toast } from 'sonner';
+import axios from 'axios';
 
 export default function CreatePage() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function CreatePage() {
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
 
   const [createPostData, setCreatePostData] = useState({
-    caption: "",
+    caption: '',
     file: null as File | null,
     preview: null as string | null,
   });
@@ -31,9 +31,9 @@ export default function CreatePage() {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type
-      if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
-        toast.error("Invalid file type", {
-          description: "Please upload an image or video file",
+      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+        toast.error('Invalid file type', {
+          description: 'Please upload an image or video file',
         });
         return;
       }
@@ -41,8 +41,8 @@ export default function CreatePage() {
       // Validate file size (e.g., 50MB max)
       const maxSize = 50 * 1024 * 1024; // 50MB
       if (file.size > maxSize) {
-        toast.error("File too large", {
-          description: "Please upload a file smaller than 50MB",
+        toast.error('File too large', {
+          description: 'Please upload a file smaller than 50MB',
         });
         return;
       }
@@ -60,9 +60,9 @@ export default function CreatePage() {
     e.stopPropagation();
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
-        toast.error("Invalid file type", {
-          description: "Please upload an image or video file",
+      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+        toast.error('Invalid file type', {
+          description: 'Please upload an image or video file',
         });
         return;
       }
@@ -83,15 +83,15 @@ export default function CreatePage() {
     try {
       // Check if user is authenticated
       if (!currentUser) {
-        toast.error("Authentication Required", {
-          description: "You must be logged in to create a post.",
+        toast.error('Authentication Required', {
+          description: 'You must be logged in to create a post.',
         });
         return;
       }
 
       // Determine post type
-      let postType: "text" | "image" | "reel" = "text";
-      let fileUrl = "";
+      let postType: 'text' | 'image' | 'reel' = 'text';
+      let fileUrl = '';
 
       // Upload file if exists
       if (createPostData.file) {
@@ -100,57 +100,48 @@ export default function CreatePage() {
 
         try {
           // Check file type
-          if (createPostData.file.type.startsWith("image/")) {
-            postType = "image";
-          } else if (createPostData.file.type.startsWith("video/")) {
-            postType = "reel";
+          if (createPostData.file.type.startsWith('image/')) {
+            postType = 'image';
+          } else if (createPostData.file.type.startsWith('video/')) {
+            postType = 'reel';
           }
 
           // Get Cloudinary signature
-          const { data: response } = await axios.get(
-            "/api/cloudinary/signature",
-            {
-              params: {
-                folder: "loop-social-platform",
-              },
-            }
-          );
+          const { data: response } = await axios.get('/api/cloudinary/signature', {
+            params: {
+              folder: 'loop-social-platform',
+            },
+          });
 
           // Extract signature data from response
           const signature = response.data;
 
           // Determine upload endpoint based on file type
-          const uploadType = postType === "reel" ? "video" : "image";
+          const uploadType = postType === 'reel' ? 'video' : 'image';
           const uploadApi = `https://api.cloudinary.com/v1_1/${signature.cloudName}/${uploadType}/upload`;
 
           // Create FormData
           const formData = new FormData();
-          formData.append("file", createPostData.file);
-          formData.append("api_key", signature.apiKey);
-          formData.append("timestamp", signature.timestamp.toString());
-          formData.append("folder", signature.folder);
-          formData.append("signature", signature.signature);
+          formData.append('file', createPostData.file);
+          formData.append('api_key', signature.apiKey);
+          formData.append('timestamp', signature.timestamp.toString());
+          formData.append('folder', signature.folder);
+          formData.append('signature', signature.signature);
 
           // Upload to Cloudinary
-          const { data: uploadResponse } = await axios.post(
-            uploadApi,
-            formData,
-            {
-              onUploadProgress: (progressEvent) => {
-                if (progressEvent.total) {
-                  const progress = Math.round(
-                    (progressEvent.loaded * 100) / progressEvent.total
-                  );
-                  setUploadProgress(progress);
-                }
-              },
-            }
-          );
+          const { data: uploadResponse } = await axios.post(uploadApi, formData, {
+            onUploadProgress: (progressEvent) => {
+              if (progressEvent.total) {
+                const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                setUploadProgress(progress);
+              }
+            },
+          });
 
           fileUrl = uploadResponse.secure_url || uploadResponse.url;
 
           if (!fileUrl) {
-            throw new Error("No URL returned from Cloudinary");
+            throw new Error('No URL returned from Cloudinary');
           }
 
           setIsUploading(false);
@@ -158,14 +149,14 @@ export default function CreatePage() {
         } catch (error) {
           setIsUploading(false);
           setUploadProgress(0);
-          console.error("Error uploading file:", error);
+          console.error('Error uploading file:', error);
           const errorMessage =
             axios.isAxiosError(error) && error.response?.data?.message
               ? error.response.data.message
               : error instanceof Error
-              ? error.message
-              : "Failed to upload file. Please try again.";
-          toast.error("Upload Failed", {
+                ? error.message
+                : 'Failed to upload file. Please try again.';
+          toast.error('Upload Failed', {
             description: errorMessage,
           });
           return;
@@ -176,9 +167,9 @@ export default function CreatePage() {
       const requestBody: {
         content: string;
         url?: string;
-        type: "text" | "image" | "reel";
+        type: 'text' | 'image' | 'reel';
       } = {
-        content: createPostData.caption.trim() || "",
+        content: createPostData.caption.trim() || '',
         type: postType,
       };
 
@@ -187,41 +178,40 @@ export default function CreatePage() {
       }
 
       // Create post via API
-      const response = await fetch("/api/posts", {
-        method: "POST",
+      const response = await fetch('/api/posts', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
         const result = await response.json();
-        toast.success("Post Created", {
-          description: "Your post has been created successfully!",
+        toast.success('Post Created', {
+          description: 'Your post has been created successfully!',
         });
 
         // Reset form
         setCreatePostData({
-          caption: "",
+          caption: '',
           file: null,
           preview: null,
         });
 
         // Navigate to home or profile
-        router.push("/");
+        router.push('/');
       } else {
         const error = await response.json();
-        toast.error("Failed to Create Post", {
-          description:
-            error.error || "Failed to create post. Please try again.",
+        toast.error('Failed to Create Post', {
+          description: error.error || 'Failed to create post. Please try again.',
         });
       }
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error('Error creating post:', error);
       setIsUploading(false);
-      toast.error("Error", {
-        description: "An error occurred while creating the post.",
+      toast.error('Error', {
+        description: 'An error occurred while creating the post.',
       });
     }
   };
@@ -248,19 +238,17 @@ export default function CreatePage() {
     };
 
     if (isEmojiPickerOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isEmojiPickerOpen]);
 
   const avatarUrl =
     currentUser?.image ||
-    `https://api.dicebear.com/7.x/avataaars/svg?seed=${
-      currentUser?.username || "user"
-    }`;
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.username || 'user'}`;
 
   return (
     <main className="flex-1 min-h-screen bg-background">
@@ -284,7 +272,7 @@ export default function CreatePage() {
             >
               {createPostData.preview ? (
                 <div className="space-y-4 w-full h-full flex flex-col items-center justify-center p-4">
-                  {createPostData.file?.type.startsWith("video/") ? (
+                  {createPostData.file?.type.startsWith('video/') ? (
                     <video
                       src={createPostData.preview}
                       className="max-h-[400px] max-w-full rounded-lg"
@@ -308,7 +296,7 @@ export default function CreatePage() {
                           preview: null,
                         }));
                         if (fileInputRef.current) {
-                          fileInputRef.current.value = "";
+                          fileInputRef.current.value = '';
                         }
                       }}
                     >
@@ -357,12 +345,10 @@ export default function CreatePage() {
             <div className="flex items-center gap-3 mb-4 pb-4 border-b">
               <Avatar className="h-10 w-10">
                 <AvatarImage src={avatarUrl} />
-                <AvatarFallback>
-                  {currentUser?.username?.[0]?.toUpperCase() || "U"}
-                </AvatarFallback>
+                <AvatarFallback>{currentUser?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
               <span className="font-semibold text-sm truncate">
-                {currentUser?.username || "User"}
+                {currentUser?.username || 'User'}
               </span>
             </div>
 
@@ -393,9 +379,8 @@ export default function CreatePage() {
                   className="h-8 w-8"
                   onClick={() => {
                     // Simple emoji insertion - can be enhanced with emoji picker library
-                    const emojis = ["😀", "❤️", "👍", "🔥", "🎉", "💯"];
-                    const randomEmoji =
-                      emojis[Math.floor(Math.random() * emojis.length)];
+                    const emojis = ['😀', '❤️', '👍', '🔥', '🎉', '💯'];
+                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
                     setCreatePostData((prev) => ({
                       ...prev,
                       caption: prev.caption + randomEmoji,
@@ -440,15 +425,10 @@ export default function CreatePage() {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={
-                  (!createPostData.caption.trim() && !createPostData.file) ||
-                  isUploading
-                }
+                disabled={(!createPostData.caption.trim() && !createPostData.file) || isUploading}
                 className="flex-1"
               >
-                {isUploading
-                  ? `Uploading... ${uploadProgress}%`
-                  : "Create Post"}
+                {isUploading ? `Uploading... ${uploadProgress}%` : 'Create Post'}
               </Button>
             </div>
           </div>

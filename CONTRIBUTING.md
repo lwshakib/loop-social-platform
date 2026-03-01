@@ -97,5 +97,3 @@ When opening a pull request:
 ### Questions
 
 If you’re unsure about anything (architecture, style, or scope), open a draft PR or GitHub Discussion/Issue and tag **@lwshakib** for feedback before investing significant work.
-
-

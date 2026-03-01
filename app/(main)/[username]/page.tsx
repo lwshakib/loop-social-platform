@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -11,13 +11,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { PostDialog } from "../_components/post-dialog";
-import VideoPlayer from "../_components/video-player";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useSocialStore } from "@/context";
+} from '@/components/ui/dialog';
+import { PostDialog } from '../_components/post-dialog';
+import VideoPlayer from '../_components/video-player';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useSocialStore } from '@/context';
 import {
   toggleLike,
   toggleUnlike,
@@ -25,7 +25,7 @@ import {
   toggleUnbookmark,
   getPostComments,
   createComment,
-} from "@/lib/post-actions";
+} from '@/lib/post-actions';
 import {
   Bookmark,
   Calendar,
@@ -36,20 +36,20 @@ import {
   MoreHorizontal,
   Play,
   X,
-} from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { authClient } from "@/lib/auth-client";
-import { toast } from "sonner";
-import { motion } from "framer-motion";
+} from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { authClient } from '@/lib/auth-client';
+import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
-type TabType = "posts" | "reels" | "liked" | "saved";
+type TabType = 'posts' | 'reels' | 'liked' | 'saved';
 
 type Post = {
   id: string;
   userId: string;
   content: string;
   imageUrl: string;
-  type: "text" | "image" | "reel";
+  type: 'text' | 'image' | 'reel';
   likesCount: number;
   commentsCount: number;
   createdAt: string;
@@ -87,10 +87,7 @@ const ProfileSkeleton = () => (
             <Skeleton className="h-4 w-52 sm:w-64" />
             <div className="flex gap-3">
               {[1, 2, 3].map((item) => (
-                <Skeleton
-                  key={item}
-                  className="h-4 w-16 sm:w-20 rounded-full"
-                />
+                <Skeleton key={item} className="h-4 w-16 sm:w-20 rounded-full" />
               ))}
             </div>
           </div>
@@ -160,8 +157,7 @@ const formatTimeAgo = (date: string): string => {
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
   if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
   if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
-  if (diffInSeconds < 31536000)
-    return `${Math.floor(diffInSeconds / 2592000)}mo`;
+  if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo`;
   return `${Math.floor(diffInSeconds / 31536000)}y`;
 };
 
@@ -169,24 +165,24 @@ const formatTimeAgo = (date: string): string => {
 const formatDate = (date: string): string => {
   const d = new Date(date);
   const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
   return `${months[d.getMonth()]} ${d.getFullYear()}`;
 };
 
 // Valid tabs constant
-const validTabs: TabType[] = ["posts", "reels", "liked", "saved"];
+const validTabs: TabType[] = ['posts', 'reels', 'liked', 'saved'];
 
 export default function ProfilePage() {
   const params = useParams();
@@ -196,9 +192,8 @@ export default function ProfilePage() {
   const username = params?.username as string;
 
   // Get initial tab from URL or default to "posts"
-  const tabFromUrl = searchParams.get("tab") as TabType | null;
-  const initialTab =
-    tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : "posts";
+  const tabFromUrl = searchParams.get('tab') as TabType | null;
+  const initialTab = tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : 'posts';
 
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
@@ -211,11 +206,11 @@ export default function ProfilePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [editFormData, setEditFormData] = useState({
-    name: "",
-    username: "",
-    bio: "",
-    imageUrl: "",
-    coverImageUrl: "",
+    name: '',
+    username: '',
+    bio: '',
+    imageUrl: '',
+    coverImageUrl: '',
   });
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -231,9 +226,9 @@ export default function ProfilePage() {
   const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
-  const [commentContent, setCommentContent] = useState("");
+  const [commentContent, setCommentContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyContent, setReplyContent] = useState("");
+  const [replyContent, setReplyContent] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isFollowersOpen, setIsFollowersOpen] = useState(false);
   const [isFollowingOpen, setIsFollowingOpen] = useState(false);
@@ -243,7 +238,7 @@ export default function ProfilePage() {
   const [isLoadingFollowing, setIsLoadingFollowing] = useState(false);
 
   // Use username as-is (don't clean it)
-  const cleanUsername = username || "";
+  const cleanUsername = username || '';
 
   // Check if this is the current user's profile (prefer id match)
   const isOwnProfile =
@@ -255,26 +250,22 @@ export default function ProfilePage() {
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     const url = new URL(window.location.href);
-    if (tab === "posts") {
+    if (tab === 'posts') {
       // Remove tab param for posts (default)
-      url.searchParams.delete("tab");
+      url.searchParams.delete('tab');
     } else {
-      url.searchParams.set("tab", tab);
+      url.searchParams.set('tab', tab);
     }
     router.push(url.pathname + url.search, { scroll: false });
   };
 
   // Sync tab with URL on mount and when URL changes
   useEffect(() => {
-    const tabFromUrl = searchParams.get("tab") as TabType | null;
-    if (
-      tabFromUrl &&
-      validTabs.includes(tabFromUrl) &&
-      tabFromUrl !== activeTab
-    ) {
+    const tabFromUrl = searchParams.get('tab') as TabType | null;
+    if (tabFromUrl && validTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
-    } else if (!tabFromUrl && activeTab !== "posts") {
-      setActiveTab("posts");
+    } else if (!tabFromUrl && activeTab !== 'posts') {
+      setActiveTab('posts');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -293,7 +284,7 @@ export default function ProfilePage() {
             setUserData(null);
             return;
           }
-          throw new Error("Failed to fetch user data");
+          throw new Error('Failed to fetch user data');
         }
 
         const result = await response.json();
@@ -302,7 +293,7 @@ export default function ProfilePage() {
           setIsFollowing(result.data.isFollowing || false);
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error('Error fetching user data:', error);
         setUserData(null);
       } finally {
         setIsLoading(false);
@@ -319,12 +310,10 @@ export default function ProfilePage() {
 
       try {
         setIsLoadingPosts(true);
-        const response = await fetch(
-          `/api/users/${cleanUsername}/posts?type=${activeTab}`
-        );
+        const response = await fetch(`/api/users/${cleanUsername}/posts?type=${activeTab}`);
 
         if (!response.ok) {
-          throw new Error("Failed to fetch posts");
+          throw new Error('Failed to fetch posts');
         }
 
         const result = await response.json();
@@ -347,7 +336,7 @@ export default function ProfilePage() {
           setSavedPosts(new Set(savedPostIds));
         }
       } catch (error) {
-        console.error("Error fetching posts:", error);
+        console.error('Error fetching posts:', error);
         setPosts([]);
       } finally {
         setIsLoadingPosts(false);
@@ -362,9 +351,9 @@ export default function ProfilePage() {
       setEditFormData({
         name: userData.name,
         username: userData.username,
-        bio: userData.bio || "",
-        imageUrl: userData.imageUrl || "",
-        coverImageUrl: userData.coverImageUrl || "",
+        bio: userData.bio || '',
+        imageUrl: userData.imageUrl || '',
+        coverImageUrl: userData.coverImageUrl || '',
       });
       setProfileFile(null);
       setCoverFile(null);
@@ -372,26 +361,26 @@ export default function ProfilePage() {
     }
   };
 
-  const uploadImage = async (file: File, folder = "loop-social-platform") => {
+  const uploadImage = async (file: File, folder = 'loop-social-platform') => {
     const signatureRes = await fetch(
       `/api/cloudinary/signature?folder=${encodeURIComponent(folder)}`
     );
-    if (!signatureRes.ok) throw new Error("Failed to get upload signature");
+    if (!signatureRes.ok) throw new Error('Failed to get upload signature');
     const signatureJson = await signatureRes.json();
     const sigData = signatureJson.data;
     const uploadUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`;
     const formData = new FormData();
-    formData.append("file", file);
-    formData.append("api_key", sigData.apiKey);
-    formData.append("timestamp", String(sigData.timestamp));
-    formData.append("folder", sigData.folder);
-    formData.append("signature", sigData.signature);
+    formData.append('file', file);
+    formData.append('api_key', sigData.apiKey);
+    formData.append('timestamp', String(sigData.timestamp));
+    formData.append('folder', sigData.folder);
+    formData.append('signature', sigData.signature);
 
     const uploadRes = await fetch(uploadUrl, {
-      method: "POST",
+      method: 'POST',
       body: formData,
     });
-    if (!uploadRes.ok) throw new Error("Failed to upload image");
+    if (!uploadRes.ok) throw new Error('Failed to upload image');
     const uploadJson = await uploadRes.json();
     return uploadJson.secure_url || uploadJson.url;
   };
@@ -405,16 +394,10 @@ export default function ProfilePage() {
     try {
       setIsUpdatingProfile(true);
       if (profileFile) {
-        nextImageUrl = await uploadImage(
-          profileFile,
-          "loop-social-platform/profile"
-        );
+        nextImageUrl = await uploadImage(profileFile, 'loop-social-platform/profile');
       }
       if (coverFile) {
-        nextCoverUrl = await uploadImage(
-          coverFile,
-          "loop-social-platform/cover"
-        );
+        nextCoverUrl = await uploadImage(coverFile, 'loop-social-platform/cover');
       }
 
       // Update core user details using authClient
@@ -426,7 +409,7 @@ export default function ProfilePage() {
       });
 
       if (updateError) {
-        toast.error(updateError.message || "Failed to update profile");
+        toast.error(updateError.message || 'Failed to update profile');
         return;
       }
 
@@ -437,12 +420,12 @@ export default function ProfilePage() {
         });
 
         if (usernameError) {
-          toast.error(usernameError.message || "Failed to update username");
+          toast.error(usernameError.message || 'Failed to update username');
           // Continue anyway if other updates succeeded
         }
       }
 
-      toast.success("Profile updated successfully!");
+      toast.success('Profile updated successfully!');
 
       // Update local state to reflect changes immediately
       setUserData((prev) =>
@@ -468,8 +451,8 @@ export default function ProfilePage() {
         router.push(`/${editFormData.username}`);
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error("An unexpected error occurred while updating your profile");
+      console.error('Error updating profile:', error);
+      toast.error('An unexpected error occurred while updating your profile');
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -489,30 +472,26 @@ export default function ProfilePage() {
       if (isOwnProfile) {
         return {
           ...prev,
-          following: nextFollowing
-            ? prev.following + 1
-            : Math.max(0, prev.following - 1),
+          following: nextFollowing ? prev.following + 1 : Math.max(0, prev.following - 1),
         };
       }
       return {
         ...prev,
-        followers: nextFollowing
-          ? prev.followers + 1
-          : Math.max(0, prev.followers - 1),
+        followers: nextFollowing ? prev.followers + 1 : Math.max(0, prev.followers - 1),
       };
     });
 
     try {
-      const method = nextFollowing ? "POST" : "DELETE";
+      const method = nextFollowing ? 'POST' : 'DELETE';
       const res = await fetch(`/api/users/${userData.username}/follow`, {
         method,
       });
 
       if (!res.ok) {
-        throw new Error("Failed to update follow status");
+        throw new Error('Failed to update follow status');
       }
     } catch (error) {
-      console.error("Error following/unfollowing user:", error);
+      console.error('Error following/unfollowing user:', error);
       // Revert optimistic update on error
       setIsFollowing(prevIsFollowing);
       setUserData(prevUserData);
@@ -529,7 +508,7 @@ export default function ProfilePage() {
         setFollowersList(json.data || []);
       }
     } catch (error) {
-      console.error("Error fetching followers:", error);
+      console.error('Error fetching followers:', error);
       setFollowersList([]);
     } finally {
       setIsLoadingFollowers(false);
@@ -546,7 +525,7 @@ export default function ProfilePage() {
         setFollowingList(json.data || []);
       }
     } catch (error) {
-      console.error("Error fetching following:", error);
+      console.error('Error fetching following:', error);
       setFollowingList([]);
     } finally {
       setIsLoadingFollowing(false);
@@ -560,9 +539,7 @@ export default function ProfilePage() {
     const prevUserData = userData;
 
     // Optimistic update
-    setFollowingList((prev) =>
-      prev.filter((user) => user.username !== targetUsername)
-    );
+    setFollowingList((prev) => prev.filter((user) => user.username !== targetUsername));
     setUserData((prev) =>
       prev
         ? {
@@ -574,13 +551,13 @@ export default function ProfilePage() {
 
     try {
       const res = await fetch(`/api/users/${targetUsername}/follow`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
       if (!res.ok) {
-        throw new Error("Failed to unfollow");
+        throw new Error('Failed to unfollow');
       }
     } catch (error) {
-      console.error("Error unfollowing user:", error);
+      console.error('Error unfollowing user:', error);
       // Revert on failure
       setFollowingList(prevList);
       setUserData(prevUserData);
@@ -648,7 +625,7 @@ export default function ProfilePage() {
         await toggleLike(postId);
       }
     } catch (error) {
-      console.error("Error toggling like:", error);
+      console.error('Error toggling like:', error);
       // Revert on error
       setSelectedPost(previousSelectedPost);
       setPosts(previousPosts);
@@ -667,16 +644,12 @@ export default function ProfilePage() {
     if (isSaved) {
       setSelectedPost((prev) => (prev ? { ...prev, isSaved: false } : null));
       setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId ? { ...post, isSaved: false } : post
-        )
+        prev.map((post) => (post.id === postId ? { ...post, isSaved: false } : post))
       );
     } else {
       setSelectedPost((prev) => (prev ? { ...prev, isSaved: true } : null));
       setPosts((prev) =>
-        prev.map((post) =>
-          post.id === postId ? { ...post, isSaved: true } : post
-        )
+        prev.map((post) => (post.id === postId ? { ...post, isSaved: true } : post))
       );
     }
 
@@ -688,7 +661,7 @@ export default function ProfilePage() {
         await toggleBookmark(postId);
       }
     } catch (error) {
-      console.error("Error toggling bookmark:", error);
+      console.error('Error toggling bookmark:', error);
       // Revert on error
       setSelectedPost(previousSelectedPost);
       setPosts(previousPosts);
@@ -707,7 +680,7 @@ export default function ProfilePage() {
           setComments(result.data);
         }
       } catch (error) {
-        console.error("Error fetching comments:", error);
+        console.error('Error fetching comments:', error);
         setComments([]);
       } finally {
         setIsLoadingComments(false);
@@ -720,9 +693,9 @@ export default function ProfilePage() {
   // Reset comment state when dialog closes
   useEffect(() => {
     if (!isPostDialogOpen) {
-      setCommentContent("");
+      setCommentContent('');
       setReplyingTo(null);
-      setReplyContent("");
+      setReplyContent('');
       setComments([]);
     }
   }, [isPostDialogOpen]);
@@ -733,13 +706,10 @@ export default function ProfilePage() {
 
     try {
       setIsSubmittingComment(true);
-      const result = await createComment(
-        selectedPost.id,
-        commentContent.trim()
-      );
+      const result = await createComment(selectedPost.id, commentContent.trim());
       if (result.data) {
         setComments((prev) => [result.data, ...prev]);
-        setCommentContent("");
+        setCommentContent('');
         setSelectedPost((prev) =>
           prev
             ? {
@@ -760,7 +730,7 @@ export default function ProfilePage() {
         );
       }
     } catch (error) {
-      console.error("Error creating comment:", error);
+      console.error('Error creating comment:', error);
     } finally {
       setIsSubmittingComment(false);
     }
@@ -772,11 +742,7 @@ export default function ProfilePage() {
 
     try {
       setIsSubmittingComment(true);
-      const result = await createComment(
-        selectedPost.id,
-        replyContent.trim(),
-        parentId
-      );
+      const result = await createComment(selectedPost.id, replyContent.trim(), parentId);
       if (result.data) {
         setComments((prev) =>
           prev.map((comment) =>
@@ -789,7 +755,7 @@ export default function ProfilePage() {
           )
         );
         setReplyingTo(null);
-        setReplyContent("");
+        setReplyContent('');
         setSelectedPost((prev) =>
           prev
             ? {
@@ -810,7 +776,7 @@ export default function ProfilePage() {
         );
       }
     } catch (error) {
-      console.error("Error creating reply:", error);
+      console.error('Error creating reply:', error);
     } finally {
       setIsSubmittingComment(false);
     }
@@ -833,9 +799,8 @@ export default function ProfilePage() {
   }
 
   const avatarUrl =
-    userData.imageUrl ||
-    `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`;
-  const coverImageUrl = "https://picsum.photos/800/300?random=profile";
+    userData.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`;
+  const coverImageUrl = 'https://picsum.photos/800/300?random=profile';
   const currentCoverImage =
     userData.coverImageUrl && userData.coverImageUrl.length > 0
       ? userData.coverImageUrl
@@ -845,11 +810,7 @@ export default function ProfilePage() {
     <div className="flex-1 overflow-y-auto">
       {/* Cover Image */}
       <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 bg-linear-to-r from-blue-500 to-purple-500">
-        <img
-          src={currentCoverImage}
-          alt="Cover"
-          className="w-full h-full object-cover"
-        />
+        <img src={currentCoverImage} alt="Cover" className="w-full h-full object-cover" />
       </div>
 
       {/* Profile Info */}
@@ -859,14 +820,11 @@ export default function ProfilePage() {
             <Avatar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 lg:h-32 lg:w-32 border-2 sm:border-4 border-background shrink-0">
               <AvatarImage src={avatarUrl} alt={userData.name} />
               <AvatarFallback className="text-lg sm:text-xl md:text-2xl lg:text-3xl">
-                {userData.name[0]?.toUpperCase() ||
-                  userData.username[0].toUpperCase()}
+                {userData.name[0]?.toUpperCase() || userData.username[0].toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="sm:hidden">
-              <h1 className="text-base sm:text-lg font-bold truncate">
-                {userData.name}
-              </h1>
+              <h1 className="text-base sm:text-lg font-bold truncate">{userData.name}</h1>
               <p className="text-xs sm:text-sm text-muted-foreground truncate">
                 {userData.username}
               </p>
@@ -898,20 +856,16 @@ export default function ProfilePage() {
                 )}
                 {currentUser && (
                   <Button
-                    variant={isFollowing ? "outline" : "default"}
+                    variant={isFollowing ? 'outline' : 'default'}
                     size="sm"
                     onClick={handleFollow}
                     className="flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
                   >
-                    {isFollowing ? "Following" : "Follow"}
+                    {isFollowing ? 'Following' : 'Follow'}
                   </Button>
                 )}
                 {currentUser && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="sm:flex-none h-8 sm:h-9 w-8 sm:w-9"
-                  >
+                  <Button variant="ghost" size="sm" className="sm:flex-none h-8 sm:h-9 w-8 sm:w-9">
                     <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 )}
@@ -921,18 +875,12 @@ export default function ProfilePage() {
         </div>
 
         <div className="mb-3 sm:mb-4 hidden sm:block">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">
-            {userData.name}
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground truncate">
-            {userData.username}
-          </p>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">{userData.name}</h1>
+          <p className="text-sm sm:text-base text-muted-foreground truncate">{userData.username}</p>
         </div>
 
         {userData.bio && (
-          <p className="text-xs sm:text-sm mb-2 sm:mb-3 whitespace-pre-wrap">
-            {userData.bio}
-          </p>
+          <p className="text-xs sm:text-sm mb-2 sm:mb-3 whitespace-pre-wrap">{userData.bio}</p>
         )}
 
         <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
@@ -950,7 +898,7 @@ export default function ProfilePage() {
           >
             <span className="font-semibold text-foreground">
               {userData.following.toLocaleString()}
-            </span>{" "}
+            </span>{' '}
             <span className="text-muted-foreground">Following</span>
           </button>
           <button
@@ -962,16 +910,13 @@ export default function ProfilePage() {
           >
             <span className="font-semibold text-foreground">
               {userData.followers.toLocaleString()}
-            </span>{" "}
+            </span>{' '}
             <span className="text-muted-foreground">Followers</span>
           </button>
-          <button
-            className="hover:underline shrink-0"
-            onClick={() => handleTabChange("posts")}
-          >
+          <button className="hover:underline shrink-0" onClick={() => handleTabChange('posts')}>
             <span className="font-semibold text-foreground">
               {userData.postsCount.toLocaleString()}
-            </span>{" "}
+            </span>{' '}
             <span className="text-muted-foreground">Posts</span>
           </button>
         </div>
@@ -980,41 +925,41 @@ export default function ProfilePage() {
       {/* Tabs */}
       <div className="flex border-b">
         <button
-          onClick={() => handleTabChange("posts")}
+          onClick={() => handleTabChange('posts')}
           className={`flex-1 py-2 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm transition-colors ${
-            activeTab === "posts"
-              ? "border-b-2 border-primary text-foreground"
-              : "text-muted-foreground hover:text-foreground"
+            activeTab === 'posts'
+              ? 'border-b-2 border-primary text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Grid3x3 className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
         <button
-          onClick={() => handleTabChange("reels")}
+          onClick={() => handleTabChange('reels')}
           className={`flex-1 py-2 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm transition-colors ${
-            activeTab === "reels"
-              ? "border-b-2 border-primary text-foreground"
-              : "text-muted-foreground hover:text-foreground"
+            activeTab === 'reels'
+              ? 'border-b-2 border-primary text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Play className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
         <button
-          onClick={() => handleTabChange("liked")}
+          onClick={() => handleTabChange('liked')}
           className={`flex-1 py-2 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm transition-colors ${
-            activeTab === "liked"
-              ? "border-b-2 border-primary text-foreground"
-              : "text-muted-foreground hover:text-foreground"
+            activeTab === 'liked'
+              ? 'border-b-2 border-primary text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
         <button
-          onClick={() => handleTabChange("saved")}
+          onClick={() => handleTabChange('saved')}
           className={`flex-1 py-2 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 font-semibold text-xs sm:text-sm transition-colors ${
-            activeTab === "saved"
-              ? "border-b-2 border-primary text-foreground"
-              : "text-muted-foreground hover:text-foreground"
+            activeTab === 'saved'
+              ? 'border-b-2 border-primary text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Bookmark className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -1028,10 +973,10 @@ export default function ProfilePage() {
         ) : posts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-muted-foreground text-sm">
-              {activeTab === "posts" && "No posts yet"}
-              {activeTab === "reels" && "No reels yet"}
-              {activeTab === "liked" && "No liked posts yet"}
-              {activeTab === "saved" && "No saved posts yet"}
+              {activeTab === 'posts' && 'No posts yet'}
+              {activeTab === 'reels' && 'No reels yet'}
+              {activeTab === 'liked' && 'No liked posts yet'}
+              {activeTab === 'saved' && 'No saved posts yet'}
             </p>
           </div>
         ) : (
@@ -1046,7 +991,7 @@ export default function ProfilePage() {
                 }}
               >
                 {post.imageUrl ? (
-                  post.type === "reel" ? (
+                  post.type === 'reel' ? (
                     <div className="relative w-full h-full">
                       <video
                         src={post.imageUrl}
@@ -1059,17 +1004,13 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   ) : (
-                    <img
-                      src={post.imageUrl}
-                      alt="Post"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={post.imageUrl} alt="Post" className="w-full h-full object-cover" />
                   )
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-muted">
                     <div className="text-center p-4">
                       <p className="text-xs sm:text-sm text-muted-foreground line-clamp-3">
-                        {post.content || "Post"}
+                        {post.content || 'Post'}
                       </p>
                     </div>
                   </div>
@@ -1099,17 +1040,13 @@ export default function ProfilePage() {
       </div>
 
       {/* Post Detail Dialog */}
-      <PostDialog
-        open={isPostDialogOpen}
-        onOpenChange={setIsPostDialogOpen}
-        className="p-0"
-      >
+      <PostDialog open={isPostDialogOpen} onOpenChange={setIsPostDialogOpen} className="p-0">
         {selectedPost && (
           <div className="flex flex-col md:flex-row h-full max-h-[95vh]">
             {/* Media Section */}
             <div className="relative w-full md:w-3/5 bg-black flex items-center justify-center overflow-hidden min-h-[400px] md:min-h-0 md:h-full">
               {selectedPost.imageUrl ? (
-                selectedPost.type === "reel" ? (
+                selectedPost.type === 'reel' ? (
                   <VideoPlayer
                     src={selectedPost.imageUrl}
                     videoId={selectedPost.id}
@@ -1130,7 +1067,7 @@ export default function ProfilePage() {
                 )
               ) : (
                 <div className="text-center p-8 text-white">
-                  <p className="text-sm">{selectedPost.content || "Post"}</p>
+                  <p className="text-sm">{selectedPost.content || 'Post'}</p>
                 </div>
               )}
             </div>
@@ -1143,23 +1080,18 @@ export default function ProfilePage() {
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={avatarUrl} />
                       <AvatarFallback>
-                        {userData.name[0]?.toUpperCase() ||
-                          userData.username[0].toUpperCase()}
+                        {userData.name[0]?.toUpperCase() || userData.username[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="font-semibold text-sm">
-                        {userData.username}
-                      </p>
+                      <p className="font-semibold text-sm">{userData.username}</p>
                     </div>
                   </div>
                 </div>
 
                 {selectedPost.content && (
                   <div className="p-4 border-b">
-                    <p className="text-sm whitespace-pre-wrap">
-                      {selectedPost.content}
-                    </p>
+                    <p className="text-sm whitespace-pre-wrap">{selectedPost.content}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatTimeAgo(selectedPost.createdAt)}
                     </p>
@@ -1170,22 +1102,15 @@ export default function ProfilePage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <button
-                        onClick={() =>
-                          handleLike(
-                            selectedPost.id,
-                            selectedPost.isLiked || false
-                          )
-                        }
+                        onClick={() => handleLike(selectedPost.id, selectedPost.isLiked || false)}
                         className={`flex items-center gap-2 transition-colors ${
                           selectedPost.isLiked
-                            ? "text-red-500"
-                            : "text-foreground hover:text-red-500"
+                            ? 'text-red-500'
+                            : 'text-foreground hover:text-red-500'
                         }`}
                       >
                         <Heart
-                          className={`h-6 w-6 ${
-                            selectedPost.isLiked ? "fill-current" : ""
-                          }`}
+                          className={`h-6 w-6 ${selectedPost.isLiked ? 'fill-current' : ''}`}
                         />
                         <span className="text-sm font-semibold">
                           {selectedPost.likesCount || 0}
@@ -1199,22 +1124,15 @@ export default function ProfilePage() {
                       </button>
                     </div>
                     <button
-                      onClick={() =>
-                        handleBookmark(
-                          selectedPost.id,
-                          selectedPost.isSaved || false
-                        )
-                      }
+                      onClick={() => handleBookmark(selectedPost.id, selectedPost.isSaved || false)}
                       className={`transition-colors ${
                         selectedPost.isSaved
-                          ? "text-yellow-500"
-                          : "text-foreground hover:text-yellow-500"
+                          ? 'text-yellow-500'
+                          : 'text-foreground hover:text-yellow-500'
                       }`}
                     >
                       <Bookmark
-                        className={`h-6 w-6 ${
-                          selectedPost.isSaved ? "fill-current" : ""
-                        }`}
+                        className={`h-6 w-6 ${selectedPost.isSaved ? 'fill-current' : ''}`}
                       />
                     </button>
                   </div>
@@ -1244,12 +1162,8 @@ export default function ProfilePage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start gap-2">
                               <div className="flex-1">
-                                <p className="text-sm font-semibold">
-                                  {comment.user.username}
-                                </p>
-                                <p className="text-sm whitespace-pre-wrap">
-                                  {comment.content}
-                                </p>
+                                <p className="text-sm font-semibold">{comment.user.username}</p>
+                                <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
                                 <div className="flex items-center gap-3 mt-1">
                                   <p className="text-xs text-muted-foreground">
                                     {formatTimeAgo(comment.createdAt)}
@@ -1258,17 +1172,13 @@ export default function ProfilePage() {
                                     <button
                                       onClick={() => {
                                         setReplyingTo(
-                                          replyingTo === comment.id
-                                            ? null
-                                            : comment.id
+                                          replyingTo === comment.id ? null : comment.id
                                         );
-                                        setReplyContent("");
+                                        setReplyContent('');
                                       }}
                                       className="text-xs text-muted-foreground hover:text-foreground"
                                     >
-                                      {replyingTo === comment.id
-                                        ? "Cancel"
-                                        : "Reply"}
+                                      {replyingTo === comment.id ? 'Cancel' : 'Reply'}
                                     </button>
                                   )}
                                 </div>
@@ -1281,17 +1191,11 @@ export default function ProfilePage() {
                                 <div className="flex gap-2">
                                   <Input
                                     value={replyContent}
-                                    onChange={(e) =>
-                                      setReplyContent(e.target.value)
-                                    }
+                                    onChange={(e) => setReplyContent(e.target.value)}
                                     placeholder="Add a reply..."
                                     className="text-sm"
                                     onKeyDown={(e) => {
-                                      if (
-                                        e.key === "Enter" &&
-                                        !e.shiftKey &&
-                                        replyContent.trim()
-                                      ) {
+                                      if (e.key === 'Enter' && !e.shiftKey && replyContent.trim()) {
                                         e.preventDefault();
                                         handleSubmitReply(comment.id);
                                       }
@@ -1299,13 +1203,8 @@ export default function ProfilePage() {
                                   />
                                   <Button
                                     size="sm"
-                                    onClick={() =>
-                                      handleSubmitReply(comment.id)
-                                    }
-                                    disabled={
-                                      !replyContent.trim() ||
-                                      isSubmittingComment
-                                    }
+                                    onClick={() => handleSubmitReply(comment.id)}
+                                    disabled={!replyContent.trim() || isSubmittingComment}
                                   >
                                     Reply
                                   </Button>
@@ -1326,12 +1225,8 @@ export default function ProfilePage() {
                                       </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-semibold">
-                                        {reply.user.username}
-                                      </p>
-                                      <p className="text-sm whitespace-pre-wrap">
-                                        {reply.content}
-                                      </p>
+                                      <p className="text-sm font-semibold">{reply.user.username}</p>
+                                      <p className="text-sm whitespace-pre-wrap">{reply.content}</p>
                                       <p className="text-xs text-muted-foreground mt-1">
                                         {formatTimeAgo(reply.createdAt)}
                                       </p>
@@ -1358,11 +1253,7 @@ export default function ProfilePage() {
                       placeholder="Add a comment..."
                       className="text-sm"
                       onKeyDown={(e) => {
-                        if (
-                          e.key === "Enter" &&
-                          !e.shiftKey &&
-                          commentContent.trim()
-                        ) {
+                        if (e.key === 'Enter' && !e.shiftKey && commentContent.trim()) {
                           e.preventDefault();
                           handleSubmitComment();
                         }
@@ -1388,9 +1279,7 @@ export default function ProfilePage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
-            <DialogDescription>
-              Update your profile information.
-            </DialogDescription>
+            <DialogDescription>Update your profile information.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -1439,9 +1328,7 @@ export default function ProfilePage() {
                 maxLength={160}
                 rows={4}
               />
-              <p className="text-xs text-muted-foreground">
-                {editFormData.bio.length}/160
-              </p>
+              <p className="text-xs text-muted-foreground">{editFormData.bio.length}/160</p>
             </div>
           </div>
 
@@ -1468,7 +1355,7 @@ export default function ProfilePage() {
                 <AvatarFallback>
                   {editFormData.name[0]?.toUpperCase() ||
                     editFormData.username[0]?.toUpperCase() ||
-                    "U"}
+                    'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex gap-2">
@@ -1482,11 +1369,7 @@ export default function ProfilePage() {
                   className="w-48"
                 />
                 {profileFile && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setProfileFile(null)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setProfileFile(null)}>
                     Remove
                   </Button>
                 )}
@@ -1499,9 +1382,7 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-3">
               <div className="h-24 w-full rounded-md overflow-hidden bg-muted">
                 <img
-                  src={
-                    coverPreview || editFormData.coverImageUrl || coverImageUrl
-                  }
+                  src={coverPreview || editFormData.coverImageUrl || coverImageUrl}
                   alt="Cover preview"
                   className="w-full h-full object-cover"
                 />
@@ -1517,11 +1398,7 @@ export default function ProfilePage() {
                   className="w-48"
                 />
                 {coverFile && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCoverFile(null)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setCoverFile(null)}>
                     Remove
                   </Button>
                 )}
@@ -1530,14 +1407,11 @@ export default function ProfilePage() {
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleUpdateProfile} disabled={isUpdatingProfile}>
-              {isUpdatingProfile ? "Saving..." : "Save Changes"}
+              {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1548,40 +1422,29 @@ export default function ProfilePage() {
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Followers</DialogTitle>
-            <DialogDescription>
-              People who follow {userData.username}
-            </DialogDescription>
+            <DialogDescription>People who follow {userData.username}</DialogDescription>
           </DialogHeader>
           {isLoadingFollowers ? (
             <div className="py-6">
               <CommentsSkeleton />
             </div>
           ) : followersList.length === 0 ? (
-            <div className="py-6 text-center text-muted-foreground text-sm">
-              No followers yet.
-            </div>
+            <div className="py-6 text-center text-muted-foreground text-sm">No followers yet.</div>
           ) : (
             <div className="space-y-3">
               {followersList.map((follower) => (
-                <div
-                  key={follower.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border"
-                >
+                <div key={follower.id} className="flex items-center gap-3 p-3 rounded-lg border">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={follower.imageUrl} />
                     <AvatarFallback>
                       {follower.name?.[0]?.toUpperCase() ||
                         follower.username?.[0]?.toUpperCase() ||
-                        "U"}
+                        'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">
-                      {follower.username}
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {follower.name}
-                    </p>
+                    <p className="font-semibold truncate">{follower.username}</p>
+                    <p className="text-sm text-muted-foreground truncate">{follower.name}</p>
                   </div>
                 </div>
               ))}
@@ -1595,9 +1458,7 @@ export default function ProfilePage() {
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Following</DialogTitle>
-            <DialogDescription>
-              People {userData.username} follows
-            </DialogDescription>
+            <DialogDescription>People {userData.username} follows</DialogDescription>
           </DialogHeader>
           {isLoadingFollowing ? (
             <div className="py-6">
@@ -1610,25 +1471,18 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-3">
               {followingList.map((followed) => (
-                <div
-                  key={followed.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border"
-                >
+                <div key={followed.id} className="flex items-center gap-3 p-3 rounded-lg border">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={followed.imageUrl} />
                     <AvatarFallback>
                       {followed.name?.[0]?.toUpperCase() ||
                         followed.username?.[0]?.toUpperCase() ||
-                        "U"}
+                        'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">
-                      {followed.username}
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {followed.name}
-                    </p>
+                    <p className="font-semibold truncate">{followed.username}</p>
+                    <p className="text-sm text-muted-foreground truncate">{followed.name}</p>
                   </div>
                   {isOwnProfile && currentUser && (
                     <Button

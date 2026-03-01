@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { Volume2, VolumeX, Play } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { Volume2, VolumeX, Play } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 // Helper function to format time (MM:SS)
 const formatTime = (seconds: number): string => {
-  if (!seconds || isNaN(seconds)) return "0:00";
+  if (!seconds || isNaN(seconds)) return '0:00';
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
 interface VideoPlayerProps {
@@ -85,10 +85,10 @@ export default function VideoPlayer({
       if (onPause) onPause();
     };
 
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    video.addEventListener("loadedmetadata", handleLoadedMetadata);
-    video.addEventListener("play", handlePlay);
-    video.addEventListener("pause", handlePause);
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
 
     // Set initial muted state
     video.muted = isMuted;
@@ -96,15 +96,15 @@ export default function VideoPlayer({
     // Auto-play if requested
     if (autoPlay) {
       video.play().catch((error) => {
-        console.error("Error auto-playing video:", error);
+        console.error('Error auto-playing video:', error);
       });
     }
 
     return () => {
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      video.removeEventListener("play", handlePlay);
-      video.removeEventListener("pause", handlePause);
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
     };
   }, [autoPlay, isMuted, onPlay, onPause]);
 
@@ -127,7 +127,7 @@ export default function VideoPlayer({
       },
       {
         threshold: 0.1,
-        rootMargin: "0px",
+        rootMargin: '0px',
       }
     );
 
@@ -146,7 +146,7 @@ export default function VideoPlayer({
       video.pause();
     } else {
       video.play().catch((error) => {
-        console.error("Error playing video:", error);
+        console.error('Error playing video:', error);
       });
     }
   };
@@ -167,10 +167,7 @@ export default function VideoPlayer({
   return (
     <div
       data-video-id={intersectionObserverId}
-      className={cn(
-        "relative group bg-black rounded-2xl overflow-hidden",
-        containerClassName
-      )}
+      className={cn('relative group bg-black rounded-2xl overflow-hidden', containerClassName)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
@@ -181,7 +178,7 @@ export default function VideoPlayer({
       <video
         ref={videoRef}
         src={src}
-        className={cn("w-full h-full object-contain cursor-pointer", className)}
+        className={cn('w-full h-full object-contain cursor-pointer', className)}
         playsInline
         loop={loop}
         muted={isMuted}
@@ -195,8 +192,8 @@ export default function VideoPlayer({
           {/* Mute/Unmute Button - Top Right */}
           <div
             className={cn(
-              "absolute top-3 right-3 transition-opacity z-10",
-              isHovered ? "opacity-100" : "opacity-0"
+              'absolute top-3 right-3 transition-opacity z-10',
+              isHovered ? 'opacity-100' : 'opacity-0'
             )}
           >
             <button
@@ -205,13 +202,9 @@ export default function VideoPlayer({
                 toggleMute();
               }}
               className="p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-colors"
-              aria-label={isMuted ? "Unmute" : "Mute"}
+              aria-label={isMuted ? 'Unmute' : 'Mute'}
             >
-              {isMuted ? (
-                <VolumeX className="h-4 w-4" />
-              ) : (
-                <Volume2 className="h-4 w-4" />
-              )}
+              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </button>
           </div>
 
@@ -236,7 +229,7 @@ export default function VideoPlayer({
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{
-                    type: "spring",
+                    type: 'spring',
                     stiffness: 300,
                     damping: 20,
                   }}
@@ -250,8 +243,8 @@ export default function VideoPlayer({
           {/* Video Progress Slider - Bottom */}
           <div
             className={cn(
-              "absolute bottom-0 left-0 right-0 p-3 transition-opacity z-10 bg-gradient-to-t from-black/70 via-black/50 to-transparent",
-              isHovered ? "opacity-100" : "opacity-0"
+              'absolute bottom-0 left-0 right-0 p-3 transition-opacity z-10 bg-gradient-to-t from-black/70 via-black/50 to-transparent',
+              isHovered ? 'opacity-100' : 'opacity-0'
             )}
           >
             <div className="flex items-center gap-3 text-white">
@@ -276,9 +269,7 @@ export default function VideoPlayer({
                   }}
                 />
               </div>
-              <span className="shrink-0 min-w-12 text-xs font-medium">
-                {formatTime(duration)}
-              </span>
+              <span className="shrink-0 min-w-12 text-xs font-medium">{formatTime(duration)}</span>
             </div>
           </div>
         </>

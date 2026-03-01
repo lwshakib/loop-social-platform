@@ -1,15 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import prisma from "@/lib/prisma";
-import { PostType } from "@/generated/prisma/client";
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import prisma from '@/lib/prisma';
+import { PostType } from '@/generated/prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get("limit") || "5");
-    const excludeIds =
-      searchParams.get("excludeIds")?.split(",").filter(Boolean) || [];
+    const limit = parseInt(searchParams.get('limit') || '5');
+    const excludeIds = searchParams.get('excludeIds')?.split(',').filter(Boolean) || [];
 
     // Get current authenticated user
     const session = await auth.api.getSession({ headers: await headers() });
@@ -43,7 +42,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: limit,
     });
 
@@ -69,7 +68,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         take: remainingNeeded,
       });
 
@@ -134,10 +133,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error fetching recommended reels:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching recommended reels:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

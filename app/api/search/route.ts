@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const query = searchParams.get("q") || "";
-    const type = searchParams.get("type") || "all"; // all, users, posts
+    const query = searchParams.get('q') || '';
+    const type = searchParams.get('type') || 'all'; // all, users, posts
 
     if (!query.trim()) {
       return NextResponse.json({
@@ -17,19 +17,19 @@ export async function GET(request: NextRequest) {
     }
 
     // Get current authenticated user from x-user header (set by proxy middleware)
-    const user = JSON.parse(request.headers.get("x-user") || "null");
+    const user = JSON.parse(request.headers.get('x-user') || 'null');
     const currentUserId = user?.id;
 
     const searchTerm = query.trim();
 
     // Search users
     let users: any[] = [];
-    if (type === "all" || type === "users") {
+    if (type === 'all' || type === 'users') {
       users = await prisma.user.findMany({
         where: {
           OR: [
-            { username: { contains: searchTerm, mode: "insensitive" } },
-            { name: { contains: searchTerm, mode: "insensitive" } },
+            { username: { contains: searchTerm, mode: 'insensitive' } },
+            { name: { contains: searchTerm, mode: 'insensitive' } },
           ],
         },
         select: {
@@ -46,10 +46,10 @@ export async function GET(request: NextRequest) {
 
     // Search posts
     let posts: any[] = [];
-    if (type === "all" || type === "posts") {
+    if (type === 'all' || type === 'posts') {
       const foundPosts = await prisma.post.findMany({
         where: {
-          content: { contains: searchTerm, mode: "insensitive" },
+          content: { contains: searchTerm, mode: 'insensitive' },
         },
         include: {
           user: {
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         take: 20,
       });
 
@@ -142,10 +142,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: response });
   } catch (error) {
-    console.error("Error searching:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error searching:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

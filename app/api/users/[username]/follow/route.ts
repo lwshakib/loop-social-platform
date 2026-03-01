@@ -1,15 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
-async function resolveUsername(
-  params: Promise<{ username: string }> | { username: string }
-) {
+async function resolveUsername(params: Promise<{ username: string }> | { username: string }) {
   const resolved = await Promise.resolve(params);
   return resolved.username;
 }
 
 async function getCurrentDbUserId(request: NextRequest) {
-  const user = JSON.parse(request.headers.get("x-user") || "null");
+  const user = JSON.parse(request.headers.get('x-user') || 'null');
   if (!user) return null;
   return user.id;
 }
@@ -27,27 +25,21 @@ export async function POST(
   try {
     const username = await resolveUsername(params);
     if (!username) {
-      return NextResponse.json(
-        { error: "Username is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
     const currentUserId = await getCurrentDbUserId(_req);
     if (!currentUserId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const targetUser = await getTargetUser(username);
     if (!targetUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     if (targetUser.id === currentUserId) {
-      return NextResponse.json(
-        { error: "You cannot follow yourself" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'You cannot follow yourself' }, { status: 400 });
     }
 
     // Check if already following
@@ -71,11 +63,8 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error following user:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error following user:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -86,20 +75,17 @@ export async function DELETE(
   try {
     const username = await resolveUsername(params);
     if (!username) {
-      return NextResponse.json(
-        { error: "Username is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
     const currentUserId = await getCurrentDbUserId(_req);
     if (!currentUserId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const targetUser = await getTargetUser(username);
     if (!targetUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     await prisma.follow.deleteMany({
@@ -111,10 +97,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error unfollowing user:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error unfollowing user:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

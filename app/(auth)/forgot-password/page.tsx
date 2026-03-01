@@ -6,9 +6,14 @@ import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { buttonVariants } from '@/components/ui/button';
 
+import AuthLayout from '@/components/auth/AuthLayout';
+import { Lock, ShieldCheck, LifeBuoy } from 'lucide-react';
+
 export default function ForgotPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
@@ -25,32 +30,31 @@ export default function ForgotPasswordPage() {
     if (error) {
       toast.error(error.message || 'Failed to send reset email.');
     } else {
-      setIsSent(true);
       toast.success('Password reset email sent!');
+      setIsSent(true);
     }
     setLoading(false);
   };
 
   if (isSent) {
     return (
-      <div className="relative flex min-h-screen w-full items-center justify-center bg-background overflow-hidden p-4">
+      <AuthLayout imageSrc="/images/forgot-password-bg.png" imagePosition="left">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="z-10 w-full max-w-md p-8 bg-card/50 backdrop-blur-xl border border-border rounded-[2rem] shadow-2xl text-center space-y-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-6"
         >
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-            <CheckCircle2 className="w-8 h-8 text-primary" />
+          <div className="p-4 bg-primary/10 rounded-full mx-auto lg:mx-0">
+            <Mail className="w-12 h-12 text-primary" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-foreground">Email Sent</h2>
-            <p className="text-muted-foreground">
-              We&apos;ve sent a password reset link to{' '}
-              <span className="font-semibold text-foreground">{email}</span>.
+            <h1 className="text-4xl font-extrabold text-foreground tracking-tight">Check Email</h1>
+            <p className="text-muted-foreground text-lg">
+              We&apos;ve sent a password reset link to <span className="font-semibold text-foreground">{email}</span>.
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 pt-4">
+          <div className="flex flex-col w-full gap-3 pt-4">
             <a
               href="https://mail.google.com"
               target="_blank"
@@ -74,24 +78,24 @@ export default function ForgotPasswordPage() {
               Back to Login
             </Link>
           </div>
+
+          <p className="text-sm text-muted-foreground pt-4">
+            Didn&apos;t receive the email? Check your spam folder or try again later.
+          </p>
         </motion.div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-background overflow-hidden p-4">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-0 right-0 w-125 h-125 bg-primary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-100 h-100 bg-primary/5 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
-
+    <AuthLayout imageSrc="/images/forgot-password-bg.png" imagePosition="left">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="z-10 w-full max-w-md p-8 bg-card/50 backdrop-blur-xl border border-border rounded-[2rem] shadow-2xl"
+        transition={{ duration: 0.5 }}
+        className="w-full"
       >
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center lg:text-left">
           <Link
             href="/sign-in"
             className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-6 text-sm font-semibold"
@@ -99,15 +103,13 @@ export default function ForgotPasswordPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to Login
           </Link>
-          <h2 className="text-3xl font-bold text-foreground mb-2">Forgot Password</h2>
-          <p className="text-muted-foreground font-medium">
-            Enter your email to receive a reset link.
-          </p>
+          <h2 className="text-4xl font-extrabold text-foreground mb-3 tracking-tight">Recover</h2>
+          <p className="text-muted-foreground text-lg">Enter your email to receive a reset link</p>
         </div>
 
         <form onSubmit={handleRequestReset} className="space-y-5">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            <label className="text-sm font-semibold text-muted-foreground tracking-wider">
               Email Address
             </label>
             <div className="relative group">
@@ -141,6 +143,7 @@ export default function ForgotPasswordPage() {
           </motion.button>
         </form>
       </motion.div>
-    </div>
+    </AuthLayout>
   );
 }
+

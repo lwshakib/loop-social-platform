@@ -9,24 +9,41 @@ import {
   Bell,
   PlusSquare,
   Palette,
+  LogOut,
+  Settings,
 } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NavItem } from './nav-item';
 import { SidebarLogo } from './sidebar-logo';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { useSocialStore } from '@/context';
+import { authClient } from '@/lib/auth-client';
+import { toast } from 'sonner';
 
 export function LeftSidebar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const user = useSocialStore((state) => state.user);
+  const router = useRouter();
 
   const isHomeActive = pathname === '/';
   const isSearchActive = pathname === '/search';
@@ -35,6 +52,7 @@ export function LeftSidebar() {
   const isMessagesActive = pathname === '/messages';
   const isNotificationsActive = pathname === '/notifications';
   const isCreateActive = pathname === '/create';
+  const isSettingsActive = pathname === '/settings';
   const isProfileActive = Boolean(user?.username && pathname === `/${user.username}`);
 
   useEffect(() => {
@@ -50,6 +68,25 @@ export function LeftSidebar() {
   const handleDarkModeToggle = (checked: boolean) => {
     setIsDarkMode(checked);
     setTheme(checked ? 'dark' : 'light');
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            router.push('/sign-in');
+            toast.success('Logged out successfully');
+          },
+        },
+      });
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Failed to log out');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -71,7 +108,6 @@ export function LeftSidebar() {
             icon={Bell}
             label="Notifications"
             href="/notifications"
-            badge={3}
             isActive={isNotificationsActive}
           />
           <NavItem icon={PlusSquare} label="Create" href="/create" isActive={isCreateActive} />
@@ -82,7 +118,9 @@ export function LeftSidebar() {
             avatar={
               <Avatar className="h-6 w-6">
                 <AvatarImage src={user?.image || ''} />
-                <AvatarFallback className="text-xs">{user?.username?.slice(0, 2)}</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground font-bold text-[10px]">
+                  {(user?.name?.[0] || user?.username?.[0] || 'U').toUpperCase()}
+                </AvatarFallback>
               </Avatar>
             }
           />
@@ -125,6 +163,46 @@ export function LeftSidebar() {
             </PopoverContent>
           </Popover>
         </nav>
+
+        {/* Account and Logout Section at Bottom */}
+        <div className="px-3 pb-6 mt-auto space-y-1">
+          <NavItem
+            icon={Settings}
+            label="Account settings"
+            href="/settings"
+            isActive={isSettingsActive}
+          />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 h-12 text-base font-medium"
+                disabled={isLoggingOut}
+              >
+                <LogOut className="h-5 w-5" />
+                <span>{isLoggingOut ? 'Logging out...' : 'Log out'}</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure you want to log out?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You will need to sign in again to access your account.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isLoggingOut}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  Log out
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
     </aside>
   );

@@ -24,85 +24,8 @@ interface Notification {
 export default function NotificationsPage() {
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
-  // Mock notifications
-  const allNotifications: Notification[] = [
-    {
-      id: 1,
-      type: 'like',
-      user: {
-        username: 'johndoe',
-        name: 'John Doe',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
-      },
-      content: 'liked your post',
-      timestamp: '5m ago',
-      isRead: false,
-      relatedContent: 'Amazing sunset view! 🌅',
-    },
-    {
-      id: 2,
-      type: 'comment',
-      user: {
-        username: 'janedoe',
-        name: 'Jane Doe',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jane',
-      },
-      content: 'commented on your post',
-      timestamp: '15m ago',
-      isRead: false,
-      relatedContent: 'Great shot! Where was this taken?',
-    },
-    {
-      id: 3,
-      type: 'follow',
-      user: {
-        username: 'alice',
-        name: 'Alice Smith',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alice',
-      },
-      content: 'started following you',
-      timestamp: '1h ago',
-      isRead: true,
-    },
-    {
-      id: 4,
-      type: 'follow_request',
-      user: {
-        username: 'bob',
-        name: 'Bob Johnson',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=bob',
-      },
-      content: 'wants to follow you',
-      timestamp: '2h ago',
-      isRead: false,
-    },
-    {
-      id: 5,
-      type: 'like',
-      user: {
-        username: 'charlie',
-        name: 'Charlie Brown',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=charlie',
-      },
-      content: 'liked your post',
-      timestamp: '3h ago',
-      isRead: true,
-      relatedContent: 'Check out this cool trick!',
-    },
-    {
-      id: 6,
-      type: 'mention',
-      user: {
-        username: 'diana',
-        name: 'Diana Prince',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=diana',
-      },
-      content: 'mentioned you in a comment',
-      timestamp: '5h ago',
-      isRead: false,
-      relatedContent: '@you This is exactly what I was looking for!',
-    },
-  ];
+  // Real notifications will be fetched here when the API is ready
+  const allNotifications: Notification[] = [];
 
   const notifications =
     filter === 'unread' ? allNotifications.filter((n) => !n.isRead) : allNotifications;

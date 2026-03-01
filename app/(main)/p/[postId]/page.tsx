@@ -422,7 +422,7 @@ export default function PostPage() {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={avatarUrl} />
                   <AvatarFallback>
-                    {post.user.name[0]?.toUpperCase() || post.user.username[0].toUpperCase()}
+                    {post.user.name?.[0]?.toUpperCase() || post.user.username?.[0]?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
@@ -485,8 +485,8 @@ export default function PostPage() {
                       <Avatar className="h-8 w-8 shrink-0">
                         <AvatarImage src={comment.user.imageUrl} />
                         <AvatarFallback>
-                          {comment.user.name[0]?.toUpperCase() ||
-                            comment.user.username[0].toUpperCase()}
+                          {comment.user.name?.[0]?.toUpperCase() ||
+                            comment.user.username?.[0]?.toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
@@ -548,8 +548,8 @@ export default function PostPage() {
                                 <Avatar className="h-7 w-7 shrink-0">
                                   <AvatarImage src={reply.user.imageUrl} />
                                   <AvatarFallback>
-                                    {reply.user.name[0]?.toUpperCase() ||
-                                      reply.user.username[0].toUpperCase()}
+                                    {reply.user.name?.[0]?.toUpperCase() ||
+                                      reply.user.username?.[0]?.toUpperCase() || 'U'}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">

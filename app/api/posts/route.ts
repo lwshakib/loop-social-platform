@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         userId: newPost.userId,
         content: newPost.content,
         url: newPost.url,
-        type: newPost.type,
+        type: newPost.type === 'IMAGE' ? 'image' : newPost.type === 'VIDEO' ? 'reel' : 'text',
         createdAt: newPost.createdAt.toISOString(),
       },
     });

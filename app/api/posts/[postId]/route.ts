@@ -74,7 +74,7 @@ export async function GET(
         userId: post.userId,
         content: post.content,
         imageUrl: post.url,
-        type: post.type,
+        type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
         likesCount: post._count.likes,
         commentsCount: post._count.comments,
         createdAt: post.createdAt.toISOString(),

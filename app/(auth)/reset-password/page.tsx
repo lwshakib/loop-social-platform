@@ -1,22 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Lock, Eye, EyeOff, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
-export default function ResetPasswordPage() {
+import AuthLayout from '@/components/auth/AuthLayout';
+import { ShieldCheck, Fingerprint, Key } from 'lucide-react';
+
+function ResetPasswordForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!token) {
+      toast.error('Invalid or missing reset token.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       toast.error('Passwords do not match.');
@@ -27,6 +38,7 @@ export default function ResetPasswordPage() {
 
     const { error } = await authClient.resetPassword({
       newPassword: password,
+      token: token,
     });
 
     if (error) {
@@ -40,17 +52,17 @@ export default function ResetPasswordPage() {
 
   if (isSuccess) {
     return (
-      <div className="relative flex min-h-screen w-full items-center justify-center bg-background overflow-hidden p-4">
+      <AuthLayout imageSrc="/images/reset-password-bg.png" imagePosition="right">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="z-10 w-full max-w-md p-8 bg-card/50 backdrop-blur-xl border border-border rounded-[2rem] shadow-2xl text-center space-y-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full text-center lg:text-left space-y-6"
         >
-          <div className="mx-auto w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center">
+          <div className="mx-auto lg:mx-0 w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center">
             <CheckCircle2 className="w-8 h-8 text-green-500" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-foreground">Password Reset</h2>
+            <h2 className="text-4xl font-extrabold text-foreground tracking-tight">Success</h2>
             <p className="text-muted-foreground text-lg">
               Your password has been successfully reset. You can now log in with your new password.
             </p>
@@ -62,37 +74,33 @@ export default function ResetPasswordPage() {
               className={buttonVariants({
                 variant: 'default',
                 size: 'lg',
-                className: 'w-full text-md font-semibold text-white',
+              className: 'w-full text-md font-semibold',
               })}
             >
               Back to Login
             </Link>
           </div>
         </motion.div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center bg-background overflow-hidden p-4">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-0 right-0 w-125 h-125 bg-primary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-100 h-100 bg-primary/5 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2" />
-
+    <AuthLayout imageSrc="/images/reset-password-bg.png" imagePosition="right">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="z-10 w-full max-w-md p-8 bg-card/50 backdrop-blur-xl border border-border rounded-[2rem] shadow-2xl"
+        transition={{ duration: 0.5 }}
+        className="w-full"
       >
-        <div className="mb-8 text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-2">Reset Password</h2>
-          <p className="text-muted-foreground font-medium">Set your new secure password below.</p>
+        <div className="mb-8 text-center lg:text-left">
+          <h2 className="text-4xl font-extrabold text-foreground mb-3 tracking-tight">New Password</h2>
+          <p className="text-muted-foreground text-lg">Set your new secure password below</p>
         </div>
 
         <form onSubmit={handleResetPassword} className="space-y-5">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            <label className="text-sm font-semibold text-muted-foreground tracking-wider">
               New Password
             </label>
             <div className="relative group">
@@ -116,7 +124,7 @@ export default function ResetPasswordPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            <label className="text-sm font-semibold text-muted-foreground tracking-wider">
               Confirm Password
             </label>
             <div className="relative group">
@@ -150,6 +158,19 @@ export default function ResetPasswordPage() {
           </motion.button>
         </form>
       </motion.div>
-    </div>
+    </AuthLayout>
   );
 }
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
+  );
+}
+

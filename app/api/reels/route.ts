@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       userId: reel.userId,
       content: reel.content,
       imageUrl: reel.url,
-      type: reel.type,
+      type: reel.type === 'IMAGE' ? 'image' : reel.type === 'VIDEO' ? 'reel' : 'text',
       likesCount: reel._count.likes || 0,
       commentsCount: reel._count.comments || 0,
       createdAt: reel.createdAt.toISOString(),

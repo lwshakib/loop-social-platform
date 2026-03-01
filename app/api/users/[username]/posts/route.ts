@@ -34,7 +34,7 @@ export async function GET(
         userId: post.userId,
         content: post.content,
         imageUrl: post.url, // Map url to imageUrl for frontend compatibility
-        type: post.type,
+        type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
         likesCount,
         commentsCount,
         createdAt: post.createdAt.toISOString(),

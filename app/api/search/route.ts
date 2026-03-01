@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
         userId: post.userId,
         content: post.content,
         imageUrl: post.url,
-        type: post.type,
+        type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
         likesCount: post._count.likes || 0,
         commentsCount: post._count.comments || 0,
         createdAt: post.createdAt.toISOString(),

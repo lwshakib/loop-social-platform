@@ -798,19 +798,22 @@ export default function ProfilePage() {
     );
   }
 
-  const avatarUrl =
-    userData.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`;
-  const coverImageUrl = 'https://picsum.photos/800/300?random=profile';
-  const currentCoverImage =
-    userData.coverImageUrl && userData.coverImageUrl.length > 0
-      ? userData.coverImageUrl
-      : coverImageUrl;
+  const avatarUrl = userData.imageUrl || '';
+  const currentCoverImage = userData.coverImageUrl || '';
 
   return (
     <div className="flex-1 overflow-y-auto">
       {/* Cover Image */}
-      <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 bg-linear-to-r from-blue-500 to-purple-500">
-        <img src={currentCoverImage} alt="Cover" className="w-full h-full object-cover" />
+      <div className="relative h-40 sm:h-48 md:h-56 lg:h-64 bg-muted border-b">
+        {currentCoverImage ? (
+          <img src={currentCoverImage} alt="Cover" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-linear-to-b from-muted to-muted/50">
+            <span className="text-xs sm:text-sm font-semibold text-muted-foreground/60 tracking-widest">
+              No cover image found
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Profile Info */}
@@ -819,8 +822,8 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3 sm:gap-4">
             <Avatar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 lg:h-32 lg:w-32 border-2 sm:border-4 border-background shrink-0">
               <AvatarImage src={avatarUrl} alt={userData.name} />
-              <AvatarFallback className="text-lg sm:text-xl md:text-2xl lg:text-3xl">
-                {userData.name[0]?.toUpperCase() || userData.username[0].toUpperCase()}
+              <AvatarFallback className="text-lg sm:text-xl md:text-2xl lg:text-3xl bg-primary text-primary-foreground font-bold">
+                {(userData.name?.[0] || userData.username?.[0] || 'U').toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="sm:hidden">
@@ -1380,12 +1383,18 @@ export default function ProfilePage() {
           <div className="space-y-2">
             <Label>Cover Image Upload</Label>
             <div className="flex flex-col gap-3">
-              <div className="h-24 w-full rounded-md overflow-hidden bg-muted">
-                <img
-                  src={coverPreview || editFormData.coverImageUrl || coverImageUrl}
-                  alt="Cover preview"
-                  className="w-full h-full object-cover"
-                />
+              <div className="h-24 w-full rounded-md overflow-hidden bg-muted border flex items-center justify-center">
+                {coverPreview || editFormData.coverImageUrl ? (
+                  <img
+                    src={coverPreview || editFormData.coverImageUrl}
+                    alt="Cover preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xs font-semibold text-muted-foreground/60 tracking-widest">
+                    No cover image
+                  </span>
+                )}
               </div>
               <div className="flex gap-2">
                 <Input

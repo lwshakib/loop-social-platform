@@ -751,8 +751,8 @@ export default function HomePage() {
                               src={storyGroup.user.imageUrl || ''}
                               alt={storyGroup.user.username || ''}
                             />
-                            <AvatarFallback className="text-xs sm:text-sm">
-                              {storyGroup.user.name?.[0] || storyGroup.user.username?.[0] || 'U'}
+                            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-[10px] sm:text-xs">
+                              {(storyGroup.user.name?.[0] || storyGroup.user.username?.[0] || 'U').toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                         </div>
@@ -781,9 +781,7 @@ export default function HomePage() {
               </div>
             ) : (
               posts.map((post) => {
-                const avatarUrl =
-                  post.user.imageUrl ||
-                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user.username}`;
+                const avatarUrl = post.user.imageUrl || '';
 
                 return (
                   <div
@@ -801,8 +799,8 @@ export default function HomePage() {
                         >
                           <Avatar className="h-10 w-10 cursor-pointer">
                             <AvatarImage src={avatarUrl} alt={post.user.username} />
-                            <AvatarFallback className="text-xs">
-                              {(post.user.name || post.user.username)[0]?.toUpperCase() || 'U'}
+                            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
+                              {(post.user.name?.[0] || post.user.username?.[0] || 'U').toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
@@ -969,8 +967,8 @@ export default function HomePage() {
                               src={userGroup.user.imageUrl || ''}
                               alt={userGroup.user.username || ''}
                             />
-                            <AvatarFallback className="text-[10px] md:text-xs">
-                              {userGroup.user.name?.[0] || userGroup.user.username?.[0] || 'U'}
+                            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-[10px]">
+                              {(userGroup.user.name?.[0] || userGroup.user.username?.[0] || 'U').toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                         </Link>

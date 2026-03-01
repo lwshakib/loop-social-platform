@@ -29,8 +29,8 @@ export const auth = betterAuth({
   },
   emailVerification: {
     sendOnSignUp: true,
-    autoSignInAfterVerification: true,
-    callbackURL: '/email-verified',
+    autoSignInAfterVerification: false,
+    callbackURL: '/verify-email',
     sendVerificationEmail: async ({ user, url }) => {
       try {
         await resend.emails.send({
@@ -56,6 +56,9 @@ export const auth = betterAuth({
     },
   },
   user: {
+    deleteUser: {
+      enabled: true,
+    },
     additionalFields: {
       coverImage: { type: 'string', required: false },
       bio: { type: 'string', required: false },

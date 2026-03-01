@@ -35,7 +35,7 @@ export function MobileNav() {
               activeMatch(href) && 'text-primary'
             )}
           >
-            <Icon className={cn('h-5 w-5', activeMatch(href) && 'stroke-[2.25] fill-primary/10')} />
+            <Icon className="h-5 w-5" />
             <span className="sr-only sm:not-sr-only sm:leading-none">{label}</span>
           </Link>
         ))}
@@ -49,8 +49,8 @@ export function MobileNav() {
         >
           <Avatar className="h-6 w-6 border border-border">
             <AvatarImage src={user?.image || ''} />
-            <AvatarFallback className="text-[10px]">
-              {user?.username?.[0]?.toUpperCase() || 'U'}
+            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-[10px]">
+              {(user?.name?.[0] || user?.username?.[0] || 'U').toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <span className="sr-only sm:not-sr-only sm:leading-none">Profile</span>

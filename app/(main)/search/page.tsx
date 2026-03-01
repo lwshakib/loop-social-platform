@@ -386,9 +386,7 @@ export default function SearchPage() {
                 <h2 className="text-xl font-semibold mb-4">Users</h2>
                 <div className="space-y-3">
                   {users.map((user) => {
-                    const avatarUrl =
-                      user.imageUrl ||
-                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`;
+                    const avatarUrl = user.imageUrl || '';
                     return (
                       <Link
                         key={user.id}
@@ -397,8 +395,8 @@ export default function SearchPage() {
                       >
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={avatarUrl} alt={user.username} />
-                          <AvatarFallback>
-                            {user.name[0]?.toUpperCase() || user.username[0].toUpperCase()}
+                          <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                            {(user.name?.[0] || user.username?.[0] || 'U').toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
@@ -427,9 +425,7 @@ export default function SearchPage() {
                 <h2 className="text-xl font-semibold mb-4">Posts</h2>
                 <div className="space-y-4">
                   {posts.map((post) => {
-                    const avatarUrl =
-                      post.user.imageUrl ||
-                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user.username}`;
+                    const avatarUrl = post.user.imageUrl || '';
                     return (
                       <div
                         key={post.id}
@@ -440,8 +436,8 @@ export default function SearchPage() {
                           <Link href={`/${post.user.username}`}>
                             <Avatar className="h-10 w-10 shrink-0 cursor-pointer">
                               <AvatarImage src={avatarUrl} alt={post.user.username} />
-                              <AvatarFallback className="text-sm">
-                                {(post.user.name || post.user.username)[0]?.toUpperCase() || 'U'}
+                              <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
+                                {(post.user.name?.[0] || post.user.username?.[0] || 'U').toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                           </Link>

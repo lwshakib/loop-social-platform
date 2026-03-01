@@ -1,99 +1,151 @@
-## Contributing to Loop – Social Platform
+# Contributing to Loop – Social Platform
 
-Thanks for your interest in contributing! This document describes how to get set up locally and the conventions to follow when submitting changes.
+First off, thank you for considering contributing to Loop! It's people like you who make the open-source community such an amazing place to learn, inspire, and create.
 
-### Project Repository
+This document provides guidelines and instructions for contributing to this project. Following these helps us maintain a high standard of code quality and ensures a smooth workflow for everyone.
 
-The canonical repository is hosted on GitHub under **@lwshakib**. If you are working from a fork, keep it in sync with the upstream repository.
+---
 
-### Getting Started
+## 🏗️ Getting Started
 
-1. **Fork** the repository on GitHub (if you are an external contributor).
-2. **Clone** your fork:
+### 1. Prerequisites
 
-```bash
-git clone https://github.com/lwshakib/loop-social-platform.git
-cd loop-social-platform
-```
+Before you begin, ensure you have the following installed:
 
-3. **Install dependencies**:
+- [Bun](https://bun.sh/) (Primary runtime and package manager)
+- [Node.js](https://nodejs.org/) (v18+)
+- [Git](https://git-scm.com/)
+- A running [PostgreSQL](https://www.postgresql.org/) database
 
-```bash
-npm install
-```
+### 2. Fork & Clone
 
-4. **Set up environment variables**:
-   - Create a `.env.local` file (see `README.md` for required variables, including `DATABASE_URL`, Clerk keys, and Cloudinary keys).
+1.  **Fork** the repository to your own GitHub account.
+2.  **Clone** your fork locally:
+    ```bash
+    git clone https://github.com/your-username/loop-social-platform.git
+    cd loop-social-platform
+    ```
 
-5. **Prepare the database**:
+### 3. Setup Environment
 
-```bash
-npm run db:push
-```
-
-6. **Run the dev server**:
+Copy the example environment file and fill in your local values:
 
 ```bash
-npm run dev
+cp .env.example .env
 ```
 
-### Branching & Workflow
+Refer to the `README.md` for detailed explanations of each environment variable.
 
-- Work on a **feature branch** off `main`, e.g.:
+### 4. Install Dependencies
+
+Loop uses **Bun** for package management. Avoid using `npm` or `yarn` to prevent lockfile conflicts.
 
 ```bash
-git checkout -b feature/your-feature-name
+bun install
 ```
 
-- Keep your branch up to date with `main` and resolve conflicts locally before opening a PR.
+### 5. Database Initialization
 
-### Code Style & Quality
-
-- **TypeScript & Next.js**:
-  - Prefer **TypeScript** for all new code.
-  - Use the **App Router** conventions and follow the existing folder structure (`src/app`, `src/actions`, `src/db`, etc.).
-
-- **Formatting**:
-  - This project uses **Prettier**; run:
+Prepare your database by generating the Prisma client and running migrations:
 
 ```bash
-npm run format
+bun run db:generate
+bun run db:migrate
 ```
 
-- **Linting**:
-  - Run ESLint before pushing:
+### 6. Start Developing
+
+Launch the development server:
 
 ```bash
-npm run lint
+bun run dev
 ```
 
-- **Styling**:
-  - Use **Tailwind CSS** utility classes.
-  - Use existing **shadcn/ui** and **Radix UI** components from `src/components/ui` rather than introducing new, overlapping primitives.
+---
 
-### Commits
+## 🛠️ Development Workflow
 
-- Keep commits **small and focused**.
-- Use clear, descriptive messages (e.g. `feat: add reels autoplay`, `fix: handle empty search query`, `chore: update drizzle schema`).
+### Branching Strategy
 
-### Pull Requests
+We use a feature-branch workflow. Always create a new branch for your work:
 
-When opening a pull request:
+- `feat/` for new features
+- `fix/` for bug fixes
+- `docs/` for documentation changes
+- `chore/` for maintenance tasks
 
-1. Ensure the app builds and runs locally without errors.
-2. Confirm `npm run lint` and `npm run format:check` pass.
-3. Add or update tests if applicable (e.g. in `src/lib/__tests__`).
-4. Provide a clear description:
-   - What you changed.
-   - Why you changed it.
-   - Any breaking changes or migration steps (e.g. `db:push` required).
+```bash
+git checkout -b feat/your-exciting-feature
+```
 
-### Reporting Issues & Feature Requests
+### Coding Standards
 
-- Use GitHub Issues to:
-  - Report bugs (include steps to reproduce, expected vs actual behavior, and environment info).
-  - Propose enhancements or new features (describe the use case and any UI/UX considerations).
+To keep the codebase clean and accessible, please follow these conventions:
 
-### Questions
+- **TypeScript**: All new files must use `.ts` or `.tsx`. Avoid using `any`; define interfaces or types instead.
+- **Server Actions**: Use Server Actions (in the `/actions` directory) for data mutations.
+- **Components**:
+  - Use Functional Components with Arrow Functions.
+  - Leverage `shadcn/ui` primitives found in `components/ui`.
+  - Keep components small and focused.
+- **Styling**: Stick to **Tailwind CSS 4** utility classes. Avoid inline styles or custom CSS unless absolutely necessary.
+- **State Management**: Use **Zustand** for global client-side state.
 
-If you’re unsure about anything (architecture, style, or scope), open a draft PR or GitHub Discussion/Issue and tag **@lwshakib** for feedback before investing significant work.
+### Quality Control
+
+Before submitting a Pull Request, ensure your code passes our quality checks:
+
+1.  **Linting**:
+    ```bash
+    bun run lint
+    ```
+2.  **Formatting**:
+    ```bash
+    bun run format
+    ```
+3.  **Testing**:
+    If you added logic, consider adding a unit test in `__tests__/unit` or an E2E test in `__tests__/e2e`.
+
+---
+
+## 📝 Commit Messages
+
+We follow a simplified version of [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat: add Google OAuth support`
+- `fix: resolve hydration error in Navbar`
+- `docs: update setup instructions in README`
+- `style: fix alignment in Profile page`
+
+---
+
+## 🚀 Submitting a Pull Request
+
+1.  **Push** your branch to your fork:
+    ```bash
+    git push origin feat/your-feature-name
+    ```
+2.  **Open a PR** against the `main` branch of the upstream repository.
+3.  **Describe your changes** clearly in the PR template. Include screenshots for UI changes.
+4.  **Reference Issues**: If your PR closes an open issue, include `Closes #123`.
+
+---
+
+## 🐛 Reporting Bugs & Issues
+
+If you find a bug, please open an issue with:
+
+- A clear, descriptive title.
+- Steps to reproduce the behavior.
+- Expected vs. Actual results.
+- Screenshots or code snippets if applicable.
+
+---
+
+## 💡 Feature Requests
+
+Have an idea for Loop? We'd love to hear it! Open an issue with the "Feature Request" label and describe the functionality and the value it adds.
+
+---
+
+_Happy hacking!_ 🚀

@@ -67,6 +67,14 @@ export default function SettingsPage() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Connected accounts state
+  interface AccountData {
+    id: string;
+    providerId: string;
+  }
+  const [accounts, setAccounts] = useState<AccountData[]>([]);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
+
   // Edit states
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
@@ -82,23 +90,32 @@ export default function SettingsPage() {
     }
   }, [currentUser]);
 
-  // Fetch sessions
+  // Fetch sessions and connected accounts together
   useEffect(() => {
-    async function fetchSessions() {
+    async function fetchData() {
       try {
         setIsLoadingSessions(true);
+        setIsLoadingAccounts(true);
 
-        const res = await authClient.listSessions();
-        if (res?.data) {
-          setSessions(res.data);
+        const [sessRes, accRes] = await Promise.all([
+          authClient.listSessions(),
+          authClient.listAccounts(),
+        ]);
+
+        if (sessRes?.data) {
+          setSessions(sessRes.data);
+        }
+        if (accRes?.data) {
+          setAccounts(accRes.data);
         }
       } catch (error) {
-        console.error('Error fetching sessions:', error);
+        console.error('Error fetching settings data:', error);
       } finally {
         setIsLoadingSessions(false);
+        setIsLoadingAccounts(false);
       }
     }
-    fetchSessions();
+    fetchData();
   }, []);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,6 +177,12 @@ export default function SettingsPage() {
         finalImageUrl = key;
       }
 
+      // 1.5 Sync with Better Auth session
+      await authClient.updateUser({
+        name: editName,
+        image: finalImageUrl || undefined,
+      });
+
       // 2. Update profile via API
       const res = await fetch(`/api/users/${originalUser.username}`, {
         method: 'PATCH',
@@ -220,16 +243,52 @@ export default function SettingsPage() {
     }
   };
 
+  const handleLinkSocial = async (providerId: 'google' | 'github') => {
+    try {
+      await authClient.linkSocial({
+        provider: providerId,
+        callbackURL: window.location.href,
+      });
+    } catch (error) {
+      console.error(`Failed to link ${providerId}:`, error);
+      toast.error(`Failed to link ${providerId} account`);
+    }
+  };
+
+  const handleUnlinkAccount = async (providerId: string) => {
+    try {
+      const { error } = await authClient.unlinkAccount({
+        providerId,
+      });
+
+      if (error) {
+        toast.error(error.message || `Failed to unlink ${providerId}`);
+        return;
+      }
+
+      toast.success(`${providerId} account unlinked`);
+      setAccounts((prev) =>
+        prev.filter((acc) => acc.providerId !== providerId)
+      );
+    } catch (error) {
+      console.error(`Error unlinking ${providerId}:`, error);
+      toast.error(`Error unlinking ${providerId}`);
+    }
+  };
+
   const handleRevokeSession = async (tokenId: string) => {
     try {
       await authClient.revokeSession({ token: tokenId });
-      setSessions((prev) => prev.filter((s) => s.id !== tokenId));
+      setSessions((prev) => prev.filter((s) => s.id !== tokenId && (s as any).token !== tokenId));
       toast.success('Session revoked');
     } catch (error) {
       console.error('Error revoking session:', error);
       toast.error('Failed to revoke session');
     }
   };
+
+  const isGoogleLinked = accounts.some((acc) => acc.providerId === 'google');
+  const isGithubLinked = accounts.some((acc) => acc.providerId === 'github');
 
   if (!currentUser) return null;
 
@@ -398,42 +457,102 @@ export default function SettingsPage() {
           <CardDescription>Social accounts linked to your Loop profile.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* Google */}
-          <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-background">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-accent/50 flex items-center justify-center">
-                <Chrome className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Google</p>
-                <p className="text-xs text-muted-foreground">Connect with Google account</p>
-              </div>
+          {isLoadingAccounts ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
             </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="outline"
-                className="text-[10px] text-green-500 border-green-200 bg-green-50"
-              >
-                Connected
-              </Badge>
-            </div>
-          </div>
+          ) : (
+            <div className="grid gap-3">
+              {/* Google */}
+              <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-background">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-accent/50 flex items-center justify-center">
+                    <Chrome className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">Google</p>
+                    <p className="text-xs text-muted-foreground">Connect with Google account</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isGoogleLinked ? (
+                    <>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] text-green-500 border-green-200 bg-green-50 mr-2"
+                      >
+                        Connected
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => handleUnlinkAccount('google')}
+                      >
+                        Disconnect
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={() => handleLinkSocial('google')}
+                    >
+                      Connect
+                    </Button>
+                  )}
+                </div>
+              </div>
 
-          {/* GitHub */}
-          <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-background opacity-70">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-accent/50 flex items-center justify-center">
-                <Github className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">GitHub</p>
-                <p className="text-xs text-muted-foreground">Connect with GitHub account</p>
+              {/* GitHub */}
+              <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-background">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-accent/50 flex items-center justify-center">
+                    <Github className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">GitHub</p>
+                    <p className="text-xs text-muted-foreground">Connect with GitHub account</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isGithubLinked ? (
+                    <>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] text-green-500 border-green-200 bg-green-50 mr-2"
+                      >
+                        Connected
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => handleUnlinkAccount('github')}
+                      >
+                        Disconnect
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-[10px]">
+                        Coming soon
+                      </Badge>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-8 text-xs opacity-50 cursor-not-allowed"
+                        disabled
+                      >
+                        Connect
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            <Badge variant="secondary" className="text-[10px]">
-              Coming soon
-            </Badge>
-          </div>
+          )}
         </CardContent>
       </Card>
 

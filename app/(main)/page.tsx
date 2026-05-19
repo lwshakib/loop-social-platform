@@ -768,7 +768,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-2 sm:px-3 md:px-4 py-3 sm:py-4 md:py-6 lg:px-8 overflow-x-hidden relative left-0">
+    <div className="w-full max-w-6xl mx-auto px-2 sm:px-3 md:px-4 py-3 sm:py-4 md:py-6 lg:px-8 relative left-0">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 w-full">
         {/* === MAIN NEWSFEED SECTION (Left Column) === */}
         <div className="lg:col-span-2 space-y-3 sm:space-y-4 md:space-y-6 min-w-0 w-full relative z-0 pb-4">
@@ -1054,7 +1054,7 @@ export default function HomePage() {
 
         {/* Right Sidebar */}
         {/* === SIDEBAR SECTION (Right Column) === */}
-        <div className="hidden lg:block space-y-4 md:space-y-6 relative z-0">
+        <div className="hidden lg:block space-y-4 md:space-y-6 sticky top-6 self-start z-0">
           {/* Suggestions */}
           <div className="bg-card border rounded-lg p-3 md:p-4">
             <div className="flex items-center justify-between mb-3 md:mb-4">

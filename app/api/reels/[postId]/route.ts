@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { PostType } from '@/generated/prisma/client';
+import { getSignedUrlIfNeeded } from '@/lib/s3';
 
 export async function GET(
   request: NextRequest,
@@ -84,14 +85,17 @@ export async function GET(
       id: reel.id,
       userId: reel.userId,
       content: reel.content,
-      imageUrl: reel.url,
-      type: reel.type,
+      imageUrl: await getSignedUrlIfNeeded(reel.url),
+      type: reel.type === 'IMAGE' ? 'image' : reel.type === 'VIDEO' ? 'reel' : 'text',
       likesCount: reel._count.likes || 0,
       commentsCount: reel._count.comments || 0,
       createdAt: reel.createdAt.toISOString(),
       isLiked,
       isSaved,
-      user: reel.user,
+      user: {
+        ...reel.user,
+        imageUrl: await getSignedUrlIfNeeded(reel.user.image),
+      },
     };
 
     return NextResponse.json({ data: response });

@@ -30,7 +30,7 @@ export function NavItem({
       {avatar ? (
         avatar
       ) : Icon ? (
-        <div className="relative">
+        <div className="relative flex items-center justify-center h-6 w-6 shrink-0">
           <Icon className="h-5 w-5" />
           {badge !== undefined && badge > 0 && (
             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-semibold">
@@ -48,7 +48,7 @@ export function NavItem({
       <Button
         variant="ghost"
         className={cn(
-          'w-full justify-start gap-3 h-12 text-base font-medium',
+          'w-full justify-start gap-3 h-12 text-base font-medium px-3',
           isActive && 'bg-accent font-semibold',
           className
         )}
@@ -63,7 +63,7 @@ export function NavItem({
     <Button
       variant="ghost"
       className={cn(
-        'w-full justify-start gap-3 h-12 text-base font-medium',
+        'w-full justify-start gap-3 h-12 text-base font-medium px-3',
         isActive && 'bg-accent font-semibold',
         className
       )}

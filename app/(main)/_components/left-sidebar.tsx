@@ -125,14 +125,20 @@ export function LeftSidebar() {
             }
           />
 
+        </nav>
+
+        {/* Account and Logout Section at Bottom */}
+        <div className="px-3 pb-6 mt-auto space-y-1">
           {/* Appearance NavItem with Popover */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 h-12 text-base font-medium"
+                className="w-full justify-start gap-3 h-12 text-base font-medium px-3"
               >
-                <Palette className="h-5 w-5" />
+                <div className="flex items-center justify-center h-6 w-6 shrink-0">
+                  <Palette className="h-5 w-5" />
+                </div>
                 <span>Appearance</span>
               </Button>
             </PopoverTrigger>
@@ -162,10 +168,6 @@ export function LeftSidebar() {
               </div>
             </PopoverContent>
           </Popover>
-        </nav>
-
-        {/* Account and Logout Section at Bottom */}
-        <div className="px-3 pb-6 mt-auto space-y-1">
           <NavItem
             icon={Settings}
             label="Account settings"
@@ -176,10 +178,12 @@ export function LeftSidebar() {
             <AlertDialogTrigger asChild>
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 h-12 text-base font-medium"
+                className="w-full justify-start gap-3 h-12 text-base font-medium px-3"
                 disabled={isLoggingOut}
               >
-                <LogOut className="h-5 w-5" />
+                <div className="flex items-center justify-center h-6 w-6 shrink-0">
+                  <LogOut className="h-5 w-5" />
+                </div>
                 <span>{isLoggingOut ? 'Logging out...' : 'Log out'}</span>
               </Button>
             </AlertDialogTrigger>

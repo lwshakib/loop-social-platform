@@ -177,6 +177,7 @@ export default function ReelsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const isUpdatingRef = useRef(false);
+  const isInitialScrollRef = useRef(true);
 
   // Fetch ALL videos initially (simpler with small dataset)
   useEffect(() => {
@@ -306,6 +307,21 @@ export default function ReelsPage() {
     };
   }, [videos, router, isLoading]);
 
+  // Synchronously set container scroll position immediately on initial load before paint
+  useEffect(() => {
+    if (isLoading || videos.length === 0 || !videoId) return;
+
+    if (isInitialScrollRef.current && containerRef.current) {
+      const activeIndex = videos.findIndex((v) => v.id === videoId);
+      if (activeIndex !== -1) {
+        const container = containerRef.current;
+        const scrollPosition = activeIndex * (container.clientHeight || window.innerHeight);
+        container.scrollTop = scrollPosition;
+        isInitialScrollRef.current = false;
+      }
+    }
+  }, [isLoading, videos, videoId]);
+
   // Scroll to video when videoId changes
   useEffect(() => {
     if (!videoId || isLoading || videos.length === 0) return;
@@ -328,17 +344,25 @@ export default function ReelsPage() {
 
         if (scrollDiff > 50) {
           isUpdatingRef.current = true;
+          
+          const isInitial = isInitialScrollRef.current;
           container.scrollTo({
             top: scrollPosition,
-            behavior: 'smooth',
+            behavior: isInitial ? 'auto' : 'smooth',
           });
+
+          if (isInitial) {
+            isInitialScrollRef.current = false;
+          }
 
           setTimeout(() => {
             isUpdatingRef.current = false;
-          }, 500);
+          }, isInitial ? 100 : 500);
+        } else if (isInitialScrollRef.current) {
+          isInitialScrollRef.current = false;
         }
       }
-    }, 100);
+    }, 50);
 
     return () => clearTimeout(timeoutId);
   }, [videoId, videos, isLoading]);
@@ -589,7 +613,41 @@ export default function ReelsPage() {
         ref={containerRef}
         className="h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth max-w-full mx-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
-        {videos.map((video) => {
+        {videos.map((video, index) => {
+          const activeIndex = videos.findIndex((v) => v.id === videoId);
+          const isNear = index >= activeIndex - 2 && index <= activeIndex + 5;
+
+          if (!isNear) {
+            return (
+              <div
+                key={video.id}
+                id={`video-${video.id}`}
+                data-video-id={video.id}
+                className="h-screen w-full snap-start snap-always flex items-center justify-center bg-background relative"
+              >
+                {/* Visual placeholder while scrolling */}
+                <div className="w-full h-[98vh] flex items-end justify-center gap-4 relative pb-4">
+                  <div
+                    className="h-full w-full max-w-[calc(98vh*9/16)] flex items-center justify-center relative bg-black/40 backdrop-blur-2xl rounded-2xl border border-white/5 shadow-2xl"
+                    style={{ aspectRatio: '9/16' }}
+                  >
+                    <div className="animate-pulse flex flex-col items-center gap-2 text-white/40">
+                      <Play className="h-12 w-12 stroke-1" />
+                      <span className="text-xs">Loading Reel...</span>
+                    </div>
+                  </div>
+                  {/* Action buttons placeholder on the side */}
+                  <div className="flex flex-col items-center gap-6 shrink-0 mb-8 opacity-20">
+                    <Heart className="h-6 w-6 stroke-white" />
+                    <MessageCircle className="h-6 w-6 stroke-white" />
+                    <Share className="h-6 w-6 stroke-white" />
+                    <Bookmark className="h-6 w-6 stroke-white" />
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           const avatarUrl =
             video.user.imageUrl ||
             `https://api.dicebear.com/7.x/avataaars/svg?seed=${video.user.username}`;

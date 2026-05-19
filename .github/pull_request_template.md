@@ -24,7 +24,7 @@ Please delete options that are not relevant:
 ## Database Changes (Prisma)
 
 - [ ] This PR contains database schema changes (`prisma/schema.prisma`)
-  - [ ] Run `bun run db:migrate` locally
+  - [ ] Run `pnpm run db:migrate` locally
   - [ ] Verified database schema matches client expectations
 
 ## Visual Impact (Screenshots / GIFs / Videos)
@@ -50,5 +50,5 @@ Please describe the tests/checks you ran to verify your changes. Provide instruc
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] My changes generate no new lint warnings
-- [ ] I have run `bun run format` and `bun run lint` successfully
-- [ ] I have verified the build completes successfully via `bun run build`
+- [ ] I have run `pnpm run format` and `pnpm run lint` successfully
+- [ ] I have verified the build completes successfully via `pnpm run build`

@@ -674,22 +674,23 @@ export default function ReelsPage() {
                 className="h-screen w-full snap-start snap-always flex items-center justify-center bg-background relative"
               >
                 {/* Visual placeholder while scrolling */}
-                <div className="w-full h-[98vh] flex items-end justify-center gap-4 relative pb-4">
+                <div className="w-full h-[98vh] flex items-center justify-center relative pb-0 sm:pb-4">
                   <div
-                    className="h-full w-full max-w-[calc(98vh*9/16)] flex items-center justify-center relative bg-black/40 backdrop-blur-2xl rounded-2xl border border-white/5 shadow-2xl"
+                    className="h-full w-full sm:max-w-[calc(98vh*9/16)] flex items-center justify-center relative bg-black/40 backdrop-blur-2xl sm:rounded-2xl border-0 sm:border border-white/5 shadow-2xl overflow-hidden"
                     style={{ aspectRatio: '9/16' }}
                   >
                     <div className="animate-pulse flex flex-col items-center gap-2 text-white/40">
                       <Play className="h-12 w-12 stroke-1" />
                       <span className="text-xs">Loading Reel...</span>
                     </div>
-                  </div>
-                  {/* Action buttons placeholder on the side */}
-                  <div className="flex flex-col items-center gap-6 shrink-0 mb-8 opacity-20">
-                    <Heart className="h-6 w-6 stroke-white" />
-                    <MessageCircle className="h-6 w-6 stroke-white" />
-                    <Share className="h-6 w-6 stroke-white" />
-                    <Bookmark className="h-6 w-6 stroke-white" />
+
+                    {/* Action buttons placeholder overlay */}
+                    <div className="absolute right-2 sm:right-4 bottom-24 flex flex-col items-center gap-5 sm:gap-6 shrink-0 opacity-20 z-20">
+                      <Heart className="h-6 w-6 stroke-white" />
+                      <MessageCircle className="h-6 w-6 stroke-white" />
+                      <Share className="h-6 w-6 stroke-white" />
+                      <Bookmark className="h-6 w-6 stroke-white" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -708,10 +709,10 @@ export default function ReelsPage() {
               className="h-screen w-full snap-start snap-always flex items-center justify-center bg-background relative"
             >
               {/* Video Container - 95vh height with glassmorphism background */}
-              <div className="w-full h-[98vh] flex items-end justify-center gap-4 relative pb-4">
+              <div className="w-full h-[98vh] flex items-center justify-center relative pb-0 sm:pb-4">
                 {/* Glassmorphism container around video - 9:16 aspect ratio */}
                 <div
-                  className="h-full w-full max-w-[calc(98vh*9/16)] flex items-center justify-center relative bg-background/30 backdrop-blur-2xl rounded-2xl shadow-2xl p-2 sm:p-4 group"
+                  className="h-full w-full sm:max-w-[calc(98vh*9/16)] flex items-center justify-center relative bg-black/90 sm:bg-background/30 sm:backdrop-blur-2xl sm:rounded-2xl border-0 sm:border border-white/10 shadow-2xl overflow-hidden group"
                   style={{ aspectRatio: '9/16' }}
                 >
                   <video
@@ -736,7 +737,7 @@ export default function ReelsPage() {
                       }
                     }}
                     src={video.imageUrl}
-                    className="h-full w-full object-contain rounded-lg border border-white/10 cursor-pointer"
+                    className="h-full w-full object-cover sm:object-contain cursor-pointer"
                     loop
                     muted={mutedVideos.has(video.id)}
                     playsInline
@@ -769,7 +770,7 @@ export default function ReelsPage() {
                   />
 
                   {/* Video Player Controls - Top Right */}
-                  <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
+                  <div className="absolute top-6 right-6 flex items-center gap-2 z-20">
                     <button
                       onClick={() => {
                         const videoElement = videoRefs.current.get(video.id);
@@ -841,331 +842,327 @@ export default function ReelsPage() {
                     )}
                   </AnimatePresence>
 
-                  {/* Video Progress Slider - At the bottom */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 z-10 bg-linear-to-t from-black/70 via-black/50 to-transparent">
-                    <div className="flex items-center gap-3 text-white">
-                      <span className="shrink-0 min-w-12 text-right text-xs sm:text-sm font-medium">
-                        {formatTime(videoProgress[video.id] || 0)}
-                      </span>
-                      <div className="flex-1 relative group">
-                        <input
-                          type="range"
-                          min="0"
-                          max={videoDuration[video.id] || 0}
-                          value={videoProgress[video.id] || 0}
-                          onChange={(e) => {
-                            const videoElement = videoRefs.current.get(video.id);
-                            if (videoElement) {
-                              const newTime = parseFloat(e.target.value);
-                              videoElement.currentTime = newTime;
-                              setVideoProgress((prev) => ({
-                                ...prev,
-                                [video.id]: newTime,
-                              }));
-                            }
-                          }}
-                          className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0"
-                          style={{
-                            background: `linear-gradient(to right, white 0%, white ${
-                              ((videoProgress[video.id] || 0) / (videoDuration[video.id] || 1)) *
-                              100
-                            }%, rgba(255, 255, 255, 0.2) ${
-                              ((videoProgress[video.id] || 0) / (videoDuration[video.id] || 1)) *
-                              100
-                            }%, rgba(255, 255, 255, 0.2) 100%)`,
-                          }}
-                        />
-                      </div>
-                      <span className="shrink-0 min-w-12 text-xs sm:text-sm font-medium">
-                        {formatTime(videoDuration[video.id] || 0)}
-                      </span>
-                    </div>
-                  </div>
-
                   {/* User info and caption - At the bottom of video container */}
-                  <div className="absolute bottom-12 left-0 right-0 p-4 sm:p-6">
+                  <div className="absolute bottom-4 left-0 right-0 p-4 sm:p-6 pr-16 sm:pr-20 bg-linear-to-t from-black/80 via-black/40 to-transparent z-10">
                     {video.user && (
                       <div className="flex items-center gap-2 mb-2">
-                        <Link href={`/${video.user.username}`}>
-                          <Avatar className="h-6 w-6 sm:h-7 sm:w-7 border border-white/50 shrink-0 cursor-pointer">
+                        <Link href={`/${video.user.username}`} className="pointer-events-auto">
+                          <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-white/50 shrink-0 cursor-pointer shadow-lg shadow-black/20">
                             <AvatarImage src={avatarUrl} alt={video.user.username} />
-                            <AvatarFallback className="text-[10px] sm:text-xs">
+                            <AvatarFallback className="text-xs">
                               {video.user.name[0]?.toUpperCase() ||
                                 video.user.username[0].toUpperCase() ||
                                 'U'}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
-                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <div className="flex flex-col flex-1 min-w-0">
                           <Link
                             href={`/${video.user.username}`}
-                            className="font-semibold text-white text-xs sm:text-sm truncate cursor-pointer hover:underline"
+                            className="font-semibold text-white text-sm sm:text-base truncate cursor-pointer hover:underline drop-shadow-md pointer-events-auto"
                           >
-                            {video.user.username || 'unknown'}
+                            {video.user.name || video.user.username}
                           </Link>
+                          <span className="text-white/80 text-xs truncate drop-shadow-md">
+                            @{video.user.username}
+                          </span>
                         </div>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 px-3 text-xs font-semibold rounded-full bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-md pointer-events-auto shadow-sm"
+                        >
+                          Follow
+                        </Button>
                       </div>
                     )}
                     {video.content && (
-                      <p className="text-white text-xs sm:text-sm mb-1 line-clamp-2">
-                        {video.content.length > 100
-                          ? `${video.content.substring(0, 100)}...`
-                          : video.content}
+                      <p className="text-white text-sm sm:text-base mb-3 line-clamp-3 drop-shadow-md">
+                        {video.content}
                       </p>
                     )}
                   </div>
-                </div>
 
-                {/* Right side - Action buttons (Beside video container) */}
-                <div className="flex flex-col items-center gap-4 sm:gap-6 shrink-0 mb-8">
-                  <button
-                    className="flex flex-col gap-1 items-center cursor-pointer text-white p-0 bg-transparent border-none outline-none hover:opacity-80 transition-opacity"
-                    onClick={() => handleLike(video.id)}
-                  >
-                    <Heart
-                      className={`h-6 w-6 sm:h-7 sm:w-7 stroke-2 ${
-                        video.isLiked
-                          ? 'fill-red-500 text-red-500 stroke-red-500'
-                          : 'fill-none stroke-white'
-                      }`}
+                  {/* Video Progress Slider - At the very bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 z-20">
+                    <input
+                      type="range"
+                      min="0"
+                      max={videoDuration[video.id] || 0}
+                      value={videoProgress[video.id] || 0}
+                      onChange={(e) => {
+                        const videoElement = videoRefs.current.get(video.id);
+                        if (videoElement) {
+                          const newTime = parseFloat(e.target.value);
+                          videoElement.currentTime = newTime;
+                          setVideoProgress((prev) => ({
+                            ...prev,
+                            [video.id]: newTime,
+                          }));
+                        }
+                      }}
+                      className="w-full h-1 bg-white/20 appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-0 [&::-webkit-slider-thumb]:h-0 [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-0 [&::-moz-range-thumb]:h-0 transition-all hover:h-2"
+                      style={{
+                        background: `linear-gradient(to right, white 0%, white ${
+                          ((videoProgress[video.id] || 0) / (videoDuration[video.id] || 1)) * 100
+                        }%, rgba(255, 255, 255, 0.2) ${
+                          ((videoProgress[video.id] || 0) / (videoDuration[video.id] || 1)) * 100
+                        }%, rgba(255, 255, 255, 0.2) 100%)`,
+                      }}
                     />
-                    <span className="text-xs sm:text-sm font-normal text-white">
-                      {formatNumber(video.likesCount)}
-                    </span>
-                  </button>
+                  </div>
 
-                  <Popover
-                    open={isCommentsDialogOpen && selectedVideo?.id === video.id}
-                    onOpenChange={(open) => {
-                      setIsCommentsDialogOpen(open);
-                      if (open) {
-                        setSelectedVideo(video);
-                      } else {
-                        setSelectedVideo(null);
-                        setReplyingTo(null);
-                        setReplyText({});
-                      }
-                    }}
-                  >
-                    <PopoverTrigger asChild>
-                      <button className="flex flex-col gap-1 items-center cursor-pointer text-white p-0 bg-transparent border-none outline-none hover:opacity-80 transition-opacity">
-                        <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7 stroke-2 fill-none stroke-white" />
-                        <span className="text-xs sm:text-sm font-normal text-white">
-                          {formatNumber(video.commentsCount)}
-                        </span>
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-[400px] max-h-[600px] p-0 flex flex-col"
-                      align="end"
-                      side="left"
+                  {/* Right side - Action buttons (Overlaid on video) */}
+                  <div className="absolute right-2 sm:right-4 bottom-24 flex flex-col items-center gap-5 sm:gap-6 shrink-0 z-20 pointer-events-auto">
+                    <button
+                      className="flex flex-col gap-1 items-center cursor-pointer text-white p-0 bg-transparent border-none outline-none hover:opacity-80 transition-opacity"
+                      onClick={() => handleLike(video.id)}
                     >
-                      <div className="p-4 border-b">
-                        <h3 className="font-semibold">Comments</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedVideo?.commentsCount || 0} comments
-                        </p>
-                      </div>
+                      <Heart
+                        className={`h-6 w-6 sm:h-7 sm:w-7 stroke-2 ${
+                          video.isLiked
+                            ? 'fill-red-500 text-red-500 stroke-red-500'
+                            : 'fill-none stroke-white'
+                        }`}
+                      />
+                      <span className="text-xs sm:text-sm font-normal text-white">
+                        {formatNumber(video.likesCount)}
+                      </span>
+                    </button>
 
-                      {/* Comments List */}
-                      <div className="flex-1 overflow-y-auto space-y-4 p-4 max-h-[400px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        {isLoadingComments ? (
-                          <ReelCommentsSkeleton />
-                        ) : comments.length === 0 ? (
-                          <div className="text-center py-8 text-muted-foreground">
-                            No comments yet. Be the first to comment!
-                          </div>
-                        ) : (
-                          comments.map((comment) => (
-                            <div key={comment.id} className="space-y-2">
-                              <div className="flex gap-3">
-                                <Link href={`/${comment.user.username}`}>
-                                  <Avatar className="h-8 w-8 shrink-0 cursor-pointer">
-                                    <AvatarImage src={comment.user.imageUrl} />
-                                    <AvatarFallback>
-                                      {comment.user.name[0]?.toUpperCase() ||
-                                        comment.user.username[0].toUpperCase() ||
-                                        'U'}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                </Link>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Link
-                                      href={`/${comment.user.username}`}
-                                      className="font-semibold text-sm cursor-pointer hover:underline"
-                                    >
-                                      {comment.user.username || 'unknown'}
-                                    </Link>
-                                    <span className="text-xs text-muted-foreground">
-                                      {formatTimeAgo(comment.createdAt)}
-                                    </span>
+                    <Popover
+                      open={isCommentsDialogOpen && selectedVideo?.id === video.id}
+                      onOpenChange={(open) => {
+                        setIsCommentsDialogOpen(open);
+                        if (open) {
+                          setSelectedVideo(video);
+                        } else {
+                          setSelectedVideo(null);
+                          setReplyingTo(null);
+                          setReplyText({});
+                        }
+                      }}
+                    >
+                      <PopoverTrigger asChild>
+                        <button className="flex flex-col gap-1 items-center cursor-pointer text-white p-0 bg-transparent border-none outline-none hover:opacity-80 transition-opacity">
+                          <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7 stroke-2 fill-none stroke-white" />
+                          <span className="text-xs sm:text-sm font-normal text-white">
+                            {formatNumber(video.commentsCount)}
+                          </span>
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-[400px] max-h-[600px] p-0 flex flex-col"
+                        align="end"
+                        side="left"
+                      >
+                        <div className="p-4 border-b">
+                          <h3 className="font-semibold">Comments</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedVideo?.commentsCount || 0} comments
+                          </p>
+                        </div>
+
+                        {/* Comments List */}
+                        <div className="flex-1 overflow-y-auto space-y-4 p-4 max-h-[400px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                          {isLoadingComments ? (
+                            <ReelCommentsSkeleton />
+                          ) : comments.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                              No comments yet. Be the first to comment!
+                            </div>
+                          ) : (
+                            comments.map((comment) => (
+                              <div key={comment.id} className="space-y-2">
+                                <div className="flex gap-3">
+                                  <Link href={`/${comment.user.username}`}>
+                                    <Avatar className="h-8 w-8 shrink-0 cursor-pointer">
+                                      <AvatarImage src={comment.user.imageUrl} />
+                                      <AvatarFallback>
+                                        {comment.user.name[0]?.toUpperCase() ||
+                                          comment.user.username[0].toUpperCase() ||
+                                          'U'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  </Link>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Link
+                                        href={`/${comment.user.username}`}
+                                        className="font-semibold text-sm cursor-pointer hover:underline"
+                                      >
+                                        {comment.user.username || 'unknown'}
+                                      </Link>
+                                      <span className="text-xs text-muted-foreground">
+                                        {formatTimeAgo(comment.createdAt)}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                                    <div className="flex items-center gap-4 mt-2">
+                                      {currentUser && (
+                                        <button
+                                          onClick={() => {
+                                            setReplyingTo(
+                                              replyingTo === comment.id ? null : comment.id
+                                            );
+                                            if (replyingTo !== comment.id) {
+                                              setReplyText((prev) => ({
+                                                ...prev,
+                                                [comment.id]: '',
+                                              }));
+                                            }
+                                          }}
+                                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                                        >
+                                          <Reply className="h-3 w-3" />
+                                          Reply
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
-                                  <div className="flex items-center gap-4 mt-2">
-                                    {currentUser && (
-                                      <button
-                                        onClick={() => {
-                                          setReplyingTo(
-                                            replyingTo === comment.id ? null : comment.id
-                                          );
-                                          if (replyingTo !== comment.id) {
-                                            setReplyText((prev) => ({
-                                              ...prev,
-                                              [comment.id]: '',
-                                            }));
+                                </div>
+
+                                {/* Reply Input */}
+                                {replyingTo === comment.id && (
+                                  <div className="ml-11 pr-2">
+                                    <div className="flex gap-2">
+                                      <Input
+                                        type="text"
+                                        placeholder={`Reply to ${comment.user.username || 'user'}...`}
+                                        value={replyText[comment.id] || ''}
+                                        onChange={(e) =>
+                                          setReplyText((prev) => ({
+                                            ...prev,
+                                            [comment.id]: e.target.value,
+                                          }))
+                                        }
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSubmitComment(comment.id);
                                           }
                                         }}
-                                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                                      >
-                                        <Reply className="h-3 w-3" />
-                                        Reply
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Reply Input */}
-                              {replyingTo === comment.id && (
-                                <div className="ml-11 pr-2">
-                                  <div className="flex gap-2">
-                                    <Input
-                                      type="text"
-                                      placeholder={`Reply to ${comment.user.username || 'user'}...`}
-                                      value={replyText[comment.id] || ''}
-                                      onChange={(e) =>
-                                        setReplyText((prev) => ({
-                                          ...prev,
-                                          [comment.id]: e.target.value,
-                                        }))
-                                      }
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                          e.preventDefault();
-                                          handleSubmitComment(comment.id);
+                                        className="flex-1 text-sm"
+                                        disabled={isSubmittingComment}
+                                        autoFocus
+                                      />
+                                      <Button
+                                        onClick={() => handleSubmitComment(comment.id)}
+                                        disabled={
+                                          !replyText[comment.id]?.trim() || isSubmittingComment
                                         }
-                                      }}
-                                      className="flex-1 text-sm"
-                                      disabled={isSubmittingComment}
-                                      autoFocus
-                                    />
-                                    <Button
-                                      onClick={() => handleSubmitComment(comment.id)}
-                                      disabled={
-                                        !replyText[comment.id]?.trim() || isSubmittingComment
-                                      }
-                                      size="sm"
-                                    >
-                                      {isSubmittingComment ? 'Posting...' : 'Reply'}
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        setReplyingTo(null);
-                                        setReplyText((prev) => {
-                                          const newReplyText = { ...prev };
-                                          delete newReplyText[comment.id];
-                                          return newReplyText;
-                                        });
-                                      }}
-                                    >
-                                      ×
-                                    </Button>
+                                        size="sm"
+                                      >
+                                        {isSubmittingComment ? 'Posting...' : 'Reply'}
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setReplyingTo(null);
+                                          setReplyText((prev) => {
+                                            const newReplyText = { ...prev };
+                                            delete newReplyText[comment.id];
+                                            return newReplyText;
+                                          });
+                                        }}
+                                      >
+                                        ×
+                                      </Button>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
-                              {/* Replies */}
-                              {comment.replies && comment.replies.length > 0 && (
-                                <div className="ml-11 space-y-2 border-l-2 border-muted pl-4">
-                                  {comment.replies.map((reply) => (
-                                    <div key={reply.id} className="space-y-2">
-                                      <div className="flex gap-3">
-                                        <Link href={`/${reply.user.username}`}>
-                                          <Avatar className="h-7 w-7 shrink-0 cursor-pointer">
-                                            <AvatarImage src={reply.user.imageUrl} />
-                                            <AvatarFallback>
-                                              {reply.user.name[0]?.toUpperCase() ||
-                                                reply.user.username[0].toUpperCase() ||
-                                                'U'}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                        </Link>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-center gap-2 mb-1">
-                                            <Link
-                                              href={`/${reply.user.username}`}
-                                              className="font-semibold text-sm cursor-pointer hover:underline"
-                                            >
-                                              {reply.user.username &&
-                                              reply.user.username.startsWith('@')
-                                                ? reply.user.username
-                                                : `@${reply.user.username || ''}`}
-                                            </Link>
-                                            <span className="text-xs text-muted-foreground">
-                                              {formatTimeAgo(reply.createdAt)}
-                                            </span>
+                                {/* Replies */}
+                                {comment.replies && comment.replies.length > 0 && (
+                                  <div className="ml-11 space-y-2 border-l-2 border-muted pl-4">
+                                    {comment.replies.map((reply) => (
+                                      <div key={reply.id} className="space-y-2">
+                                        <div className="flex gap-3">
+                                          <Link href={`/${reply.user.username}`}>
+                                            <Avatar className="h-7 w-7 shrink-0 cursor-pointer">
+                                              <AvatarImage src={reply.user.imageUrl} />
+                                              <AvatarFallback>
+                                                {reply.user.name[0]?.toUpperCase() ||
+                                                  reply.user.username[0].toUpperCase() ||
+                                                  'U'}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                          </Link>
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                              <Link
+                                                href={`/${reply.user.username}`}
+                                                className="font-semibold text-sm cursor-pointer hover:underline"
+                                              >
+                                                {reply.user.username &&
+                                                reply.user.username.startsWith('@')
+                                                  ? reply.user.username
+                                                  : `@${reply.user.username || ''}`}
+                                              </Link>
+                                              <span className="text-xs text-muted-foreground">
+                                                {formatTimeAgo(reply.createdAt)}
+                                              </span>
+                                            </div>
+                                            <p className="text-sm whitespace-pre-wrap">
+                                              {reply.content}
+                                            </p>
                                           </div>
-                                          <p className="text-sm whitespace-pre-wrap">
-                                            {reply.content}
-                                          </p>
                                         </div>
                                       </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ))
-                        )}
-                      </div>
-
-                      {/* Comment Input */}
-                      {currentUser && (
-                        <div className="border-t pt-4 p-4">
-                          <div className="flex gap-2">
-                            <Input
-                              type="text"
-                              placeholder="Add a comment..."
-                              value={newComment}
-                              onChange={(e) => setNewComment(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                  e.preventDefault();
-                                  handleSubmitComment();
-                                }
-                              }}
-                              className="flex-1"
-                              disabled={isSubmittingComment}
-                            />
-                            <Button
-                              onClick={() => handleSubmitComment()}
-                              disabled={!newComment.trim() || isSubmittingComment}
-                            >
-                              {isSubmittingComment ? 'Posting...' : 'Post'}
-                            </Button>
-                          </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                          )}
                         </div>
-                      )}
-                    </PopoverContent>
-                  </Popover>
 
-                  <button className="flex flex-col gap-1 items-center cursor-pointer text-white p-0 bg-transparent border-none outline-none hover:opacity-80 transition-opacity">
-                    <Share className="h-6 w-6 sm:h-7 sm:w-7 stroke-2 fill-none stroke-white" />
-                  </button>
+                        {/* Comment Input */}
+                        {currentUser && (
+                          <div className="border-t pt-4 p-4">
+                            <div className="flex gap-2">
+                              <Input
+                                type="text"
+                                placeholder="Add a comment..."
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmitComment();
+                                  }
+                                }}
+                                className="flex-1"
+                                disabled={isSubmittingComment}
+                              />
+                              <Button
+                                onClick={() => handleSubmitComment()}
+                                disabled={!newComment.trim() || isSubmittingComment}
+                              >
+                                {isSubmittingComment ? 'Posting...' : 'Post'}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
 
-                  <button
-                    className="flex flex-col gap-1 items-center cursor-pointer text-white p-0 bg-transparent border-none outline-none hover:opacity-80 transition-opacity"
-                    onClick={() => handleSave(video.id)}
-                  >
-                    <Bookmark
-                      className={`h-6 w-6 sm:h-7 sm:w-7 stroke-2 ${
-                        video.isSaved ? 'fill-white stroke-white' : 'fill-none stroke-white'
-                      }`}
-                    />
-                  </button>
+                    <button className="flex flex-col gap-1 items-center cursor-pointer text-white p-0 bg-transparent border-none outline-none hover:opacity-80 transition-opacity">
+                      <Share className="h-6 w-6 sm:h-7 sm:w-7 stroke-2 fill-none stroke-white" />
+                    </button>
+
+                    <button
+                      className="flex flex-col gap-1 items-center cursor-pointer text-white p-0 bg-transparent border-none outline-none hover:opacity-80 transition-opacity"
+                      onClick={() => handleSave(video.id)}
+                    >
+                      <Bookmark
+                        className={`h-6 w-6 sm:h-7 sm:w-7 stroke-2 ${
+                          video.isSaved ? 'fill-white stroke-white' : 'fill-none stroke-white'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

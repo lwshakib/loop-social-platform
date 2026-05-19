@@ -171,9 +171,7 @@ export default function SearchPage() {
 
       try {
         setIsLoading(true);
-        const response = await fetch(
-          `/api/search?q=${encodeURIComponent(debouncedSearchQuery)}&type=${activeTab}`
-        );
+        const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedSearchQuery)}`);
 
         if (response.ok) {
           const result = await response.json();
@@ -201,7 +199,7 @@ export default function SearchPage() {
     };
 
     fetchSearchResults();
-  }, [debouncedSearchQuery, activeTab]);
+  }, [debouncedSearchQuery]);
 
   const handleLike = async (postId: string) => {
     if (!currentUser) return;
@@ -322,8 +320,7 @@ export default function SearchPage() {
     }
   };
 
-  const hasResults = users.length > 0 || posts.length > 0;
-  const showResults = debouncedSearchQuery.trim() && (isLoading || hasResults);
+  const isSearching = debouncedSearchQuery.trim().length > 0;
 
   return (
     <main className="flex-1 min-h-screen bg-background">
@@ -347,7 +344,7 @@ export default function SearchPage() {
         </div>
 
         {/* Tabs */}
-        {showResults && (
+        {isSearching && (
           <div className="flex gap-2 mb-6 border-b">
             <Button
               variant={activeTab === 'all' ? 'default' : 'ghost'}
@@ -379,7 +376,7 @@ export default function SearchPage() {
             {(activeTab === 'all' || activeTab === 'users') && <UsersSkeleton />}
             {(activeTab === 'all' || activeTab === 'posts') && <PostsSkeleton />}
           </div>
-        ) : showResults ? (
+        ) : isSearching ? (
           <div className="space-y-6">
             {/* Users Results */}
             {(activeTab === 'all' || activeTab === 'users') && users.length > 0 && (
@@ -558,14 +555,17 @@ export default function SearchPage() {
             )}
 
             {/* No Results */}
-            {!isLoading && hasResults === false && (
-              <div className="text-center py-12">
-                <SearchIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  No results found for &quot;{debouncedSearchQuery}&quot;
-                </p>
-              </div>
-            )}
+            {!isLoading &&
+              ((activeTab === 'all' && users.length === 0 && posts.length === 0) ||
+                (activeTab === 'users' && users.length === 0) ||
+                (activeTab === 'posts' && posts.length === 0)) && (
+                <div className="text-center py-12">
+                  <SearchIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    No results found for &quot;{debouncedSearchQuery}&quot;
+                  </p>
+                </div>
+              )}
           </div>
         ) : (
           <div className="space-y-4 py-12">

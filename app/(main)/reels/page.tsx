@@ -181,7 +181,7 @@ export default function ReelsPage() {
             <p className="text-muted-foreground">No reels available yet. Check back later!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
             {reels.map((reel) => {
               const avatarUrl =
                 reel.user.imageUrl ||
@@ -202,12 +202,12 @@ export default function ReelsPage() {
                       playsInline
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                      <Play className="h-12 w-12 sm:h-16 sm:w-16 text-white opacity-80" />
+                      <Play className="h-10 w-10 sm:h-16 sm:w-16 text-white opacity-80" />
                     </div>
                   </div>
 
                   {/* Overlay Content */}
-                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent p-3 sm:p-4 flex flex-col justify-end opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity pointer-events-none">
                     {/* User Info */}
                     <Link
                       href={`/${reel.user.username}`}

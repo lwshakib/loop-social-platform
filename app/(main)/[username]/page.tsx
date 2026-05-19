@@ -107,8 +107,8 @@ const ProfileSkeleton = () => (
 );
 
 const PostsGridSkeleton = () => (
-  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-0.5 sm:gap-1 md:gap-2 p-0.5 sm:p-1 md:p-2">
-    {Array.from({ length: 8 }).map((_, idx) => (
+  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 sm:gap-1 md:gap-2 p-0.5 sm:p-1 md:p-2">
+    {Array.from({ length: 9 }).map((_, idx) => (
       <Skeleton key={idx} className="aspect-square w-full rounded-md" />
     ))}
   </div>
@@ -822,28 +822,21 @@ export default function ProfilePage() {
 
       {/* Profile Info */}
       <div className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 border-b">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start -mt-12 sm:-mt-16 md:-mt-20 lg:-mt-24 mb-3 sm:mb-4 gap-3 sm:gap-4">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <Avatar className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 lg:h-32 lg:w-32 border-2 sm:border-4 border-background shrink-0">
-              <AvatarImage src={avatarUrl} alt={userData.name} />
-              <AvatarFallback className="text-lg sm:text-xl md:text-2xl lg:text-3xl bg-primary text-primary-foreground font-bold">
-                {(userData.name?.[0] || userData.username?.[0] || 'U').toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="sm:hidden">
-              <h1 className="text-base sm:text-lg font-bold truncate">{userData.name}</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                {userData.username}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-1.5 sm:gap-2 mt-0 sm:mt-16 md:mt-20 lg:mt-24 flex-wrap">
+        <div className="flex justify-between items-start -mt-12 sm:-mt-16 md:-mt-20 lg:-mt-24 mb-3 sm:mb-4 gap-3 sm:gap-4 relative z-10">
+          <Avatar className="h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 lg:h-32 lg:w-32 border-4 border-background shrink-0 bg-background">
+            <AvatarImage src={avatarUrl} alt={userData.name} className="object-cover" />
+            <AvatarFallback className="text-xl sm:text-2xl md:text-3xl lg:text-4xl bg-primary text-primary-foreground font-bold">
+              {(userData.name?.[0] || userData.username?.[0] || 'U').toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="flex gap-1.5 sm:gap-2 mt-12 sm:mt-16 md:mt-20 lg:mt-24 flex-wrap justify-end">
             {isOwnProfile ? (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleEditProfileClick}
-                className="flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
+                className="text-xs sm:text-sm h-8 sm:h-9"
               >
                 <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                 <span className="hidden min-[375px]:inline">Edit Profile</span>
@@ -852,11 +845,7 @@ export default function ProfilePage() {
             ) : (
               <>
                 {currentUser && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
-                  >
+                  <Button variant="outline" size="sm" className="text-xs sm:text-sm h-8 sm:h-9">
                     <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5 md:mr-2" />
                     <span className="hidden sm:inline">Message</span>
                   </Button>
@@ -866,14 +855,14 @@ export default function ProfilePage() {
                     variant={isFollowing ? 'outline' : 'default'}
                     size="sm"
                     onClick={handleFollow}
-                    className="flex-1 sm:flex-none text-xs sm:text-sm h-8 sm:h-9"
+                    className="text-xs sm:text-sm h-8 sm:h-9"
                   >
                     {isFollowing ? 'Following' : 'Follow'}
                   </Button>
                 )}
                 {currentUser && (
-                  <Button variant="ghost" size="sm" className="sm:flex-none h-8 sm:h-9 w-8 sm:w-9">
-                    <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Button variant="ghost" size="sm" className="h-8 sm:h-9 w-8 sm:w-9 px-0">
+                    <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 )}
               </>
@@ -881,9 +870,13 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="mb-3 sm:mb-4 hidden sm:block">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold truncate">{userData.name}</h1>
-          <p className="text-sm sm:text-base text-muted-foreground truncate">{userData.username}</p>
+        <div className="mb-3 sm:mb-4 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold truncate">{userData.name}</h1>
+          <p className="text-sm sm:text-base text-muted-foreground truncate">
+            {userData.username && userData.username.startsWith('@')
+              ? userData.username
+              : `@${userData.username}`}
+          </p>
         </div>
 
         {userData.bio && (
@@ -987,7 +980,7 @@ export default function ProfilePage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-0.5 sm:gap-1 md:gap-2 p-0.5 sm:p-1 md:p-2">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 sm:gap-1 md:gap-2 p-0.5 sm:p-1 md:p-2">
             {posts.map((post) => (
               <div
                 key={post.id}

@@ -255,7 +255,7 @@ export default function CreatePage() {
           <div className="space-y-2">
             <Label className="text-base">Media</Label>
             <div
-              className="border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors min-h-[400px]"
+              className="border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors min-h-[250px] md:min-h-[400px]"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
@@ -264,21 +264,20 @@ export default function CreatePage() {
                   {createPostData.file?.type.startsWith('video/') ? (
                     <video
                       src={createPostData.preview}
-                      className="max-h-[400px] max-w-full rounded-lg"
+                      className="max-h-[250px] md:max-h-[400px] max-w-full rounded-lg"
                       controls
                     />
                   ) : (
                     <Image
                       src={createPostData.preview}
                       alt="Preview"
-                      className="max-h-[400px] max-w-full rounded-lg object-contain"
+                      className="max-h-[250px] md:max-h-[400px] max-w-full rounded-lg object-contain"
                       width={0}
                       height={0}
                       sizes="100vw"
                       style={{
                         width: 'auto',
                         height: 'auto',
-                        maxHeight: '400px',
                         maxWidth: '100%',
                       }}
                     />
@@ -304,8 +303,8 @@ export default function CreatePage() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4 text-center p-8">
-                  <Upload className="h-16 w-16 mx-auto text-muted-foreground" />
+                <div className="space-y-4 text-center p-4 sm:p-8">
+                  <Upload className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">
                       Drag and drop an image or video here, or click to browse
@@ -338,7 +337,7 @@ export default function CreatePage() {
           </div>
 
           {/* Right Side - Caption Field */}
-          <div className="flex flex-col h-full min-h-[400px]">
+          <div className="flex flex-col h-full min-h-[300px] md:min-h-[400px]">
             {/* Profile Section */}
             <div className="flex items-center gap-3 mb-4 pb-4 border-b">
               <Avatar className="h-10 w-10">

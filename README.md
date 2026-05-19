@@ -2,7 +2,10 @@
 
 Loop is a high-performance, modern social networking platform designed for seamless interaction. Built with a cutting-edge stack including **Next.js 16**, **React 19**, **Better Auth**, and **Prisma**, Loop provides a fast, secure, and visually stunning experience across all devices.
 
-![Loop App Demo](public/demo.png)
+<p align="center">
+  <img src="public/demos/light_demo.png" width="49%" />
+  <img src="public/demos/dark_demo.png" width="49%" />
+</p>
 
 ## 🚀 Key Features
 
@@ -47,6 +50,41 @@ Loop follows a modern server-centric architecture:
 2.  **Authentication**: Better Auth handles session persistence and OAuth flows securely.
 3.  **App Logic**: Server Actions handle data mutations, reducing client-side bundle size.
 4.  **UI/UX**: Components are built with accessible primitives from Radix UI and styled with Tailwind 4.
+
+### 🔌 Platform Architecture
+
+```mermaid
+graph TD
+    Client[Next.js Client]
+    Server[Next.js Server API / Server Actions]
+    DB[(PostgreSQL Database)]
+    Pinecone[(Pinecone Vector DB)]
+    R2[(Cloudflare R2 Bucket)]
+
+    Client -->|HTTPS Interactions & Media Presign| Server
+    Server -->|ORM Queries| DB
+    Server -->|Vector Queries / Upserts| Pinecone
+    Client -->|Direct Media Uploads| R2
+    Server -->|Pre-signed Asset Request| R2
+```
+
+### 🧠 Reels Hybrid Recommendation Pipeline
+
+```mermaid
+graph TD
+    Interactions[User Watch / Like / Bookmark Actions]
+    Weights[Compute Dynamic Preference Vector via Interaction Weights]
+    Retrieve[Candidate Retrieval: Pinecone Vector Similarity / PostgreSQL Fallback Scan]
+    Rank[Scoring: Cosine Similarity with Log-Popularity Boosting]
+    Diversify[Diversification: Exploration Shuffling & Infinite Recycling]
+    Feed[Serve Dynamic Playlist to User Client]
+
+    Interactions --> Weights
+    Weights --> Retrieve
+    Retrieve --> Rank
+    Rank --> Diversify
+    Diversify --> Feed
+```
 
 ## 📥 Getting Started
 

@@ -120,11 +120,15 @@ export default function SettingsPage() {
     // Capture original state for rollback
     const originalUser = { ...currentUser };
 
+    const cleanUsername = editUsername.trim().startsWith('@')
+      ? editUsername.trim()
+      : `@${editUsername.trim()}`;
+
     // Prepare optimistic state with updated info and preview image
     const optimisticUser = {
       ...currentUser,
       name: editName,
-      username: editUsername,
+      username: cleanUsername,
       image: avatarPreview || currentUser.image,
     };
 
@@ -162,7 +166,7 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editName,
-          username: editUsername,
+          username: cleanUsername,
           image: finalImageUrl,
         }),
       });
@@ -317,7 +321,11 @@ export default function SettingsPage() {
               {!isEditing ? (
                 <div>
                   <p className="font-bold text-xl">{currentUser.name || currentUser.username}</p>
-                  <p className="text-sm text-muted-foreground">@{currentUser.username}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {currentUser.username && currentUser.username.startsWith('@')
+                      ? currentUser.username
+                      : `@${currentUser.username || ''}`}
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

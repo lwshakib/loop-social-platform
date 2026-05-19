@@ -935,7 +935,7 @@ export default function HomePage() {
                               onClick={(e) => e.stopPropagation()}
                               className="text-sm text-muted-foreground hover:underline cursor-pointer"
                             >
-                              @{post.user.username}
+                              {post.user.username.startsWith('@') ? post.user.username : `@${post.user.username}`}
                             </Link>
                             <span className="text-sm text-muted-foreground">·</span>
                             <span className="text-sm text-muted-foreground hover:underline">

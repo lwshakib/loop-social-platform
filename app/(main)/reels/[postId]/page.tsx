@@ -1051,7 +1051,9 @@ export default function ReelsPage() {
                                               href={`/${reply.user.username}`}
                                               className="font-semibold text-sm cursor-pointer hover:underline"
                                             >
-                                              @{reply.user.username || 'unknown'}
+                                              {reply.user.username && reply.user.username.startsWith('@')
+                                                ? reply.user.username
+                                                : `@${reply.user.username || ''}`}
                                             </Link>
                                             <span className="text-xs text-muted-foreground">
                                               {formatTimeAgo(reply.createdAt)}

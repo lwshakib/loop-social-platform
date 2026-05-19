@@ -830,7 +830,7 @@ export default function ProfilePage() {
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex gap-1.5 sm:gap-2 mt-12 sm:mt-16 md:mt-20 lg:mt-24 flex-wrap justify-end">
+          <div className="flex gap-1.5 sm:gap-2 mt-16 sm:mt-20 md:mt-24 lg:mt-28 flex-wrap justify-end">
             {isOwnProfile ? (
               <Button
                 variant="outline"

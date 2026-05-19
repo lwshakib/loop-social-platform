@@ -1,4 +1,9 @@
-import { S3Client, HeadBucketCommand, CreateBucketCommand, PutBucketCorsCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  HeadBucketCommand,
+  CreateBucketCommand,
+  PutBucketCorsCommand,
+} from '@aws-sdk/client-s3';
 import * as dotenv from 'dotenv';
 
 // Load environment variables from .env file

@@ -32,7 +32,10 @@ export async function getEmbedding(
         }
       }
     } catch (err) {
-      console.warn('Hugging Face Inference API failed, falling back to local feature embeddings.', err);
+      console.warn(
+        'Hugging Face Inference API failed, falling back to local feature embeddings.',
+        err
+      );
     }
   }
 
@@ -59,7 +62,7 @@ function generateDeterministicEmbedding(
   if (cleanText.length > 0) {
     // Generate different hashes for segments to distribute features across dimensions
     const words = cleanText.split(/\s+/).filter(Boolean);
-    
+
     // Hash words into dimensional bins
     words.forEach((word) => {
       const hash = createHash('md5').update(word).digest();

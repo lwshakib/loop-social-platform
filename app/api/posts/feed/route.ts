@@ -111,22 +111,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform to response format
-    const response = await Promise.all(postsWithStatus.map(async (post) => ({
-      id: post.id,
-      userId: post.userId,
-      content: post.content,
-      imageUrl: await getSignedUrlIfNeeded(post.url),
-      type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
-      likesCount: post._count.likes,
-      commentsCount: post._count.comments,
-      createdAt: post.createdAt.toISOString(),
-      isLiked: post.isLiked || false,
-      isSaved: post.isSaved || false,
-      user: {
-        ...post.user,
-        imageUrl: await getSignedUrlIfNeeded(post.user.image),
-      },
-    })));
+    const response = await Promise.all(
+      postsWithStatus.map(async (post) => ({
+        id: post.id,
+        userId: post.userId,
+        content: post.content,
+        imageUrl: await getSignedUrlIfNeeded(post.url),
+        type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
+        likesCount: post._count.likes,
+        commentsCount: post._count.comments,
+        createdAt: post.createdAt.toISOString(),
+        isLiked: post.isLiked || false,
+        isSaved: post.isSaved || false,
+        user: {
+          ...post.user,
+          imageUrl: await getSignedUrlIfNeeded(post.user.image),
+        },
+      }))
+    );
 
     return NextResponse.json({ data: { posts: response } });
   } catch (error) {

@@ -124,7 +124,6 @@ export function LeftSidebar() {
               </Avatar>
             }
           />
-
         </nav>
 
         {/* Account and Logout Section at Bottom */}

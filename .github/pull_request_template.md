@@ -29,10 +29,10 @@ Please delete options that are not relevant:
 
 ## Visual Impact (Screenshots / GIFs / Videos)
 
-*If applicable, please provide screenshots or screen recordings showcasing the UI/UX changes before and after.*
+_If applicable, please provide screenshots or screen recordings showcasing the UI/UX changes before and after._
 
-| Before | After |
-|--------|-------|
+| Before                     | After                      |
+| -------------------------- | -------------------------- |
 | Insert screenshot/GIF here | Insert screenshot/GIF here |
 
 ## Verification & Manual Testing Plan

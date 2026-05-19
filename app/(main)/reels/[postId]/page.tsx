@@ -52,7 +52,10 @@ type Post = {
 
 const ReelPageSkeleton = () => (
   <div className="relative flex-1 h-[98vh] flex items-center justify-center bg-background pb-4">
-    <div className="w-full h-full max-w-[calc(98vh*9/16)] flex items-center justify-center relative p-2 sm:p-4" style={{ aspectRatio: '9/16' }}>
+    <div
+      className="w-full h-full max-w-[calc(98vh*9/16)] flex items-center justify-center relative p-2 sm:p-4"
+      style={{ aspectRatio: '9/16' }}
+    >
       <div className="h-full w-full bg-accent/20 animate-pulse rounded-2xl flex flex-col justify-end p-6 space-y-4 border border-border/10">
         <div className="flex items-center gap-2 mb-2">
           <Skeleton className="h-8 w-8 rounded-full bg-white/20" />
@@ -160,6 +163,7 @@ export default function ReelsPage() {
   const isUpdatingRef = useRef(false);
   const isInitialScrollRef = useRef(true);
   const remainingReelsRef = useRef<Post[]>([]);
+  const [remainingReelsCount, setRemainingReelsCount] = useState(0);
 
   // Fetch the selected video first, and append 5 recommendations initially
   useEffect(() => {
@@ -181,12 +185,14 @@ export default function ReelsPage() {
             const otherReels = allReels.filter((v) => v.id !== videoId);
             const initialRecommendations = otherReels.slice(0, 5);
             remainingReelsRef.current = otherReels.slice(5);
+            setRemainingReelsCount(otherReels.slice(5).length);
             setVideos([targetReel, ...initialRecommendations]);
             setActiveVideoId(targetReel.id);
           } else {
             // Fallback if target reel is not found (e.g. invalid postId)
             const initialRecommendations = allReels.slice(0, 6);
             remainingReelsRef.current = allReels.slice(6);
+            setRemainingReelsCount(allReels.slice(6).length);
             setVideos(initialRecommendations);
 
             if (initialRecommendations[0]) {
@@ -234,6 +240,7 @@ export default function ReelsPage() {
       if (remainingReelsRef.current.length > 0) {
         const nextRecommendations = remainingReelsRef.current.slice(0, 5);
         remainingReelsRef.current = remainingReelsRef.current.slice(5);
+        setRemainingReelsCount(remainingReelsRef.current.length);
 
         setVideos((prev) => [...prev, ...nextRecommendations]);
       }
@@ -375,7 +382,7 @@ export default function ReelsPage() {
 
         if (scrollDiff > 50) {
           isUpdatingRef.current = true;
-          
+
           const isInitial = isInitialScrollRef.current;
           container.scrollTo({
             top: scrollPosition,
@@ -386,9 +393,12 @@ export default function ReelsPage() {
             isInitialScrollRef.current = false;
           }
 
-          setTimeout(() => {
-            isUpdatingRef.current = false;
-          }, isInitial ? 100 : 500);
+          setTimeout(
+            () => {
+              isUpdatingRef.current = false;
+            },
+            isInitial ? 100 : 500
+          );
         } else if (isInitialScrollRef.current) {
           isInitialScrollRef.current = false;
         }
@@ -617,7 +627,8 @@ export default function ReelsPage() {
     if (videos.length === 0 || isUpdatingRef.current) return;
 
     const currentIndex = videos.findIndex((v) => v.id === activeVideoId);
-    const isLastVideo = currentIndex === videos.length - 1 && remainingReelsRef.current.length === 0;
+    const isLastVideo =
+      currentIndex === videos.length - 1 && remainingReelsRef.current.length === 0;
     if (isLastVideo) return;
 
     const nextIndex = currentIndex < videos.length - 1 ? currentIndex + 1 : 0;
@@ -1088,7 +1099,8 @@ export default function ReelsPage() {
                                               href={`/${reply.user.username}`}
                                               className="font-semibold text-sm cursor-pointer hover:underline"
                                             >
-                                              {reply.user.username && reply.user.username.startsWith('@')
+                                              {reply.user.username &&
+                                              reply.user.username.startsWith('@')
                                                 ? reply.user.username
                                                 : `@${reply.user.username || ''}`}
                                             </Link>
@@ -1167,7 +1179,9 @@ export default function ReelsPage() {
           variant="ghost"
           size="icon"
           className={`h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20 transition-all ${
-            videos.findIndex((v) => v.id === activeVideoId) === 0 ? 'opacity-40 pointer-events-none cursor-not-allowed' : ''
+            videos.findIndex((v) => v.id === activeVideoId) === 0
+              ? 'opacity-40 pointer-events-none cursor-not-allowed'
+              : ''
           }`}
           onClick={scrollToPrevious}
           disabled={videos.findIndex((v) => v.id === activeVideoId) === 0}
@@ -1178,12 +1192,16 @@ export default function ReelsPage() {
           variant="ghost"
           size="icon"
           className={`h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20 transition-all ${
-            (videos.findIndex((v) => v.id === activeVideoId) === videos.length - 1 && remainingReelsRef.current.length === 0)
+            videos.findIndex((v) => v.id === activeVideoId) === videos.length - 1 &&
+            remainingReelsCount === 0
               ? 'opacity-40 pointer-events-none cursor-not-allowed'
               : ''
           }`}
           onClick={scrollToNext}
-          disabled={videos.findIndex((v) => v.id === activeVideoId) === videos.length - 1 && remainingReelsRef.current.length === 0}
+          disabled={
+            videos.findIndex((v) => v.id === activeVideoId) === videos.length - 1 &&
+            remainingReelsCount === 0
+          }
         >
           <ChevronDown className="h-6 w-6" />
         </Button>

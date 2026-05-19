@@ -377,7 +377,7 @@ export default function ProfilePage() {
     });
 
     if (!uploadRes.ok) throw new Error('Failed to upload image to S3');
-    
+
     // Return key path to save in database
     return key;
   };

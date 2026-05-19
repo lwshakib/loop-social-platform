@@ -25,23 +25,25 @@ export async function GET(
     const posts = await getUserPosts(username, type, currentUserId);
 
     // Map posts to response format
-    const response = await Promise.all(posts.map(async (post) => {
-      const likesCount = Number(post.likesCount ?? 0);
-      const commentsCount = Number(post.commentsCount ?? 0);
+    const response = await Promise.all(
+      posts.map(async (post) => {
+        const likesCount = Number(post.likesCount ?? 0);
+        const commentsCount = Number(post.commentsCount ?? 0);
 
-      return {
-        id: post.id,
-        userId: post.userId,
-        content: post.content,
-        imageUrl: await getSignedUrlIfNeeded(post.url), // Map url to imageUrl for frontend compatibility
-        type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
-        likesCount,
-        commentsCount,
-        createdAt: post.createdAt.toISOString(),
-        isLiked: Boolean(post.isLiked),
-        isSaved: Boolean(post.isSaved),
-      };
-    }));
+        return {
+          id: post.id,
+          userId: post.userId,
+          content: post.content,
+          imageUrl: await getSignedUrlIfNeeded(post.url), // Map url to imageUrl for frontend compatibility
+          type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
+          likesCount,
+          commentsCount,
+          createdAt: post.createdAt.toISOString(),
+          isLiked: Boolean(post.isLiked),
+          isSaved: Boolean(post.isSaved),
+        };
+      })
+    );
 
     return NextResponse.json({ data: response });
   } catch (error) {

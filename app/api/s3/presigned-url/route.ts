@@ -21,7 +21,10 @@ export async function GET(request: NextRequest) {
     const folder = searchParams.get('folder') || 'general';
 
     if (!contentType) {
-      return NextResponse.json({ error: 'contentType query parameter is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'contentType query parameter is required' },
+        { status: 400 }
+      );
     }
 
     // Clean folder name to prevent directory traversal issues
@@ -32,7 +35,7 @@ export async function GET(request: NextRequest) {
     const uniqueId = crypto.randomUUID();
     // Strip special characters from filename, but keep base name
     const baseName = filename
-      .replace(/\.[^/.]+$/, "") // Remove extension
+      .replace(/\.[^/.]+$/, '') // Remove extension
       .replace(/[^a-zA-Z0-9_\-]/g, '') // Keep only alphanumeric, dash, underscore
       .substring(0, 50); // Limit length
 

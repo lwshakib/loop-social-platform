@@ -47,7 +47,9 @@ export async function getDownloadSignedUrl(key: string): Promise<string> {
  * @param urlOrKey The S3 key or full HTTP(S) URL
  * @returns Resolved HTTP(S) URL or null
  */
-export async function getSignedUrlIfNeeded(urlOrKey: string | null | undefined): Promise<string | null> {
+export async function getSignedUrlIfNeeded(
+  urlOrKey: string | null | undefined
+): Promise<string | null> {
   if (!urlOrKey) return null;
 
   // If it's a full absolute URL (e.g. Google OAuth avatar, external link), return as-is

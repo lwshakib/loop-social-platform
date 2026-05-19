@@ -35,7 +35,7 @@ export async function upsertVideoEmbedding(
             videoId,
           },
         },
-      ]
+      ],
     });
     return true;
   } catch (error) {
@@ -58,11 +58,10 @@ export async function querySimilarVideos(
 
   try {
     const index = pinecone.index(indexName);
-    
+
     // Construct filter for exclusions if any
-    const filter = excludeIds && excludeIds.length > 0 
-      ? { videoId: { $nin: excludeIds } } 
-      : undefined;
+    const filter =
+      excludeIds && excludeIds.length > 0 ? { videoId: { $nin: excludeIds } } : undefined;
 
     const response = await index.query({
       vector,

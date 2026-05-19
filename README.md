@@ -128,8 +128,8 @@ Loop follows a modern server-centric architecture:
 
 ## 📜 Scripts
 
-| Command              | Description                           |
-| :------------------- | :------------------------------------ |
+| Command               | Description                           |
+| :-------------------- | :------------------------------------ |
 | `pnpm run dev`        | Starts the development server         |
 | `pnpm run build`      | Builds the application for production |
 | `pnpm run lint`       | Runs ESLint to check for code issues  |

@@ -15,7 +15,8 @@
     "bucket:setup": "ts-node scripts/bucket-setup.ts",
     "bucket:teardown": "ts-node scripts/bucket-teardown.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1049.0",

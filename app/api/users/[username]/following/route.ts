@@ -40,13 +40,15 @@ export async function GET(
       },
     });
 
-    const response = await Promise.all(following.map(async (f) => ({
-      id: f.following.id,
-      username: f.following.username,
-      name: f.following.name,
-      image: await getSignedUrlIfNeeded(f.following.image),
-      imageUrl: await getSignedUrlIfNeeded(f.following.image),
-    })));
+    const response = await Promise.all(
+      following.map(async (f) => ({
+        id: f.following.id,
+        username: f.following.username,
+        name: f.following.name,
+        image: await getSignedUrlIfNeeded(f.following.image),
+        imageUrl: await getSignedUrlIfNeeded(f.following.image),
+      }))
+    );
 
     return NextResponse.json({ data: response });
   } catch (error) {

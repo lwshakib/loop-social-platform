@@ -122,30 +122,34 @@ export async function GET(request: NextRequest) {
 
     // Transform response
     const response = {
-      users: await Promise.all(users.map(async (user) => ({
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        imageUrl: await getSignedUrlIfNeeded(user.image),
-        bio: user.bio,
-        isVerified: false,
-      }))),
-      posts: await Promise.all(posts.map(async (post) => ({
-        id: post.id,
-        userId: post.userId,
-        content: post.content,
-        imageUrl: await getSignedUrlIfNeeded(post.url),
-        type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
-        likesCount: post._count.likes || 0,
-        commentsCount: post._count.comments || 0,
-        createdAt: post.createdAt.toISOString(),
-        isLiked: post.isLiked || false,
-        isSaved: post.isSaved || false,
-        user: {
-          ...post.user,
-          imageUrl: await getSignedUrlIfNeeded(post.user.image),
-        },
-      }))),
+      users: await Promise.all(
+        users.map(async (user) => ({
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          imageUrl: await getSignedUrlIfNeeded(user.image),
+          bio: user.bio,
+          isVerified: false,
+        }))
+      ),
+      posts: await Promise.all(
+        posts.map(async (post) => ({
+          id: post.id,
+          userId: post.userId,
+          content: post.content,
+          imageUrl: await getSignedUrlIfNeeded(post.url),
+          type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
+          likesCount: post._count.likes || 0,
+          commentsCount: post._count.comments || 0,
+          createdAt: post.createdAt.toISOString(),
+          isLiked: post.isLiked || false,
+          isSaved: post.isSaved || false,
+          user: {
+            ...post.user,
+            imageUrl: await getSignedUrlIfNeeded(post.user.image),
+          },
+        }))
+      ),
     };
 
     return NextResponse.json({ data: response });

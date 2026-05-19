@@ -267,9 +267,7 @@ export default function SettingsPage() {
       }
 
       toast.success(`${providerId} account unlinked`);
-      setAccounts((prev) =>
-        prev.filter((acc) => acc.providerId !== providerId)
-      );
+      setAccounts((prev) => prev.filter((acc) => acc.providerId !== providerId));
     } catch (error) {
       console.error(`Error unlinking ${providerId}:`, error);
       toast.error(`Error unlinking ${providerId}`);

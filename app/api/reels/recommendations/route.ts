@@ -123,9 +123,7 @@ export async function GET(request: NextRequest) {
 
       // Maintain Pinecone's ranked order
       const postMap = new Map(posts.map((p) => [p.id, p]));
-      reels = recommendedIds
-        .map((id) => postMap.get(id))
-        .filter(Boolean) as any[];
+      reels = recommendedIds.map((id) => postMap.get(id)).filter(Boolean) as any[];
     } else {
       // Fallback: Fetch candidates directly from database and rank locally
       const posts = await prisma.post.findMany({
@@ -158,10 +156,12 @@ export async function GET(request: NextRequest) {
               authorId: post.userId,
             });
             // Async save generated embedding to DB for future speedups
-            prisma.post.update({
-              where: { id: post.id },
-              data: { embeddingJson: JSON.stringify(videoVector) },
-            }).catch(console.error);
+            prisma.post
+              .update({
+                where: { id: post.id },
+                data: { embeddingJson: JSON.stringify(videoVector) },
+              })
+              .catch(console.error);
           }
 
           const similarity = cosineSimilarity(preferenceVector, videoVector);
@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
     // Inject 10% random exploration reels to avoid content bubbles
     if (reels.length > 2) {
       for (let i = 0; i < reels.length; i++) {
-        if (Math.random() < 0.10 && i < reels.length - 1) {
+        if (Math.random() < 0.1 && i < reels.length - 1) {
           // Swap with a random element downstream to mix the feed
           const swapIdx = i + 1 + Math.floor(Math.random() * (reels.length - i - 1));
           const temp = reels[i];

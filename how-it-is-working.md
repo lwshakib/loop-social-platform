@@ -53,26 +53,31 @@ The system operates on a **multi-stage candidate retrieval and ranking pipeline*
 ```
 
 ### Stage 1: Building the User Preference Vector ($\vec{P}$)
+
 When a user requests their reels feed, we fetch their historical interaction signals. We then construct their dynamic preference vector by accumulating video embeddings ($\vec{V}_i$) weighted by interaction strengths:
-* **Liked Reels**: weight = $+2.0$
-* **Bookmarked Reels**: weight = $+3.0$
-* **Completed Watch Events**: weight = $+4.0$
-* **Skipped Reels** (watched for less than 3 seconds): weight = $-1.5$ (punishes/represses matching topics)
-* **Standard Watch Events**: weight = $+1.0$
+
+- **Liked Reels**: weight = $+2.0$
+- **Bookmarked Reels**: weight = $+3.0$
+- **Completed Watch Events**: weight = $+4.0$
+- **Skipped Reels** (watched for less than 3 seconds): weight = $-1.5$ (punishes/represses matching topics)
+- **Standard Watch Events**: weight = $+1.0$
 
 We then L2-normalize the resulting vector:
 $$\vec{P}_{norm} = \frac{\vec{P}}{\|\vec{P}\|}$$
 
 ### Stage 2: Candidate Generation
-* **With Pinecone**: We query Pinecone with $\vec{P}_{norm}$, filtering out already-watched videos (`excludeIds`). Pinecone returns the top matches based on high-dimensional index distance.
-* **Without Pinecone (Fallback)**: We query PostgreSQL to fetch candidate reels and rank them in-memory.
+
+- **With Pinecone**: We query Pinecone with $\vec{P}_{norm}$, filtering out already-watched videos (`excludeIds`). Pinecone returns the top matches based on high-dimensional index distance.
+- **Without Pinecone (Fallback)**: We query PostgreSQL to fetch candidate reels and rank them in-memory.
 
 ### Stage 3: Scoring & Ranking
+
 We compute the score for each candidate:
 $$\text{Score} = \text{Similarity}(\vec{P}_{norm}, \vec{V}_{\text{candidate}}) \times \text{Popularity Boost}$$
 $$\text{Popularity Boost} = 1.0 + 0.1 \times \ln(1 + \text{Likes} + \text{Comments})$$
 This ensures that user affinity is the main driver, but highly popular/engaging reels receive a minor boost.
 
 ### Stage 4: Re-ranking & Diversification
-* **Exploration vs. Exploitation**: We shuffle $10\%$ of the feed using a random probability window, allowing fresh reels to escape filtering bubbles and resolving the cold-start problem.
-* **Looping**: If the user finishes watching all available reels, the system automatically recycles historical items to sustain circular scrolling.
+
+- **Exploration vs. Exploitation**: We shuffle $10\%$ of the feed using a random probability window, allowing fresh reels to escape filtering bubbles and resolving the cold-start problem.
+- **Looping**: If the user finishes watching all available reels, the system automatically recycles historical items to sustain circular scrolling.

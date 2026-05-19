@@ -51,35 +51,15 @@ type Post = {
 };
 
 const ReelPageSkeleton = () => (
-  <div className="relative flex-1 h-screen overflow-hidden">
-    <div className="absolute inset-0 flex">
-      <div className="w-full md:w-3/5 h-full bg-black flex items-center justify-center">
-        <Skeleton className="h-[70vh] w-full max-w-2xl rounded-3xl" />
-      </div>
-      <div className="hidden md:flex flex-1 flex-col bg-card border-l border-border p-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-40" />
-          </div>
+  <div className="relative flex-1 h-[98vh] flex items-center justify-center bg-background pb-4">
+    <div className="w-full h-full max-w-[calc(98vh*9/16)] flex items-center justify-center relative p-2 sm:p-4" style={{ aspectRatio: '9/16' }}>
+      <div className="h-full w-full bg-accent/20 animate-pulse rounded-2xl flex flex-col justify-end p-6 space-y-4 border border-border/10">
+        <div className="flex items-center gap-2 mb-2">
+          <Skeleton className="h-8 w-8 rounded-full bg-white/20" />
+          <Skeleton className="h-4 w-24 bg-white/20" />
         </div>
-        <div className="space-y-3">
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-5/6" />
-          <Skeleton className="h-3 w-4/6" />
-        </div>
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, idx) => (
-            <div key={idx} className="flex gap-3">
-              <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-3 w-32" />
-                <Skeleton className="h-3 w-5/6" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <Skeleton className="h-3 w-3/4 bg-white/20" />
+        <Skeleton className="h-3 w-1/2 bg-white/20" />
       </div>
     </div>
   </div>
@@ -160,6 +140,7 @@ export default function ReelsPage() {
   const videoId = params?.postId as string;
 
   const [videos, setVideos] = useState<Post[]>([]);
+  const [activeVideoId, setActiveVideoId] = useState<string>(videoId);
   const [selectedVideo, setSelectedVideo] = useState<Post | null>(null);
   const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -178,14 +159,14 @@ export default function ReelsPage() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const isUpdatingRef = useRef(false);
   const isInitialScrollRef = useRef(true);
+  const remainingReelsRef = useRef<Post[]>([]);
 
-  // Fetch ALL videos initially (simpler with small dataset)
+  // Fetch the selected video first, and append 5 recommendations initially
   useEffect(() => {
     const fetchAllVideos = async () => {
       try {
         setIsLoading(true);
 
-        // Fetch all reels at once
         const response = await fetch('/api/reels');
         if (!response.ok) {
           throw new Error('Failed to fetch reels');
@@ -193,11 +174,25 @@ export default function ReelsPage() {
 
         const result = await response.json();
         if (result.data && result.data.length > 0) {
-          setVideos(result.data);
+          const allReels: Post[] = result.data;
+          const targetReel = allReels.find((v) => v.id === videoId);
 
-          // If current videoId is not in the list, navigate to first video
-          if (videoId && !result.data.some((v: Post) => v.id === videoId)) {
-            router.replace(`/reels/${result.data[0].id}`, { scroll: false });
+          if (targetReel) {
+            const otherReels = allReels.filter((v) => v.id !== videoId);
+            const initialRecommendations = otherReels.slice(0, 5);
+            remainingReelsRef.current = otherReels.slice(5);
+            setVideos([targetReel, ...initialRecommendations]);
+            setActiveVideoId(targetReel.id);
+          } else {
+            // Fallback if target reel is not found (e.g. invalid postId)
+            const initialRecommendations = allReels.slice(0, 6);
+            remainingReelsRef.current = allReels.slice(6);
+            setVideos(initialRecommendations);
+
+            if (initialRecommendations[0]) {
+              setActiveVideoId(initialRecommendations[0].id);
+              window.history.replaceState(null, '', `/reels/${initialRecommendations[0].id}`);
+            }
           }
         }
       } catch (error) {
@@ -210,6 +205,40 @@ export default function ReelsPage() {
     fetchAllVideos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
+
+  // Hide scrollbar on body, html, and parent main layout elements while on Reels page
+  useEffect(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.classList.add('no-scrollbar');
+    }
+    document.body.classList.add('no-scrollbar');
+    document.documentElement.classList.add('no-scrollbar');
+
+    return () => {
+      if (mainEl) {
+        mainEl.classList.remove('no-scrollbar');
+      }
+      document.body.classList.remove('no-scrollbar');
+      document.documentElement.classList.remove('no-scrollbar');
+    };
+  }, []);
+
+  // Load 5 more recommendations when approaching the end of the queue (fourth video onwards)
+  useEffect(() => {
+    if (videos.length === 0 || !activeVideoId) return;
+
+    const currentIndex = videos.findIndex((v) => v.id === activeVideoId);
+
+    if (currentIndex !== -1 && currentIndex >= videos.length - 3) {
+      if (remainingReelsRef.current.length > 0) {
+        const nextRecommendations = remainingReelsRef.current.slice(0, 5);
+        remainingReelsRef.current = remainingReelsRef.current.slice(5);
+
+        setVideos((prev) => [...prev, ...nextRecommendations]);
+      }
+    }
+  }, [activeVideoId, videos]);
 
   // Set up Intersection Observer to detect which video is in view
   useEffect(() => {
@@ -275,7 +304,9 @@ export default function ReelsPage() {
               }
             });
 
-            router.replace(`/reels/${newVideoId}`, { scroll: false });
+            // Smoothly update URL in browser history without remounting the page
+            setActiveVideoId(newVideoId);
+            window.history.replaceState(null, '', `/reels/${newVideoId}`);
 
             setTimeout(() => {
               isUpdatingRef.current = false;
@@ -305,14 +336,14 @@ export default function ReelsPage() {
       }
       clearTimeout(timeoutId);
     };
-  }, [videos, router, isLoading]);
+  }, [videos, isLoading]);
 
   // Synchronously set container scroll position immediately on initial load before paint
   useEffect(() => {
-    if (isLoading || videos.length === 0 || !videoId) return;
+    if (isLoading || videos.length === 0 || !activeVideoId) return;
 
     if (isInitialScrollRef.current && containerRef.current) {
-      const activeIndex = videos.findIndex((v) => v.id === videoId);
+      const activeIndex = videos.findIndex((v) => v.id === activeVideoId);
       if (activeIndex !== -1) {
         const container = containerRef.current;
         const scrollPosition = activeIndex * (container.clientHeight || window.innerHeight);
@@ -320,18 +351,18 @@ export default function ReelsPage() {
         isInitialScrollRef.current = false;
       }
     }
-  }, [isLoading, videos, videoId]);
+  }, [isLoading, videos, activeVideoId]);
 
-  // Scroll to video when videoId changes
+  // Scroll to video when activeVideoId changes
   useEffect(() => {
-    if (!videoId || isLoading || videos.length === 0) return;
+    if (!activeVideoId || isLoading || videos.length === 0) return;
 
     // Check if the video exists in our current list
-    const videoExists = videos.some((v) => v.id === videoId);
+    const videoExists = videos.some((v) => v.id === activeVideoId);
     if (!videoExists) return;
 
     const timeoutId = setTimeout(() => {
-      const element = document.getElementById(`video-${videoId}`);
+      const element = document.getElementById(`video-${activeVideoId}`);
       if (element && containerRef.current) {
         const container = containerRef.current;
         const elementTop = element.offsetTop;
@@ -365,16 +396,16 @@ export default function ReelsPage() {
     }, 50);
 
     return () => clearTimeout(timeoutId);
-  }, [videoId, videos, isLoading]);
+  }, [activeVideoId, videos, isLoading]);
 
-  // Auto-play/pause videos based on videoId
+  // Auto-play/pause videos based on activeVideoId
   useEffect(() => {
-    if (!videoId || isLoading || videos.length === 0) return;
+    if (!activeVideoId || isLoading || videos.length === 0) return;
 
     const timeoutId = setTimeout(() => {
       // Pause all videos first
       videoRefs.current.forEach((videoElement, id) => {
-        if (id !== videoId) {
+        if (id !== activeVideoId) {
           if (!videoElement.paused) {
             videoElement.pause();
           }
@@ -387,9 +418,9 @@ export default function ReelsPage() {
       });
 
       // Play current video
-      const videoElement = videoRefs.current.get(videoId);
+      const videoElement = videoRefs.current.get(activeVideoId);
       if (videoElement) {
-        videoElement.muted = mutedVideos.has(videoId);
+        videoElement.muted = mutedVideos.has(activeVideoId);
 
         const playVideo = () => {
           if (videoElement.readyState >= 2) {
@@ -402,7 +433,6 @@ export default function ReelsPage() {
               videoElement.play().catch((error) => {
                 console.error('Error playing video:', error);
               });
-              // State will be updated by onPlay event handler
             }
           } else {
             videoElement.addEventListener('loadeddata', playVideo, {
@@ -417,7 +447,7 @@ export default function ReelsPage() {
     }, 200);
 
     return () => clearTimeout(timeoutId);
-  }, [videoId, mutedVideos, isLoading, videos.length]);
+  }, [activeVideoId, mutedVideos, isLoading, videos.length]);
 
   const handleLike = async (postId: string) => {
     if (!currentUser) return;
@@ -586,32 +616,39 @@ export default function ReelsPage() {
   const scrollToNext = () => {
     if (videos.length === 0 || isUpdatingRef.current) return;
 
-    const currentIndex = videos.findIndex((v) => v.id === videoId);
+    const currentIndex = videos.findIndex((v) => v.id === activeVideoId);
+    const isLastVideo = currentIndex === videos.length - 1 && remainingReelsRef.current.length === 0;
+    if (isLastVideo) return;
+
     const nextIndex = currentIndex < videos.length - 1 ? currentIndex + 1 : 0;
     const nextVideo = videos[nextIndex];
 
     if (nextVideo) {
-      router.replace(`/reels/${nextVideo.id}`, { scroll: false });
+      setActiveVideoId(nextVideo.id);
+      window.history.replaceState(null, '', `/reels/${nextVideo.id}`);
     }
   };
 
   const scrollToPrevious = () => {
     if (videos.length === 0 || isUpdatingRef.current) return;
 
-    const currentIndex = videos.findIndex((v) => v.id === videoId);
-    const prevIndex = currentIndex > 0 ? currentIndex - 1 : videos.length - 1;
+    const currentIndex = videos.findIndex((v) => v.id === activeVideoId);
+    if (currentIndex === 0) return;
+
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : 0;
     const prevVideo = videos[prevIndex];
 
     if (prevVideo) {
-      router.replace(`/reels/${prevVideo.id}`, { scroll: false });
+      setActiveVideoId(prevVideo.id);
+      window.history.replaceState(null, '', `/reels/${prevVideo.id}`);
     }
   };
 
   return (
-    <div className="relative flex-1 h-screen overflow-hidden">
+    <div className="relative flex-1 h-screen overflow-hidden reels-page-container">
       <div
         ref={containerRef}
-        className="h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth max-w-full mx-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth max-w-full mx-auto no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {videos.map((video, index) => {
           const activeIndex = videos.findIndex((v) => v.id === videoId);
@@ -1129,16 +1166,24 @@ export default function ReelsPage() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20"
+          className={`h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20 transition-all ${
+            videos.findIndex((v) => v.id === activeVideoId) === 0 ? 'opacity-40 pointer-events-none cursor-not-allowed' : ''
+          }`}
           onClick={scrollToPrevious}
+          disabled={videos.findIndex((v) => v.id === activeVideoId) === 0}
         >
           <ChevronUp className="h-6 w-6" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20"
+          className={`h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20 transition-all ${
+            (videos.findIndex((v) => v.id === activeVideoId) === videos.length - 1 && remainingReelsRef.current.length === 0)
+              ? 'opacity-40 pointer-events-none cursor-not-allowed'
+              : ''
+          }`}
           onClick={scrollToNext}
+          disabled={videos.findIndex((v) => v.id === activeVideoId) === videos.length - 1 && remainingReelsRef.current.length === 0}
         >
           <ChevronDown className="h-6 w-6" />
         </Button>

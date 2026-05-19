@@ -148,3 +148,34 @@
   scrollbar-width: thin !important;
   scrollbar-color: var(--border) transparent !important;
 }
+
+/* Custom Utility to completely hide scrollbars */
+.no-scrollbar::-webkit-scrollbar,
+.no-scrollbar *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar,
+.no-scrollbar * {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Bulletproof CSS rules to completely hide scrollbars when on the Reels details page */
+body:has(.reels-page-container),
+body:has(.reels-page-container) *,
+html:has(.reels-page-container),
+html:has(.reels-page-container) * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+body:has(.reels-page-container)::-webkit-scrollbar,
+body:has(.reels-page-container) *::-webkit-scrollbar,
+html:has(.reels-page-container)::-webkit-scrollbar,
+html:has(.reels-page-container) *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}

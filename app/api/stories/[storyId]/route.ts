@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSignedUrlIfNeeded } from '@/lib/s3';
 
 export async function GET(
   request: NextRequest,
@@ -40,24 +41,34 @@ export async function GET(
       orderBy: { createdAt: 'asc' },
     });
 
+    const resolvedUrl = (await getSignedUrlIfNeeded(story.url)) || '';
+    const resolvedUserImage = await getSignedUrlIfNeeded(story.user.image);
+
+    const resolvedAllStories = await Promise.all(
+      allUserStories.map(async (s) => ({
+        id: s.id,
+        userId: s.userId,
+        url: (await getSignedUrlIfNeeded(s.url)) || '',
+        caption: s.caption,
+        createdAt: s.createdAt.toISOString(),
+        expiresAt: s.expiresAt.toISOString(),
+      }))
+    );
+
     const response = {
       story: {
         id: story.id,
         userId: story.userId,
-        url: story.url,
+        url: resolvedUrl,
         caption: story.caption,
         createdAt: story.createdAt.toISOString(),
         expiresAt: story.expiresAt.toISOString(),
-        user: story.user,
+        user: {
+          ...story.user,
+          image: resolvedUserImage,
+        },
       },
-      allStories: allUserStories.map((s) => ({
-        id: s.id,
-        userId: s.userId,
-        url: s.url,
-        caption: s.caption,
-        createdAt: s.createdAt.toISOString(),
-        expiresAt: s.expiresAt.toISOString(),
-      })),
+      allStories: resolvedAllStories,
     };
 
     return NextResponse.json({ data: response });

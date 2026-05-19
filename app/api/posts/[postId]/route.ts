@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSignedUrlIfNeeded } from '@/lib/s3';
 
 export async function GET(
   request: NextRequest,
@@ -73,7 +74,7 @@ export async function GET(
         id: post.id,
         userId: post.userId,
         content: post.content,
-        imageUrl: post.url,
+        imageUrl: await getSignedUrlIfNeeded(post.url),
         type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
         likesCount: post._count.likes,
         commentsCount: post._count.comments,
@@ -82,7 +83,7 @@ export async function GET(
         isSaved,
         user: {
           ...post.user,
-          imageUrl: post.user.image,
+          imageUrl: await getSignedUrlIfNeeded(post.user.image),
         },
       },
     });

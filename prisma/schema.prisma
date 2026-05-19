@@ -46,6 +46,7 @@ model User {
 
   stories       Story[]
   searchHistory SearchHistory[]
+  watchEvents   WatchEvent[]
 
   displayUsername String?
 
@@ -118,6 +119,25 @@ model Post {
   likes         Like[]
   bookmarks     Bookmark[]
   notifications Notification[]
+  
+  // Recommendation system fields
+  embeddingJson String?        @default("[]")
+  watchEvents   WatchEvent[]
+}
+
+model WatchEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String
+  duration  Int      // watch duration in seconds
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([postId])
 }
 
 model Follow {

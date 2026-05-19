@@ -12,7 +12,7 @@ This document provides guidelines and instructions for contributing to this proj
 
 Before you begin, ensure you have the following installed:
 
-- [Bun](https://bun.sh/) (Primary runtime and package manager)
+- [pnpm](https://pnpm.io/) (Primary package manager)
 - [Node.js](https://nodejs.org/) (v18+)
 - [Git](https://git-scm.com/)
 - A running [PostgreSQL](https://www.postgresql.org/) database
@@ -38,10 +38,10 @@ Refer to the `README.md` for detailed explanations of each environment variable.
 
 ### 4. Install Dependencies
 
-Loop uses **Bun** for package management. Avoid using `npm` or `yarn` to prevent lockfile conflicts.
+Loop uses **pnpm** for package management. Avoid using `npm` or `yarn` to prevent lockfile conflicts.
 
 ```bash
-bun install
+pnpm install
 ```
 
 ### 5. Database Initialization
@@ -49,8 +49,8 @@ bun install
 Prepare your database by generating the Prisma client and running migrations:
 
 ```bash
-bun run db:generate
-bun run db:migrate
+pnpm run db:generate
+pnpm run db:migrate
 ```
 
 ### 6. Start Developing
@@ -58,7 +58,7 @@ bun run db:migrate
 Launch the development server:
 
 ```bash
-bun run dev
+pnpm run dev
 ```
 
 ---
@@ -97,11 +97,11 @@ Before submitting a Pull Request, ensure your code passes our quality checks:
 
 1.  **Linting**:
     ```bash
-    bun run lint
+    pnpm run lint
     ```
 2.  **Formatting**:
     ```bash
-    bun run format
+    pnpm run format
     ```
 3.  **Testing**:
     If you added logic, consider adding a unit test in `__tests__/unit` or an E2E test in `__tests__/e2e`.

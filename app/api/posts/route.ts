@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { PostType } from '@/generated/prisma/enums';
+import { getEmbedding } from '@/lib/embeddings';
+import { upsertVideoEmbedding } from '@/lib/pinecone';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,6 +51,32 @@ export async function POST(request: NextRequest) {
         type: postTypeMap[type],
       },
     });
+
+    // If the post is a reel (VIDEO), generate embeddings and save them
+    if (newPost.type === PostType.VIDEO) {
+      try {
+        const embedding = await getEmbedding(content || '', {
+          category: 'general',
+          authorId: currentDbUser.id,
+        });
+
+        // Update local Postgres embedding JSON
+        await prisma.post.update({
+          where: { id: newPost.id },
+          data: { embeddingJson: JSON.stringify(embedding) },
+        });
+
+        // Upsert to Pinecone if index configuration exists
+        await upsertVideoEmbedding(newPost.id, embedding, {
+          userId: currentDbUser.id,
+          category: 'general',
+          createdAt: newPost.createdAt.getTime(),
+          contentType: 'video',
+        });
+      } catch (err) {
+        console.error('Failed to generate or store vector embedding for reel:', err);
+      }
+    }
 
     return NextResponse.json({
       data: {

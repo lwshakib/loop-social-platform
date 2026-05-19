@@ -27,7 +27,7 @@ Loop is a high-performance, modern social networking platform designed for seaml
 - **Real-time Notifications**: Stay updated with interactions (likes, follows, comments) as they happen.
 - **Responsive Design**: Mobile-first architecture using **Tailwind CSS 4** and **shadcn/ui**.
 - **Dark Mode**: Beautifully crafted dark and light themes for any environment.
-- **Performance Optimized**: Leverages **Bun** runtime and Next.js Server Components for maximum efficiency.
+- **Performance Optimized**: Leverages Next.js Server Components for maximum efficiency.
 
 ## 🛠️ Tech Stack
 
@@ -37,7 +37,7 @@ Loop is a high-performance, modern social networking platform designed for seaml
 - **Authentication**: [Better Auth](https://better-auth.com/)
 - **Database Logic**: [Prisma ORM](https://www.prisma.io/) with [PostgreSQL](https://www.postgresql.org/)
 - **Media Hosting**: [Cloudinary](https://cloudinary.com/)
-- **Runtime & Tooling**: [Bun](https://bun.sh/), TypeScript, ESLint, Prettier
+- **Runtime & Tooling**: [pnpm](https://pnpm.io/), TypeScript, ESLint, Prettier
 
 ## ⚙️ How It Works
 
@@ -52,7 +52,7 @@ Loop follows a modern server-centric architecture:
 
 ### Prerequisites
 
-- **Bun**: v1.1.20+ (Required for `bun.lock`)
+- **pnpm**: v10.0+ (Primary package manager)
 - **Node.js**: v18.17+
 - **PostgreSQL**: A running instance (local or via Supabase/Neon)
 - **Cloudinary Account**: For handling media uploads
@@ -69,7 +69,7 @@ Loop follows a modern server-centric architecture:
 2.  **Install Dependencies**:
 
     ```bash
-    bun install
+    pnpm install
     ```
 
 3.  **Setup Environment**:
@@ -99,13 +99,13 @@ Loop follows a modern server-centric architecture:
 4.  **Synchronize Database**:
 
     ```bash
-    bun run db:generate
-    bun run db:migrate
+    pnpm run db:generate
+    pnpm run db:migrate
     ```
 
 5.  **Launch**:
     ```bash
-    bun run dev
+    pnpm run dev
     ```
     Visit [http://localhost:3000](http://localhost:3000) to see Loop in action.
 
@@ -130,13 +130,13 @@ Loop follows a modern server-centric architecture:
 
 | Command              | Description                           |
 | :------------------- | :------------------------------------ |
-| `bun run dev`        | Starts the development server         |
-| `bun run build`      | Builds the application for production |
-| `bun run lint`       | Runs ESLint to check for code issues  |
-| `bun run format`     | Formats code using Prettier           |
-| `bun run db:migrate` | Applies database migrations           |
-| `bun run db:studio`  | Opens Prisma Studio to view data      |
-| `bun run test:e2e`   | Runs Playwright E2E tests             |
+| `pnpm run dev`        | Starts the development server         |
+| `pnpm run build`      | Builds the application for production |
+| `pnpm run lint`       | Runs ESLint to check for code issues  |
+| `pnpm run format`     | Formats code using Prettier           |
+| `pnpm run db:migrate` | Applies database migrations           |
+| `pnpm run db:studio`  | Opens Prisma Studio to view data      |
+| `pnpm run test:e2e`   | Runs Playwright E2E tests             |
 
 ## 🤝 Contributing
 

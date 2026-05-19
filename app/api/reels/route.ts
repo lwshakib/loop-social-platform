@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { PostType } from '@/generated/prisma/client';
+import { getSignedUrlIfNeeded } from '@/lib/s3';
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,19 +70,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Map to response format
-    const response = reelsWithStatus.map((reel) => ({
+    const response = await Promise.all(reelsWithStatus.map(async (reel) => ({
       id: reel.id,
       userId: reel.userId,
       content: reel.content,
-      imageUrl: reel.url,
+      imageUrl: await getSignedUrlIfNeeded(reel.url),
       type: reel.type === 'IMAGE' ? 'image' : reel.type === 'VIDEO' ? 'reel' : 'text',
       likesCount: reel._count.likes || 0,
       commentsCount: reel._count.comments || 0,
       createdAt: reel.createdAt.toISOString(),
       isLiked: reel.isLiked,
       isSaved: reel.isSaved,
-      user: reel.user,
-    }));
+      user: {
+        ...reel.user,
+        imageUrl: await getSignedUrlIfNeeded(reel.user.image),
+      },
+    })));
 
     return NextResponse.json({ data: response });
   } catch (error) {

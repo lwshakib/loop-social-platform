@@ -325,7 +325,11 @@ export default function StoryViewerPage() {
           isVideo ? (
             <video
               ref={videoRef}
-              src={currentStory.url.startsWith('http') || currentStory.url.startsWith('/') ? currentStory.url : `/${currentStory.url}`}
+              src={
+                currentStory.url.startsWith('http') || currentStory.url.startsWith('/')
+                  ? currentStory.url
+                  : `/${currentStory.url}`
+              }
               className="max-w-full max-h-full object-contain"
               playsInline
               autoPlay
@@ -335,7 +339,11 @@ export default function StoryViewerPage() {
             />
           ) : (
             <Image
-              src={currentStory.url.startsWith('http') || currentStory.url.startsWith('/') ? currentStory.url : `/${currentStory.url}`}
+              src={
+                currentStory.url.startsWith('http') || currentStory.url.startsWith('/')
+                  ? currentStory.url
+                  : `/${currentStory.url}`
+              }
               alt="Story"
               className="max-w-full max-h-full object-contain"
               fill

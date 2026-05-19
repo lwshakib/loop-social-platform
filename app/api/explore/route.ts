@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { PostType } from '@/generated/prisma/enums';
+import { getSignedUrlIfNeeded } from '@/lib/s3';
 
 export async function GET(request: NextRequest) {
   try {
@@ -138,11 +139,11 @@ export async function GET(request: NextRequest) {
 
     // Transform to response format
     const response = {
-      posts: postsWithStatus.map((post) => ({
+      posts: await Promise.all(postsWithStatus.map(async (post) => ({
         id: post.id,
         userId: post.userId,
         content: post.content,
-        imageUrl: post.url,
+        imageUrl: await getSignedUrlIfNeeded(post.url),
         type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
         likesCount: post._count.likes || 0,
         commentsCount: post._count.comments || 0,
@@ -151,17 +152,17 @@ export async function GET(request: NextRequest) {
         isSaved: post.isSaved || false,
         user: {
           ...post.user,
-          imageUrl: post.user.image,
+          imageUrl: await getSignedUrlIfNeeded(post.user.image),
         },
-      })),
-      suggestedUsers: suggestedUsers.map((user) => ({
+      }))),
+      suggestedUsers: await Promise.all(suggestedUsers.map(async (user) => ({
         id: user.id,
         username: user.username,
         name: user.name,
-        imageUrl: user.image,
+        imageUrl: await getSignedUrlIfNeeded(user.image),
         bio: user.bio,
         isVerified: false,
-      })),
+      }))),
     };
 
     return NextResponse.json({ data: response });

@@ -107,30 +107,22 @@ export default function CreatePage() {
             postType = 'reel';
           }
 
-          // Get Cloudinary signature
-          const { data: response } = await axios.get('/api/cloudinary/signature', {
+          // Get S3 presigned URL
+          const { data: response } = await axios.get('/api/s3/presigned-url', {
             params: {
-              folder: 'loop-social-platform',
+              filename: createPostData.file.name,
+              contentType: createPostData.file.type,
+              folder: postType === 'reel' ? 'reels' : 'posts',
             },
           });
 
-          // Extract signature data from response
-          const signature = response.data;
+          const { url, key } = response.data;
 
-          // Determine upload endpoint based on file type
-          const uploadType = postType === 'reel' ? 'video' : 'image';
-          const uploadApi = `https://api.cloudinary.com/v1_1/${signature.cloudName}/${uploadType}/upload`;
-
-          // Create FormData
-          const formData = new FormData();
-          formData.append('file', createPostData.file);
-          formData.append('api_key', signature.apiKey);
-          formData.append('timestamp', signature.timestamp.toString());
-          formData.append('folder', signature.folder);
-          formData.append('signature', signature.signature);
-
-          // Upload to Cloudinary
-          const { data: uploadResponse } = await axios.post(uploadApi, formData, {
+          // Upload directly to S3
+          await axios.put(url, createPostData.file, {
+            headers: {
+              'Content-Type': createPostData.file.type,
+            },
             onUploadProgress: (progressEvent) => {
               if (progressEvent.total) {
                 const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -139,11 +131,7 @@ export default function CreatePage() {
             },
           });
 
-          fileUrl = uploadResponse.secure_url || uploadResponse.url;
-
-          if (!fileUrl) {
-            throw new Error('No URL returned from Cloudinary');
-          }
+          fileUrl = key;
 
           setIsUploading(false);
           setUploadProgress(0);

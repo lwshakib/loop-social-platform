@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import prisma from '@/lib/prisma';
+import { getSignedUrlIfNeeded } from '@/lib/s3';
 
 export async function GET() {
   try {
@@ -46,6 +47,18 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Resolve all signed URLs in parallel first
+    const resolvedStories = await Promise.all(
+      stories.map(async (story) => ({
+        ...story,
+        url: (await getSignedUrlIfNeeded(story.url)) || '',
+        user: {
+          ...story.user,
+          image: await getSignedUrlIfNeeded(story.user.image),
+        },
+      }))
+    );
+
     // Group stories by user
     const storiesByUser = new Map<
       string,
@@ -68,7 +81,7 @@ export async function GET() {
       }
     >();
 
-    stories.forEach((story) => {
+    resolvedStories.forEach((story) => {
       if (!storiesByUser.has(story.userId)) {
         storiesByUser.set(story.userId, {
           userId: story.userId,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserByUsername } from '@/actions/user';
 import prisma from '@/lib/prisma';
+import { getSignedUrlIfNeeded } from '@/lib/s3';
 
 export async function GET(
   request: NextRequest,
@@ -54,8 +55,8 @@ export async function GET(
       name: user.name,
       email: user.email,
       bio: user.bio || '',
-      imageUrl: user.image,
-      coverImageUrl: user.coverImage || '',
+      imageUrl: await getSignedUrlIfNeeded(user.image),
+      coverImageUrl: await getSignedUrlIfNeeded(user.coverImage || ''),
       dateOfBirth: user.dateOfBirth ? String(user.dateOfBirth) : '',
       gender: user.gender || '',
       isVerified: false,
@@ -136,10 +137,10 @@ export async function PATCH(
       name: refreshed.name,
       email: refreshed.email,
       bio: refreshed.bio || '',
-      imageUrl: refreshed.image,
+      imageUrl: await getSignedUrlIfNeeded(refreshed.image),
       dateOfBirth: refreshed.dateOfBirth ? String(refreshed.dateOfBirth) : '',
       gender: refreshed.gender || '',
-      coverImageUrl: refreshed.coverImage || '',
+      coverImageUrl: await getSignedUrlIfNeeded(refreshed.coverImage || ''),
       isVerified: false,
       createdAt: refreshed.createdAt.toISOString(),
       postsCount: refreshed.postsCount || 0,

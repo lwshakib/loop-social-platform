@@ -472,24 +472,20 @@ export default function HomePage() {
             storyType = 'video';
           }
 
-          const { data: response } = await axios.get('/api/cloudinary/signature', {
+          const { data: response } = await axios.get('/api/s3/presigned-url', {
             params: {
-              folder: 'loop-social-platform/stories',
+              filename: createStoryData.file.name,
+              contentType: createStoryData.file.type,
+              folder: 'stories',
             },
           });
 
-          const signature = response.data;
-          const uploadType = storyType === 'video' ? 'video' : 'image';
-          const uploadApi = `https://api.cloudinary.com/v1_1/${signature.cloudName}/${uploadType}/upload`;
+          const { url, key } = response.data;
 
-          const formData = new FormData();
-          formData.append('file', createStoryData.file);
-          formData.append('api_key', signature.apiKey);
-          formData.append('timestamp', signature.timestamp.toString());
-          formData.append('folder', signature.folder);
-          formData.append('signature', signature.signature);
-
-          const { data: uploadResponse } = await axios.post(uploadApi, formData, {
+          await axios.put(url, createStoryData.file, {
+            headers: {
+              'Content-Type': createStoryData.file.type,
+            },
             onUploadProgress: (progressEvent) => {
               if (progressEvent.total) {
                 const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -498,7 +494,7 @@ export default function HomePage() {
             },
           });
 
-          storyUrl = uploadResponse.secure_url || uploadResponse.url;
+          storyUrl = key;
           setIsUploading(false);
           setUploadProgress(0);
         } catch (error) {

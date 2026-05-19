@@ -360,28 +360,26 @@ export default function ProfilePage() {
     }
   };
 
-  const uploadImage = async (file: File, folder = 'loop-social-platform') => {
-    const signatureRes = await fetch(
-      `/api/cloudinary/signature?folder=${encodeURIComponent(folder)}`
+  const uploadImage = async (file: File, folder = 'general') => {
+    const urlRes = await fetch(
+      `/api/s3/presigned-url?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}&folder=${encodeURIComponent(folder)}`
     );
-    if (!signatureRes.ok) throw new Error('Failed to get upload signature');
-    const signatureJson = await signatureRes.json();
-    const sigData = signatureJson.data;
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`;
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('api_key', sigData.apiKey);
-    formData.append('timestamp', String(sigData.timestamp));
-    formData.append('folder', sigData.folder);
-    formData.append('signature', sigData.signature);
+    if (!urlRes.ok) throw new Error('Failed to get presigned upload URL');
+    const { data } = await urlRes.json();
+    const { url, key } = data;
 
-    const uploadRes = await fetch(uploadUrl, {
-      method: 'POST',
-      body: formData,
+    const uploadRes = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type,
+      },
+      body: file,
     });
-    if (!uploadRes.ok) throw new Error('Failed to upload image');
-    const uploadJson = await uploadRes.json();
-    return uploadJson.secure_url || uploadJson.url;
+
+    if (!uploadRes.ok) throw new Error('Failed to upload image to S3');
+    
+    // Return key path to save in database
+    return key;
   };
 
   const handleUpdateProfile = async () => {

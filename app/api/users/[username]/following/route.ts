@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSignedUrlIfNeeded } from '@/lib/s3';
 
 async function resolveUsername(params: Promise<{ username: string }> | { username: string }) {
   const resolved = await Promise.resolve(params);
@@ -39,7 +40,13 @@ export async function GET(
       },
     });
 
-    const response = following.map((f) => f.following);
+    const response = await Promise.all(following.map(async (f) => ({
+      id: f.following.id,
+      username: f.following.username,
+      name: f.following.name,
+      image: await getSignedUrlIfNeeded(f.following.image),
+      imageUrl: await getSignedUrlIfNeeded(f.following.image),
+    })));
 
     return NextResponse.json({ data: response });
   } catch (error) {

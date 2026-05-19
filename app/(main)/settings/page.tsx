@@ -139,22 +139,21 @@ export default function SettingsPage() {
 
       // 1. Upload new avatar if selected
       if (avatarFile) {
-        const { data: response } = await axios.get('/api/cloudinary/signature', {
-          params: { folder: 'loop-social-platform' },
+        const { data: response } = await axios.get('/api/s3/presigned-url', {
+          params: {
+            filename: avatarFile.name,
+            contentType: avatarFile.type,
+            folder: 'profiles',
+          },
         });
-        const signature = response.data;
-        const formData = new FormData();
-        formData.append('file', avatarFile);
-        formData.append('api_key', signature.apiKey);
-        formData.append('timestamp', signature.timestamp.toString());
-        formData.append('folder', signature.folder);
-        formData.append('signature', signature.signature);
+        const { url, key } = response.data;
 
-        const { data: uploadResponse } = await axios.post(
-          `https://api.cloudinary.com/v1_1/${signature.cloudName}/image/upload`,
-          formData
-        );
-        finalImageUrl = uploadResponse.secure_url || uploadResponse.url;
+        await axios.put(url, avatarFile, {
+          headers: {
+            'Content-Type': avatarFile.type,
+          },
+        });
+        finalImageUrl = key;
       }
 
       // 2. Update profile via API

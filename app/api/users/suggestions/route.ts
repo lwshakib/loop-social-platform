@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSignedUrlIfNeeded } from '@/lib/s3';
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,16 +36,16 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform to match expected format
-    const response = suggestions.map((user) => ({
+    const response = await Promise.all(suggestions.map(async (user) => ({
       userId: user.id,
       user: {
         id: user.id,
         username: user.username,
         name: user.name,
-        profileImage: user.image,
+        profileImage: await getSignedUrlIfNeeded(user.image),
       },
       stories: [], // Empty stories array for suggestions
-    }));
+    })));
 
     return NextResponse.json({ data: response });
   } catch (error) {

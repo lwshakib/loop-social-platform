@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserPosts } from '@/actions/posts';
+import { getSignedUrlIfNeeded } from '@/lib/s3';
 
 export async function GET(
   request: NextRequest,
@@ -24,7 +25,7 @@ export async function GET(
     const posts = await getUserPosts(username, type, currentUserId);
 
     // Map posts to response format
-    const response = posts.map((post) => {
+    const response = await Promise.all(posts.map(async (post) => {
       const likesCount = Number(post.likesCount ?? 0);
       const commentsCount = Number(post.commentsCount ?? 0);
 
@@ -32,7 +33,7 @@ export async function GET(
         id: post.id,
         userId: post.userId,
         content: post.content,
-        imageUrl: post.url, // Map url to imageUrl for frontend compatibility
+        imageUrl: await getSignedUrlIfNeeded(post.url), // Map url to imageUrl for frontend compatibility
         type: post.type === 'IMAGE' ? 'image' : post.type === 'VIDEO' ? 'reel' : 'text',
         likesCount,
         commentsCount,
@@ -40,7 +41,7 @@ export async function GET(
         isLiked: Boolean(post.isLiked),
         isSaved: Boolean(post.isSaved),
       };
-    });
+    }));
 
     return NextResponse.json({ data: response });
   } catch (error) {

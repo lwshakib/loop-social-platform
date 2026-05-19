@@ -651,7 +651,7 @@ export default function ReelsPage() {
         className="h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth max-w-full mx-auto no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {videos.map((video, index) => {
-          const activeIndex = videos.findIndex((v) => v.id === videoId);
+          const activeIndex = videos.findIndex((v) => v.id === activeVideoId);
           const isNear = index >= activeIndex - 2 && index <= activeIndex + 5;
 
           if (!isNear) {

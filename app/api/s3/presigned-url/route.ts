@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Clean folder name to prevent directory traversal issues
-    const safeFolder = folder.replace(/\.\./g, '').replace(/[^a-zA-Z0-9_\-\/]/g, '');
+    // Strip forward slashes to ensure top-level folder usage
+    const safeFolder = folder.replace(/\.\./g, '').replace(/[^a-zA-Z0-9_\-]/g, '');
 
     // Generate unique key
     const fileExtension = filename.split('.').pop() || '';

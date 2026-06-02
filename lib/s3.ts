@@ -52,9 +52,24 @@ export async function getSignedUrlIfNeeded(
 ): Promise<string | null> {
   if (!urlOrKey) return null;
 
-  // If it's a full absolute URL (e.g. Google OAuth avatar, external link), return as-is
+  // If it's a full absolute URL (e.g. Google OAuth avatar, external link)
+  // We validate it against a whitelist to prevent Open Redirect/SSRF
   if (urlOrKey.startsWith('http://') || urlOrKey.startsWith('https://')) {
-    return urlOrKey;
+    const allowedDomains = [
+      'lh3.googleusercontent.com',
+      'googleusercontent.com',
+      'images.unsplash.com',
+      // Add other trusted CDNs here
+    ];
+    try {
+      const url = new URL(urlOrKey);
+      if (allowedDomains.some((domain) => url.hostname.endsWith(domain))) {
+        return urlOrKey;
+      }
+    } catch (e) {
+      console.error('Invalid URL:', urlOrKey);
+    }
+    return null; // Return null if not in whitelist
   }
 
   try {

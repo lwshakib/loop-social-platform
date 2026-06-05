@@ -17,7 +17,24 @@ const s3 = new S3Client({
  * @param contentType The MIME type of the file
  * @returns Presigned upload URL valid for 10 minutes
  */
+/**
+ * Validates the S3 key to prevent path traversal.
+ * Ensures the key does not contain ".." and is not empty.
+ */
+function validateS3Key(key: string) {
+  if (key.includes('..') || key.startsWith('/') || key.length === 0) {
+    throw new Error('Invalid S3 key: Path traversal or invalid format detected.');
+  }
+}
+
+/**
+ * Generates a presigned URL for uploading a file (HTTP PUT)
+ * @param key The S3 object key (path inside the bucket)
+ * @param contentType The MIME type of the file
+ * @returns Presigned upload URL valid for 10 minutes
+ */
 export async function getUploadPresignedUrl(key: string, contentType: string): Promise<string> {
+  validateS3Key(key);
   const command = new PutObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     Key: key,
@@ -33,6 +50,7 @@ export async function getUploadPresignedUrl(key: string, contentType: string): P
  * @returns Signed download URL valid for 1 hour
  */
 export async function getDownloadSignedUrl(key: string): Promise<string> {
+  validateS3Key(key);
   const command = new GetObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     Key: key,
@@ -66,7 +84,7 @@ export async function getSignedUrlIfNeeded(
       if (allowedDomains.some((domain) => url.hostname.endsWith(domain))) {
         return urlOrKey;
       }
-    } catch (e) {
+    } catch {
       console.error('Invalid URL:', urlOrKey);
     }
     return null; // Return null if not in whitelist

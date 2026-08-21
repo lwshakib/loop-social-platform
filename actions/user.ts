@@ -6,6 +6,7 @@
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { headers } from 'next/headers';
+import { Prisma } from '@/generated/prisma/client';
 
 /**
  * UpdateUserProfileInput
@@ -90,10 +91,17 @@ export async function updateUserProfile(input: UpdateUserProfileInput) {
   }
 
   // 5. DATABASE UPDATE: Persist the changes
-  const updated = await prisma.user.update({
-    where: { id: dbUser.id },
-    data: payload,
-  });
+  try {
+    const updated = await prisma.user.update({
+      where: { id: dbUser.id },
+      data: payload,
+    });
 
-  return updated;
+    return updated;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      throw new Error('Username is already taken');
+    }
+    throw error;
+  }
 }

@@ -4,6 +4,29 @@ import { headers } from 'next/headers';
 import { getUploadPresignedUrl } from '@/lib/s3';
 import crypto from 'crypto';
 
+const ALLOWED_CONTENT_TYPES = [
+  // Images
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+  // Videos
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+  'video/ogg',
+  // Audio
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/wav',
+  'audio/ogg',
+  'audio/webm',
+  'audio/aac',
+  'audio/m4a',
+  'audio/x-m4a',
+];
+
 export async function GET(request: NextRequest) {
   try {
     // Check session server-side
@@ -25,6 +48,10 @@ export async function GET(request: NextRequest) {
         { error: 'contentType query parameter is required' },
         { status: 400 }
       );
+    }
+
+    if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
+      return NextResponse.json({ error: 'Invalid content type' }, { status: 400 });
     }
 
     // Clean folder name to prevent directory traversal issues

@@ -27,6 +27,8 @@ const ALLOWED_CONTENT_TYPES = [
   'audio/x-m4a',
 ];
 
+const ALLOWED_FOLDERS = ['general', 'posts', 'reels', 'profiles', 'avatars', 'stories'];
+
 export async function GET(request: NextRequest) {
   try {
     // Check session server-side
@@ -52,6 +54,10 @@ export async function GET(request: NextRequest) {
 
     if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
       return NextResponse.json({ error: 'Invalid content type' }, { status: 400 });
+    }
+
+    if (!ALLOWED_FOLDERS.includes(folder)) {
+      return NextResponse.json({ error: 'Invalid folder' }, { status: 400 });
     }
 
     // Clean folder name to prevent directory traversal issues

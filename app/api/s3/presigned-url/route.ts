@@ -71,16 +71,11 @@ export async function GET(request: NextRequest) {
     // Strip forward slashes to ensure top-level folder usage
     const safeFolder = targetFolder.replace(/\.\./g, '').replace(/[^a-zA-Z0-9_\-]/g, '');
 
-    // Generate unique key
-    const fileExtension = filename.split('.').pop() || '';
+    // Generate unique key using UUID to prevent user filename metadata leakage
+    const fileExtension = filename.includes('.') ? filename.split('.').pop() || '' : '';
     const uniqueId = crypto.randomUUID();
-    // Strip special characters from filename, but keep base name
-    const baseName = filename
-      .replace(/\.[^/.]+$/, '') // Remove extension
-      .replace(/[^a-zA-Z0-9_\-]/g, '') // Keep only alphanumeric, dash, underscore
-      .substring(0, 50); // Limit length
 
-    const key = `uploads/${safeFolder}/${uniqueId}${baseName ? `-${baseName}` : ''}${fileExtension ? `.${fileExtension}` : ''}`;
+    const key = `uploads/${safeFolder}/${uniqueId}${fileExtension ? `.${fileExtension}` : ''}`;
 
     const url = await getUploadPresignedUrl(key, contentType);
 

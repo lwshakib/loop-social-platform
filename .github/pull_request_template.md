@@ -2,7 +2,7 @@
 
 Please include a summary of the changes and the related issue/feature request. Include relevant motivation and context. List any dependencies that are required for this change.
 
-Closes # (issue number)
+Fixes # (issue number)
 
 ## Type of Change
 

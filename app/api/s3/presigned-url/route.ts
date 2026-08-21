@@ -30,7 +30,15 @@ const ALLOWED_CONTENT_TYPES = [
 const ALLOWED_FOLDERS = ['general', 'posts', 'reels', 'profiles', 'avatars', 'stories'];
 
 export async function GET(request: NextRequest) {
+  let userId: string | undefined;
+  let folder: string | null = null;
+  let contentType: string | null = null;
+
   try {
+    const { searchParams } = new URL(request.url);
+    folder = searchParams.get('folder');
+    contentType = searchParams.get('contentType');
+
     // Check session server-side
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -40,10 +48,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
+    userId = session.user.id;
     const filename = searchParams.get('filename') || 'file';
-    const contentType = searchParams.get('contentType');
-    const folder = searchParams.get('folder') || 'general';
+    const targetFolder = folder || 'general';
 
     if (!contentType) {
       return NextResponse.json(
@@ -56,13 +63,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid content type' }, { status: 400 });
     }
 
-    if (!ALLOWED_FOLDERS.includes(folder)) {
+    if (!ALLOWED_FOLDERS.includes(targetFolder)) {
       return NextResponse.json({ error: 'Invalid folder' }, { status: 400 });
     }
 
     // Clean folder name to prevent directory traversal issues
     // Strip forward slashes to ensure top-level folder usage
-    const safeFolder = folder.replace(/\.\./g, '').replace(/[^a-zA-Z0-9_\-]/g, '');
+    const safeFolder = targetFolder.replace(/\.\./g, '').replace(/[^a-zA-Z0-9_\-]/g, '');
 
     // Generate unique key
     const fileExtension = filename.split('.').pop() || '';
@@ -84,7 +91,12 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error generating presigned URL:', error);
+    console.error('Error generating presigned URL:', {
+      error,
+      userId,
+      folder,
+      contentType,
+    });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

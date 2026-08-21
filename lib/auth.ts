@@ -10,6 +10,7 @@ import prisma from './prisma';
 import { username } from 'better-auth/plugins';
 import { Resend } from 'resend';
 import { AuthEmailTemplate } from '@/components/emails/auth-email-template';
+import crypto from 'crypto';
 
 // Initialize the Resend email service client
 const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key');
@@ -150,8 +151,8 @@ export const auth = betterAuth({
           if (!user.username) {
             // Clean the name to create a base handle
             const baseUsername = user.name ? user.name.toLowerCase().replace(/\s+/g, '') : 'user';
-            // Add a random suffix to ensure uniqueness on generation
-            const randomSuffix = Math.random().toString(36).substring(2, 7);
+            // Add a cryptographically secure random suffix to ensure uniqueness on generation
+            const randomSuffix = crypto.randomBytes(3).toString('hex');
             user.username = `@${baseUsername}_${randomSuffix}`;
           }
           return {
